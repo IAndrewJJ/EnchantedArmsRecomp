@@ -1,4 +1,5 @@
 """Package an allowlisted, game-data-free Windows launcher kit."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -25,9 +26,12 @@ def source_files():
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--launcher", type=Path, help="Compiled launcher to package (may be staged while the installed launcher is open)")
+    options = parser.parse_args()
     destination = ROOT / "dist"
     destination.mkdir(exist_ok=True)
-    launcher = ROOT / "EnchantedArmsLauncher.exe"
+    launcher = options.launcher.resolve() if options.launcher else ROOT / "EnchantedArmsLauncher.exe"
     if not launcher.exists():
         raise SystemExit("Run scripts/build-launcher.ps1 first")
     paths = source_files() + [launcher]
@@ -52,7 +56,7 @@ def main():
     paths.append(renderer / "renderer-capabilities.json")
     # Explicit allowlist means new audit/generated/runtime files cannot slip into a release.
     for path in paths:
-        relative = path.relative_to(ROOT)
+        relative = Path("EnchantedArmsLauncher.exe") if path == launcher else path.relative_to(ROOT)
         if any(part in {".local", "audit", "bin", "default", "private", "assets", "__pycache__"} for part in relative.parts):
             raise ValueError("Private path selected: " + str(relative))
         if path not in {launcher,python_archive} and path.suffix not in {".dll", ".lib"}:
@@ -63,7 +67,7 @@ def main():
     hashes = {}
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for path in paths:
-            name = path.relative_to(ROOT).as_posix()
+            name = "EnchantedArmsLauncher.exe" if path == launcher else path.relative_to(ROOT).as_posix()
             data = path.read_bytes()
             hashes[name] = hashlib.sha256(data).hexdigest()
             z.writestr("EnchantedArmsRecomp/" + name, data)

@@ -28,7 +28,7 @@ The complete Windows kit includes a checksum-verified portable Python bootstrap 
 
 ## Visual settings
 
-The complete **0.3.0 detail/FPS preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
+The complete **0.3.1 FPS counter preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
 
 | Preset | Internal scale | Output effect | Post AA | Filtering |
 | --- | --- | --- | --- | --- |
@@ -48,7 +48,7 @@ The window size is separate from internal rendering resolution. The launcher set
 
 **Frame-rate limit** offers Original, 30, 60, 90, 120, 144, 165, 180, 240, 360 and Unlimited. Original preserves the console vblank throttle and is the default for existing/new profiles. All explicit limits and Unlimited are **experimental**: they remove that throttle and apply a host limiter at the game's original D3D swap boundary. The guest timebase, video-mode refresh and audio clock are not rescaled. The complete original swap routine still runs.
 
-These controls set an upper limit; they do not guarantee that FPS or correct timing throughout the game. Frame-dependent movement, effects, battle timing and movie/audio synchronization need playtesting. Use a separate save slot and compare against Original. Return to Original if the game runs too fast or timing changes. Pre-rendered movies retain their source cadence. Logs report swap submissions per second, which is not a measurement of unique displayed frames.
+**Use Original FPS for normal play.** [Upstream Enchanted Arms testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports game speed tied to FPS. The explicit limits can accelerate gameplay. Normal-speed 60/120+ FPS requires a verified engine timing patch that is not implemented. These controls set an upper limit; they do not guarantee that FPS or correct timing. Use a separate save slot for timing experiments. Pre-rendered movies retain their source cadence. Logs report swap submissions per second, which is not a measurement of unique displayed frames.
 
 ## Controls and saves
 

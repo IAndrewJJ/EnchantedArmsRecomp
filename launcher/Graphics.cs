@@ -142,7 +142,7 @@ namespace EnchantedArmsPC {
             var help = new Label { Text = "FSR 1 upscales lower-resolution frames; the presenter uses sharpening when upscaling is unnecessary. " +
                 "Fullscreen uses your desktop resolution. Higher internal scales cost GPU time and memory. " +
                 "Detail boost sharpens existing mipmapped surfaces; it does not replace textures. " +
-                "Experimental FPS modes may change game speed or movie/audio timing. Return to Original if this happens. " +
+                "Use Original FPS for normal play. Experimental FPS limits can accelerate gameplay; a normal-speed high-FPS timing patch is not implemented. " +
                 "Limits do not guarantee that frame rate. Temporal FSR and frame generation are not included.", AutoSize = true,
                 MaximumSize = new Size(700,0), ForeColor = Color.FromArgb(75,85,95), Margin = new Padding(0,12,0,12) };
             FullRow(table,help);

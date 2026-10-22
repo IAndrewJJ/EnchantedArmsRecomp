@@ -31,4 +31,8 @@ The NPC named **Smiling Salesgirl** is invisible at the festival. Whether her sh
 
 Status: reported October 22, 2026; investigating. No fix confirmed.
 
-The tester reports that parts of multiple NPC character models appear black where another color is expected. The affected location/materials and whether patches move with the camera are not yet established. This symptom is distinct from the two invisible NPC reports; a shared renderer cause is unconfirmed. The current installation records Original 1x scaling, game filtering, zero texture-detail bias and original frame pacing, so the initial investigation must include a baseline renderer comparison rather than assuming the new detail/FPS settings caused it.
+The tester reports that parts of multiple NPC character models appear black where another color is expected, especially **Toya and Makoto** in the opening sequence and some NPCs at the festival. Whether patches move with the camera is not yet established. This symptom is distinct from the two invisible NPC reports; a shared renderer cause is unconfirmed. The current installation records Original 1x scaling, game filtering, zero texture-detail bias and original frame pacing, so the initial investigation must include a baseline renderer comparison rather than assuming the new detail/FPS settings caused it.
+
+## EA-004 — Experimental FPS modes can accelerate gameplay
+
+Use **Original** for normal play. [Upstream Enchanted Arms testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports that game speed depends on FPS and marks the title `vsync-off-speedup`. Our explicit FPS limits disable that throttle, so they must be treated as timing experiments. A host frame limiter does not decouple animation or simulation from frame rate. Normal-speed 60/120+ FPS needs a verified engine timing patch; that patch is not implemented. Original remains the default. Movies may retain their source cadence even when gameplay is accelerated.

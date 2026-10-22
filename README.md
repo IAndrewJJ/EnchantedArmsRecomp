@@ -2,7 +2,7 @@
 
 **An unofficial native PC recompilation of Enchanted Arms for Xbox 360.** Build and play on Windows using your own supported disc image.
 
-[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.1) · [Known issues](docs/KNOWN_ISSUES.md) · [Setup help](docs/SETUP_TROUBLESHOOTING.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
+[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.2) · [Known issues](docs/KNOWN_ISSUES.md) · [Setup help](docs/SETUP_TROUBLESHOOTING.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
 
 [![Launcher checks](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml/badge.svg)](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml)
 
@@ -10,7 +10,7 @@
 
 ## Start playing
 
-1. Download **EnchantedArmsPC-0.4.1-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
+1. Download **EnchantedArmsPC-0.4.2-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
 2. Open **EnchantedArmsLauncher.exe**. Choose **Set up game**, select your Xbox 360 ISO under **Settings → Game**, then **Build game**.
 3. When setup finishes, click **Play Enchanted Arms**. The launcher always opens first; shortcuts never start the game automatically.
 4. Use **Settings → Graphics** for visual presets, **Display** for window/FPS options, or **Game → Create desktop shortcut** for an **EnchantedArmsPC** desktop icon.
@@ -25,7 +25,7 @@ The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP an
 
 - Some NPCs are invisible, and Toya, Makoto and other NPCs can have dark surface patches. These remain under investigation.
 - Mild stutter has been reported. Repeatable measurements and broader GPU/controller coverage are needed.
-- **Use Original FPS for normal play.** Experimental limits up to 360 FPS and Unlimited can accelerate gameplay. A normal-speed high-FPS engine timing patch is not implemented. [Upstream testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports the same frame dependence.
+- **60 FPS is a preview option with automatic game-speed corrections.** Opening-area character movement, menu background and a runic wall have passed a player comparison. Full campaign timing and higher limits remain unverified; Original stays the default. See [timing details](docs/TIMING.md).
 
 See [known issues](docs/KNOWN_ISSUES.md) and [playtesting guidance](docs/PLAYTESTING.md) for details. The launcher polish in 0.4.0 does not establish a campaign-wide FPS improvement.
 
@@ -72,7 +72,7 @@ Only the **USA/Europe Xbox 360 release**, title `555307E6`, media `41637F65`, XE
 
 Setup opens the ISO read-only and rejects unsupported executables before extraction. Files, translated code and compilation stay on the player's PC.
 
-To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.1 launcher uses native build 0.3.2; existing 0.3.2 players do not need to rebuild.** For earlier native builds, use **Settings → Game → Rebuild game**. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
+To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.2 launcher uses native build 0.3.3. Rebuild through Settings → Game → Rebuild game to receive the timing fixes.** A legacy build remains usable in Original mode; high FPS requires the updated native build. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
 
 Local data lives under `.local`: `runtime/user` for saves, `runtime/cache` for shader caches, `runtime/captures` for F8 images, and `runtime/boot-*.log` plus `logs` for diagnostics. Rebuilding preserves saves and caches. Report/log/save-management buttons have been removed from the simplified interface.
 

@@ -42,6 +42,7 @@ set(ENCHANTEDARMSRECOMP_SOURCES
     src/input_diagnostics.cpp
     src/scene_dispatch.cpp
     src/frame_pacing.cpp
+    src/timing_correction.cpp
     src/fps_counter.cpp
     src/frame_capture.cpp
 )

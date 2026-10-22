@@ -1,0 +1,32 @@
+# Supported XEX SHA256 79e95ea8... (checked before code generation).
+# The exploration update replaces its incoming delta with a constant 1.0.
+# Correct the live frame-step register immediately after that load; the shared
+# 1.0 constant also serves geometry and must remain unchanged.
+[[midasm_hook]]
+address = 0x820EE10C
+name = "EAExplorationFrameStep"
+registers = ["f31"]
+after_instruction = true
+
+# Texture UV scrolling adds a per-frame velocity vector independently of the
+# model's elapsed-time argument. Adjust velocity before adding and wrapping UVs.
+[[midasm_hook]]
+address = 0x82102B10
+name = "EATextureScrollStep"
+registers = ["v6", "r29"]
+
+# Animated menu scenes reset their own time step before updating the background
+# model and local animation clock, independently of the interface dispatcher.
+[[midasm_hook]]
+address = 0x8223CA0C
+name = "EAMenuSceneFrameStep"
+registers = ["f31"]
+after_instruction = true
+
+# The UI/state dispatcher has another fixed-step thunk. Its other entry accepts
+# a caller-supplied step, so correct only this constant-loading entry.
+[[midasm_hook]]
+address = 0x821B1254
+name = "EAInterfaceFrameStep"
+registers = ["f1"]
+after_instruction = true

@@ -81,13 +81,28 @@ namespace EnchantedArmsPC
             }
         }
         internal const string Version = ReleaseInfo.Version + "-" + ReleaseInfo.Channel;
+        internal static string CurrentNativeDirectory
+        {
+            get {
+                return Path.Combine(Root, "bin", "graphics-" + ReleaseInfo.NativeVersion);
+            }
+        }
+        internal static bool TimingUpdateRequired(Preferences p, string nativeDirectory)
+        {
+            return p.FrameLimit != 0 && p.FrameLimit != 30 &&
+                   !String.Equals(Path.GetFullPath(nativeDirectory),
+                                  Path.GetFullPath(CurrentNativeDirectory),
+                                  StringComparison.OrdinalIgnoreCase);
+        }
         internal static string NativeDirectory
         {
             get {
-                string diagnostics =
-                    Path.Combine(Root, "bin", "graphics-" + ReleaseInfo.NativeVersion);
+                string diagnostics = CurrentNativeDirectory;
                 if (File.Exists(Path.Combine(diagnostics, "enchantedarmsrecomp.exe")))
                     return diagnostics;
+                string prior = Path.Combine(Root, "bin", "graphics-0.3.2");
+                if (File.Exists(Path.Combine(prior, "enchantedarmsrecomp.exe")))
+                    return prior;
                 string counter = Path.Combine(Root, "bin", "graphics-0.3.1");
                 if (File.Exists(Path.Combine(counter, "enchantedarmsrecomp.exe")))
                     return counter;

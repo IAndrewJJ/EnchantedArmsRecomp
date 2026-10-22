@@ -8,4 +8,4 @@ game_root = ".local/game"
 [entrypoint]
 file_path = ".local/game/default.xex"
 out_directory_path = "generated/default"
-includes = ["config/functions.toml", "config/indirect_callbacks.toml", "config/dispatch_thunks.toml"]
+includes = ["config/functions.toml", "config/indirect_callbacks.toml", "config/dispatch_thunks.toml", "config/timing_hooks.toml"]

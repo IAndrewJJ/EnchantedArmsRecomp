@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2 — Normal-speed 60 FPS preview
+
+- Convert elapsed frame time into the engine's 30 Hz units for exploration, interface, menu scenes and alternate event/script updates. Keep Original timing as the default.
+- Correct texture UV scroll velocity separately, including animated menu backgrounds and surface effects such as the opening area's runic wall.
+- Preserve forwarded arguments and avoid applying the correction twice. Bound loading/pause catch-up without changing the audio or host clocks.
+- Enable corrections automatically in native build 0.3.3. Label 60 FPS as Preview; require an updated native build for high FPS instead of silently using a legacy executable.
+- Add portable timing/UV regression checks and a CI job without game data. Player testing reports normal movement, menu background and runic-wall animation at 60 FPS in the opening area; campaign timing and higher rates remain unverified.
+- Renderer remains at 0.3.0. Existing players must rebuild their native game to receive timing fixes; saves and caches are preserved.
+
 ## 0.4.1 — Setup recovery for external playtesters
 
 - Retry temporary file-access failures, including `Invalid argument` while finalizing a verified SDK download, and interrupted connections with bounded delays.

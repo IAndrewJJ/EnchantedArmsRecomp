@@ -18,10 +18,10 @@ namespace EnchantedArmsPC
         readonly ComboBox filtering = Choice("Original", "Off", "1×", "2×", "4×", "8×", "16×");
         readonly ComboBox detail = Choice("Original", "Crisp", "Strong");
         readonly ComboBox fps =
-            Choice("Original · Recommended", "30 FPS · Experimental", "60 FPS · Experimental",
-                   "90 FPS · Experimental", "120 FPS · Experimental", "144 FPS · Experimental",
-                   "165 FPS · Experimental", "180 FPS · Experimental", "240 FPS · Experimental",
-                   "360 FPS · Experimental", "Unlimited · Experimental");
+            Choice("Original · Recommended", "30 FPS", "60 FPS · Preview", "90 FPS · Experimental",
+                   "120 FPS · Experimental", "144 FPS · Experimental", "165 FPS · Experimental",
+                   "180 FPS · Experimental", "240 FPS · Experimental", "360 FPS · Experimental",
+                   "Unlimited · Experimental");
         readonly ComboBox display = Choice("Windowed", "Borderless fullscreen");
         readonly ComboBox size = Choice("1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160");
         readonly ComboBox renderPath =
@@ -169,9 +169,9 @@ namespace EnchantedArmsPC
             Full(screen, tearing);
             Full(screen, dither);
             var timing =
-                Theme.Label("Use Original FPS for normal gameplay. Higher limits are " +
-                                "experimental and can speed " +
-                                "up the game; a normal-speed high-FPS patch is not implemented.",
+                Theme.Label("60 FPS includes game-speed corrections. Full-playthrough testing " +
+                                "is ongoing; use Original if timing looks wrong. " +
+                                "Higher limits remain experimental.",
                             480);
             timing.ForeColor = Theme.Gold;
             Full(screen, timing);

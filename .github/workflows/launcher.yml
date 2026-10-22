@@ -8,6 +8,14 @@ concurrency:
   group: launcher-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  timing-math:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check elapsed-time and texture-scroll math without game data
+        run: |
+          c++ -std=c++17 tools/graphics-probe/timing.cpp -o "$RUNNER_TEMP/ea_timing_probe"
+          "$RUNNER_TEMP/ea_timing_probe"
   validate-and-package:
     runs-on: windows-latest
     timeout-minutes: 20

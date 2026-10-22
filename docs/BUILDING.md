@@ -46,7 +46,7 @@ Omit `--sdk-only` to install/check every pinned build tool. CI installs all pinn
 
 Launcher `--self-test` additionally checks settings migration/round trips, culture-independent arguments, desktop-scoped instance identity, bounded logging, process-exit callbacks and compiled release metadata. Its windowless child fixture never launches a game.
 
-`tools/graphics-probe` contains native probes for FSR/CAS initialization, pacing, FPS overlay and PNG/frame-interval diagnostics. These require the prepared SDK. Their results do not establish complete campaign compatibility or correct high-FPS simulation.
+`tools/graphics-probe` contains native probes for FSR/CAS initialization, pacing, FPS overlay and PNG/frame-interval diagnostics. Most require the prepared SDK. The portable timing probe can also be compiled directly with C++17 or newer and needs no game data. These checks do not establish complete campaign compatibility. See [timing validation](TIMING.md).
 
 ## Full release kit
 
@@ -54,7 +54,7 @@ Build the [spatial renderer](../renderer/README.md) and place its verified binar
 
 ```powershell
 python tools/package_release.py
-python tools/validate_package.py dist/EnchantedArmsPC-0.4.1-windows-x64.zip
+python tools/validate_package.py dist/EnchantedArmsPC-0.4.2-windows-x64.zip
 ```
 
 The package uses an explicit allowlist, stable ZIP metadata and a per-file hash ledger. Identical input files produce identical ZIPs; this does not imply that separate compiler invocations produce identical executables. The validator rejects duplicate/unlisted members, hash mismatches, private paths and unexpected executables. The packager derives the kit version from `release.json`.

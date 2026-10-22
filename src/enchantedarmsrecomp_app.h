@@ -16,6 +16,7 @@
 REXCVAR_DECLARE(bool, ea_trace_input);
 REXCVAR_DECLARE(int32_t, ea_fps_limit);
 REXCVAR_DECLARE(bool, ea_show_fps);
+REXCVAR_DECLARE(bool, ea_timing_correction);
 
 class EnchantedarmsrecompApp : public rex::ReXApp {
  public:
@@ -82,8 +83,12 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
                 REXCVAR_GET(ea_fps_limit), rex::cvar::GetFlagByName("vsync"),
                 rex::cvar::GetFlagByName("video_mode_refresh_rate"),
                 rex::cvar::GetFlagByName("ea_texture_lod_bias"));
-    if (REXCVAR_GET(ea_fps_limit) != 0) {
-      REXLOG_WARN("Experimental FPS can accelerate Enchanted Arms gameplay. A normal-speed high-FPS engine timing patch is not implemented; use Original for normal play.");
+    if (REXCVAR_GET(ea_fps_limit) != 0 && REXCVAR_GET(ea_fps_limit) != 30) {
+      if (REXCVAR_GET(ea_timing_correction)) {
+        REXLOG_INFO("Engine timing correction is active. Normal-speed 60 FPS has been checked in the opening area; campaign and higher-rate validation are ongoing.");
+      } else {
+        REXLOG_WARN("Experimental FPS can accelerate Enchanted Arms gameplay. Normal-speed high FPS is not validated; use Original for normal play.");
+      }
     }
     // GPU flags register when the renderer plugin loads. Record their applied
     // values here so a playtest report can distinguish them from launcher intent.

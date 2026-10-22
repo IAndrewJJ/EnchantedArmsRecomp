@@ -94,7 +94,7 @@ namespace EnchantedArmsPC
             layout();
             play.Click += async (s, e) =>
             {
-                if (Ready())
+                if (Ready() && !Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
                     LaunchGame();
                 else
                     await OpenSettings(3);
@@ -333,13 +333,19 @@ namespace EnchantedArmsPC
             progress.Style = busy ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
             play.Text = busy      ? "PREPARING YOUR GAME"
                         : running ? "GAME RUNNING"
-                        : Ready() ? "PLAY ENCHANTED ARMS"
-                                  : "SET UP GAME";
+                        : Ready()
+                            ? (Program.TimingUpdateRequired(preferences, Program.NativeDirectory)
+                                   ? "UPDATE GAME"
+                                   : "PLAY ENCHANTED ARMS")
+                            : "SET UP GAME";
             status.Text = busy      ? setupStage
                           : running ? "Your journey is in progress"
                           : failed ? (lastFailure ?? "Unable to start. Open Settings to try again.")
-                          : Ready() ? "Ready to play"
-                                    : "Choose your game disc to begin";
+                          : Ready()
+                              ? (Program.TimingUpdateRequired(preferences, Program.NativeDirectory)
+                                     ? "Rebuild your game to enable corrected high FPS"
+                                     : "Ready to play")
+                              : "Choose your game disc to begin";
             summary.Text = busy ? "First setup may take a while."
                                 : preferences.Scale + "× resolution  ·  " +
                                       (preferences.Upscaler == "fsr"   ? "FSR 1"
@@ -486,6 +492,10 @@ namespace EnchantedArmsPC
                 return;
             try
             {
+                if (Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
+                    throw new InvalidOperationException(
+                        "High FPS needs the updated game build. Open Settings → Game and " +
+                        "rebuild from your ISO, or select Original FPS to use the existing build.");
                 if (preferences.Upscaler != "bilinear" &&
                     !File.Exists(
                         Path.Combine(Program.NativeDirectory, "renderer-capabilities.json")))

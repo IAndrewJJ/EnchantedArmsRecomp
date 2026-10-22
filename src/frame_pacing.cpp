@@ -2,6 +2,7 @@
 #include "frame_pacer.h"
 #include "fps_counter.h"
 #include "frame_time_window.h"
+#include "timing_correction.h"
 #include <rex/cvar.h>
 #include <rex/hook.h>
 
@@ -18,6 +19,7 @@ REX_HOOK_RAW(sub_822A9680) {
     pacer.Wait(limit);
   }
   __imp__sub_822A9680(ctx, base);
+  ea::AdvanceEngineFrameStep();
   ea::RecordGameFrame();
 
   struct Metrics {

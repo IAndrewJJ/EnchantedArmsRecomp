@@ -39,7 +39,9 @@ The tester reports that parts of multiple NPC character models appear black wher
 
 ## EA-004 — Experimental FPS modes can accelerate gameplay
 
-Use **Original** for normal play. [Upstream Enchanted Arms testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports that game speed depends on FPS and marks the title `vsync-off-speedup`. Our explicit FPS limits disable that throttle, so they must be treated as timing experiments. A host frame limiter does not decouple animation or simulation from frame rate. Normal-speed 60/120+ FPS needs a verified engine timing patch; that patch is not implemented. Original remains the default. Movies may retain their source cadence even when gameplay is accelerated.
+Status: **60 FPS preview, partially validated in 0.4.2 / native 0.3.3**. Earlier builds only removed the console throttle and could accelerate gameplay, matching [upstream reports](https://github.com/xenia-canary/game-compatibility/issues/2). The new build corrects exploration/interface/menu steps and independent texture UV scrolling. Player testing in the opening area reports normal character movement, the menu background and runic-wall animation at 60 FPS, followed by an observation of no speedup or very little.
+
+This is not campaign-wide validation. Battles, scripted sequences, transitions and higher rates remain unverified. Original remains the default and fallback if timing looks wrong. Movies retain their source cadence. Existing players must rebuild their native game; a launcher-only update cannot fix the old executable. See [timing details](TIMING.md).
 
 ## EA-005 — Launcher process runs without a visible window
 

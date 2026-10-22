@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an improvement to the PC edition or launcher.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this improve?
+      description: Describe the player experience or problem and your proposed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Examples or additional context
+      description: Links or images are welcome. Do not attach game files.

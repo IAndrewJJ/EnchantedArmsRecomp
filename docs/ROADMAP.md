@@ -6,7 +6,7 @@ The goal is a dependable native PC edition that players can build from their own
 
 - Local ISO validation/extraction and native compilation, with resumable extraction and pinned tools.
 - Launcher-managed spatial FSR 1, CAS, 1–4x internal scale, FXAA, anisotropic filtering, sharpening and display settings.
-- Import/export graphics profiles, desktop shortcut, private save backups and local log/report access.
+- Simplified launcher with Play and Settings, themed original artwork, grouped graphics/display/setup pages and a desktop shortcut. Saves, captures and diagnostics remain local.
 - Pinned SDL controller mappings, renderer source/build instructions and game-data-free public packages.
 
 - 0.3.0 adds texture mip-detail bias and experimental host frame limits. These need motion and timing comparisons against Original; higher-FPS campaign compatibility is unverified.

@@ -1,126 +1,83 @@
-# EnchantedArmsRecomp / EnchantedArmsPC
+# EnchantedArmsPC
 
-**[Download the Windows launcher kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.3.1)** — choose `EnchantedArmsPC-0.3.1-windows-x64.zip` under Assets. Extract the entire ZIP and open `EnchantedArmsLauncher.exe` inside. The repository file preview shows source code; the ready-to-run launcher is included in the release ZIP.
+**An unofficial native PC recompilation of Enchanted Arms for Xbox 360.** Build and play on Windows using your own supported disc image.
 
-An early Windows x64 native recompilation of Enchanted Arms for Xbox 360, built with ReXGlue SDK 0.10.0. The public launcher kit takes your own supported ISO, extracts it locally, generates native C++ and compiles the PC executable. Game files and translated game code are never uploaded by the launcher.
+[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.0) · [Known issues](docs/KNOWN_ISSUES.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
 
-The first tester reached exploration, used the character menus, saw character models, heard normal audio, and created and loaded a save. Mild stutter remains. Full campaign compatibility is still being tested. See [playtesting status](docs/PLAYTESTING.md).
+[![Launcher checks](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml/badge.svg)](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml)
 
-## Install and play
+![EnchantedArmsPC launcher](docs/images/launcher.png)
 
-1. Unpack the entire Windows launcher kit into a writable local folder, such as a folder under Documents. Keep all the included files together. Windows 10/11 x64, .NET Framework 4.8 and a Direct3D 12 GPU are required.
-2. Open `EnchantedArmsLauncher.exe`.
-3. Choose your Enchanted Arms Xbox 360 ISO and press **Build from ISO**. Setup checks the executable revision before extraction, verifies the extracted files, downloads approximately 800 MB of pinned tools and compiles locally. Allow roughly 20 GB of free space in addition to your ISO. Compilation can take several minutes; the launcher shows its output.
-4. Choose a visual preset or open **Graphics settings**, then **Play Enchanted Arms**. Start with Original (1x) to establish a baseline. Settings apply at the next launch.
-5. Press **Create desktop shortcut** to create **EnchantedArmsPC** on your Windows desktop. The shortcut opens the launcher first. Choose your settings, then click **Play Enchanted Arms** to start the game. Existing shortcuts with `--play` also open only the launcher. Keep the installation folder in place; recreate the shortcut if you move it.
+## Start playing
 
-Only the USA/Europe Xbox 360 executable is currently supported:
+1. Download **EnchantedArmsPC-0.4.0-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
+2. Open **EnchantedArmsLauncher.exe**. Choose **Set up game**, select your Xbox 360 ISO under **Settings → Game**, then **Build game**.
+3. When setup finishes, click **Play Enchanted Arms**. The launcher always opens first; shortcuts never start the game automatically.
+4. Use **Settings → Graphics** for visual presets, **Display** for window/FPS options, or **Game → Create desktop shortcut** for an **EnchantedArmsPC** desktop icon.
 
-| Field | Required value |
-| --- | --- |
-| Title / media ID | `555307E6` / `41637F65` |
-| XEX version | `0.0.0.1` |
-| XEX SHA-256 | `79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22` |
+Requires **Windows 10/11 x64**, **.NET Framework 4.8** and a **Direct3D 12 GPU**. First setup downloads about **800 MB** of pinned build tools and needs roughly **20 GB free** in addition to the ISO. Compilation takes several minutes. Python and Visual Studio do not need to be installed separately.
 
-The ISO is opened read-only. A different executable revision is rejected rather than compiled with incompatible function hints. After setup, the extracted game is used at launch and the ISO can remain elsewhere.
+The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP and the CI launcher-only artifact do not include the renderer and bootstrap files needed for player setup.
 
-The complete Windows kit includes a checksum-verified portable Python bootstrap archive. No separate Python installation is required. Subsequent tool downloads use that runtime.
+## Current status
 
-## Visual settings
+**Early preview.** Opening battles, exploration, audio, menus, save creation and save loading have been exercised. Full campaign compatibility and clean-machine installation still need broader testing.
 
-The complete **0.3.2 rendering diagnostics preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
+- Some NPCs are invisible, and Toya, Makoto and other NPCs can have dark surface patches. These remain under investigation.
+- Mild stutter has been reported. Repeatable measurements and broader GPU/controller coverage are needed.
+- **Use Original FPS for normal play.** Experimental limits up to 360 FPS and Unlimited can accelerate gameplay. A normal-speed high-FPS engine timing patch is not implemented. [Upstream testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports the same frame dependence.
 
-| Preset | Internal scale | Output effect | Post AA | Filtering |
+See [known issues](docs/KNOWN_ISSUES.md) and [playtesting guidance](docs/PLAYTESTING.md) for details. The launcher polish in 0.4.0 does not establish a campaign-wide FPS improvement.
+
+## Graphics
+
+| Preset | Internal scale | Output effect | Antialiasing | Filtering |
 | --- | --- | --- | --- | --- |
-| Original | 1x | Bilinear | Game AA | Game requested |
-| Balanced | 1x | FSR 1 | FXAA | 8x AF |
-| Enhanced | 2x (4x pixels) | FSR 1 | FXAA | 8x AF |
-| High | 3x (9x pixels) | CAS | FXAA | 16x AF |
-| Ultra | 4x (16x pixels) | CAS | FXAA strong | 16x AF |
+| Original | 1× | Bilinear | Game requested | Game requested |
+| Balanced | 1× | FSR 1 | FXAA | 8× AF |
+| Enhanced | 2× | FSR 1 | FXAA | 8× AF |
+| High | 3× | CAS | FXAA | 16× AF |
+| Ultra | 4× | CAS | FXAA strong | 16× AF |
 
-**Graphics settings** lets you set each option independently: internal scale, bilinear/FSR 1/CAS, FXAA strength, anisotropic filtering, sharpening, window size, borderless fullscreen, dithering, aspect ratio and variable refresh rate/tearing. Native 2x MSAA applies only when requested by the game. Import/export graphics profiles to share settings without sharing your ISO path.
+Settings apply on the next game launch. Internal resolution is separate from window size. Start with Original to establish a baseline: 2×, 3× and 4× render four, nine and sixteen times the native pixel count.
 
-FSR 1 spatially upscales the rendered image to the output size; when upscaling is unnecessary the presenter uses sharpening. CAS provides contrast-adaptive sharpening. These use the runtime's actual D3D12 shader paths. FSR 2/3, temporal antialiasing and frame generation are not implemented. The GPU initialization probes passed on an RX 6700 XT; the new graphics presets still need scene-by-scene playtesting.
+FSR 1 provides spatial upscaling; CAS provides sharpening. Texture detail selects sharper existing mipmaps, with possible shimmer at Strong. Source textures and movies keep their original detail. Temporal FSR, frame generation and replacement texture packs are not implemented.
 
-The window size is separate from internal rendering resolution. The launcher sets the renderer's actual resolution-scale flags on each launch. Higher scales demand more GPU time and memory and need additional scene coverage. Pre-rendered videos and source textures retain their original detail. Original FPS mode preserves the console pacing. See the experimental options below.
+**Settings → Advanced** contains ROV/RTV, resolve readback and background shader compilation comparisons. Change one option at a time when investigating rendering problems. Immediate readback can stall heavily; these controls are not confirmed NPC fixes.
 
-**Texture detail boost** offers Original, Crisp (-0.5 mip bias) and Strong (-1.0). This favors sharper existing mip levels on eligible linear-filtered, mipmapped surfaces; point-filtered and base-map requests keep their existing sampling. It works alongside AF and CAS. It does not create new texture detail or provide an HD/AI texture pack. Strong can shimmer during movement; return to Original if the image becomes unstable.
+## Controls
 
-**Frame-rate limit** offers Original, 30, 60, 90, 120, 144, 165, 180, 240, 360 and Unlimited. Original preserves the console vblank throttle and is the default for existing/new profiles. All explicit limits and Unlimited are **experimental**: they remove that throttle and apply a host limiter at the game's original D3D swap boundary. The guest timebase, video-mode refresh and audio clock are not rescaled. The complete original swap routine still runs.
-
-**Use Original FPS for normal play.** [Upstream Enchanted Arms testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports game speed tied to FPS. The explicit limits can accelerate gameplay. Normal-speed 60/120+ FPS requires a verified engine timing patch that is not implemented. These controls set an upper limit; they do not guarantee that FPS or correct timing. Use a separate save slot for timing experiments. Pre-rendered movies retain their source cadence. Logs report swap submissions per second, which is not a measurement of unique displayed frames.
-
-## Controls and saves
-
-| Keyboard | Xbox action |
+| Keyboard | Action |
 | --- | --- |
-| Enter or X | Start |
-| Space or semicolon | A / confirm |
-| Backspace or apostrophe | B / back |
-| L / P | X / Y (Y opens game menus) |
-| W / A / S / D | Left stick |
+| Enter / X | Start |
+| Space / semicolon | A / confirm |
+| Backspace / apostrophe | B / back |
+| L / P | X / Y (menus) |
+| W A S D | Left stick |
 | Arrow keys | Right stick |
-| Shift + arrow keys | D-pad |
-| F6 | Show / hide the FPS counter |
-| F8 | Save a screenshot of the current guest output |
-| F3 / F4 / Backtick | SDK debug / settings / console |
+| Shift + arrows | D-pad |
+| F6 | Toggle FPS counter |
+| F8 | Save screenshot |
 | Alt + F4 | Close |
 
-Briefly hold a key if a very short tap is missed. A pinned SDL controller mapping database is bundled and copied alongside the native build. Physical controller compatibility and button mapping still need broader testing.
+Briefly hold a key if a short tap is missed. A pinned SDL controller database is included; physical controllers need broader testing. F6 counts game swap submissions, not monitor refresh or GPU execution time. F8 captures guest output before presenter effects and overlays and can briefly pause rendering.
 
-**F6 toggles a compact FPS and frame-interval counter in the top-right corner.** It starts hidden, updates every half second, and does not capture game input. Holding F6 toggles once. The reading counts the game's swap submissions rather than UI redraws or monitor refresh; it is not a GPU execution-time measurement or a count of unique displayed images. Hiding it removes the overlay. For diagnostic startup display, the native executable accepts `--ea_show_fps`.
+## Supported game and updates
 
-**F8 saves a PNG** in `.local/runtime/captures`; use **Open captures** in the launcher. It captures guest output before presenter effects and overlays, and can briefly pause rendering while reading back the frame. Report ZIPs do not include screenshots. Frame logs include mean, median, p95/p99, maximum intervals and counts over 50 ms every five seconds; these include pacing and are not GPU timings. See the [rendering comparison guide](docs/RELEASE-0.3.2.md) for the new ROV/RTV, resolve readback and background shader compilation controls. No NPC fix or performance gain has been confirmed yet.
+Only the **USA/Europe Xbox 360 release**, title `555307E6`, media `41637F65`, XEX version `0.0.0.1`, is supported. Required XEX SHA-256:
 
-Everything generated for your installation stays in `.local/` and `bin/`:
-
-- `.local/game`: extracted game data.
-- `.local/toolchain`, `.local/python`, `.local/build`: downloaded tools and native compilation outputs.
-- `.local/runtime/user`: saves; **Open saves** opens this folder.
-- `.local/runtime/cache`: shader caches, retained between sessions.
-- `.local/runtime/boot-*.log` and `.local/logs`: game/setup logs.
-- `.local/logs/launcher.log`: launcher activation, startup and exit diagnostics.
-- `.local/launcher.json`: your ISO path and visual settings.
-
-Rebuilding preserves saves and caches. Cancel stops this setup process tree; retrying verifies existing extracted files and resumes partial extraction. Conflicting existing game files are left intact and reported. **Back up saves** creates a private ZIP after you close the game. **Open logs** opens local runtime logs. **Export playtest report** writes path-redacted text logs, selected settings and the last launch settings to a ZIP you can review and share. Reports exclude game files, saves and memory dumps. **Updates / issues** opens this repository; nothing is uploaded automatically.
-
-## Troubleshooting
-
-- **Unsupported revision:** the executable hash must match the value above. Other regional versions or patched executables need separate analysis.
-- **Windows refused access to a tool/archive:** setup stops without altering security settings. On the development PC, Windows security blocked the official SDK archive. A supported SDK already installed in `.local/toolchain/rexglue-sdk-0.10.0/win-amd64` can be reused after its version is checked. Fresh-machine setup still needs testing; do not disable protection to force setup through.
-- **Compilation fails or runs out of memory:** try two build threads, or one on a smaller machine. Export a report and include the failing compiler message.
-- **Rendering problem or stutter:** try Original (1x), repeat the same section with a warm shader cache, and report the location, GPU/driver and whether it repeats. Higher scaling is experimental.
-- **Shortcut opens setup:** the local build has not completed, or the installation folder moved. Complete setup and recreate the shortcut.
-
-## Build the launcher from source
-
-The repository contains original host integration, function-discovery hints, the ISO reader, setup worker and Windows Forms launcher. It contains no game executable, translated game source or assets. Public CI builds and tests the launcher without a game ISO.
-
-From Windows PowerShell in the repository:
-
-```powershell
-./scripts/build-launcher.ps1
-./EnchantedArmsLauncher.exe
+```text
+79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22
 ```
 
-The launcher uses installed .NET Framework components. No Visual Studio installation or administrator account is needed. Build tools are downloaded into the project rather than installed system-wide. Their publisher URLs, sizes and hashes are pinned in `toolchain.lock.json` and `launcher/python.lock.json`.
+Setup opens the ISO read-only and rejects unsupported executables before extraction. Files, translated code and compilation stay on the player's PC.
 
-For command-line setup:
+To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.0 launcher uses native build 0.3.2; existing 0.3.2 players do not need to rebuild.** For earlier native builds, use **Settings → Game → Rebuild game**. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
 
-```powershell
-./scripts/setup.ps1 -Iso 'D:/MyGames/Enchanted Arms.iso' -Jobs 2
-```
+Local data lives under `.local`: `runtime/user` for saves, `runtime/cache` for shader caches, `runtime/captures` for F8 images, and `runtime/boot-*.log` plus `logs` for diagnostics. Rebuilding preserves saves and caches. Report/log/save-management buttons have been removed from the simplified interface.
 
-For an existing extraction/toolchain, `scripts/build.ps1` regenerates and rebuilds the native application, staging the enhanced build in `bin/graphics-0.3.1`. The launcher prefers this build and prevents another launch/rebuild while its game is running. Rebuild once after updating the kit to add F6 to an earlier native build. `scripts/run.ps1` opens the launcher to play with saved settings. `scripts/collect-crash.ps1` optionally collects a matching Windows crash event and symbolizes it using the local build. Its raw diagnostic report can contain local paths; review it before sharing.
+## Development
 
-Run the synthetic setup tests with Python 3.12 or later:
+Built with **ReXGlue SDK 0.10.0**, using a Xenia-derived renderer. See [build and validation instructions](docs/BUILDING.md), [contributor guidance](CONTRIBUTING.md), [changelog](CHANGELOG.md) and [roadmap](docs/ROADMAP.md).
 
-```powershell
-python ./tools/test_setup.py -v
-```
-
-Building the full kit from a source checkout also requires building the spatial renderer; see [renderer build instructions](renderer/README.md). Afterward, `python tools/package_release.py` packages an explicit source allowlist, the launcher, and verified game-independent renderer files. It excludes `.local`, `bin`, `audit`, translated code, ISOs, XEXs, saves and dumps. Do not distribute the locally generated native game executable.
-
-The [roadmap](docs/ROADMAP.md) prioritizes campaign compatibility, missing NPC investigation and measured performance work. This remains an early playtesting preview.
-
-This is an unofficial fan project. See [third-party notices](THIRD_PARTY_NOTICES.md) for runtime attribution and [LICENSE](LICENSE) for original project contributions.
+This is an unofficial fan project. No ISO, game executable, game assets, translated game source or saves are distributed. Original contributions use the [MIT license](LICENSE); runtime components retain their own [licenses and notices](THIRD_PARTY_NOTICES.md). Corresponding renderer source accompanies the Windows release.

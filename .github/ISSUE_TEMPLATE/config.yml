@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Known compatibility issues
+    url: https://github.com/IAndrewJJ/EnchantedArmsRecomp/blob/main/docs/KNOWN_ISSUES.md
+    about: Check existing rendering and gameplay limitations before reporting a duplicate.

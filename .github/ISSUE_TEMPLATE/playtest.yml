@@ -1,4 +1,4 @@
-name: Playtest failure
+name: Bug report
 description: Report a crash, rendering problem, audio issue or persistent stutter.
 body:
   - type: textarea
@@ -23,5 +23,5 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Playtest report
-      description: Attach the launcher's exported report after reviewing it. Do not upload game files, saves or memory dumps.
+      label: Optional screenshot or relevant log excerpt
+      description: F8 captures are in .local/runtime/captures; game logs are in .local/runtime. Review excerpts for personal paths. Do not upload game files, saves, full caches or memory dumps.

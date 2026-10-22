@@ -1,0 +1,11 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 100
+LineEnding: LF
+---
+Language: CSharp
+BasedOnStyle: Microsoft
+ColumnLimit: 100
+NamespaceIndentation: All
+LineEnding: LF

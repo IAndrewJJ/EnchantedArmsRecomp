@@ -14,6 +14,7 @@
 /renderer/renderer-capabilities.json
 /EnchantedArmsLauncher.exe
 /EnchantedArmsLauncher.pdb
+/EnchantedArmsLauncher-preview.exe
 __pycache__/
 *.pyc
 *.iso

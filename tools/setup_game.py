@@ -70,7 +70,7 @@ def download(package, cache):
         say("Verified cached " + target.name)
         return target
     temporary = target.with_name(target.name + ".partial")
-    request = urllib.request.Request(package["url"], headers={"User-Agent": "EnchantedArmsRecomp/0.1"})
+    request = urllib.request.Request(package["url"], headers={"User-Agent": "EnchantedArmsRecomp-Setup"})
     say("Downloading " + target.name)
     count, last = 0, time.monotonic()
     hasher = hashlib.new(package["algorithm"])
@@ -201,8 +201,13 @@ def main():
         subprocess.run([powershell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                         str(PROJECT / "scripts/build.ps1"), "-Jobs", str(args.jobs)], cwd=PROJECT, check=True)
         # Written only after successful staging; existing saves/caches are never removed.
-        (local / "installation.json").write_text(json.dumps({"xex_sha256": XEX_SHA256,
-            "build": "0.3.1-fps-counter-preview", "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=2))
+        release = json.loads((PROJECT / "release.json").read_text(encoding="utf-8"))
+        receipt = local / "installation.json"
+        temporary = receipt.with_suffix(".json.partial")
+        temporary.write_text(json.dumps({"xex_sha256": XEX_SHA256,
+            "build": release["native_version"], "launcher": release["version"],
+            "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=2), encoding="utf-8")
+        temporary.replace(receipt)
         say("STAGE: Ready to play")
 
 

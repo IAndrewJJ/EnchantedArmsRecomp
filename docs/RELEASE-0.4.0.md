@@ -1,0 +1,13 @@
+# EnchantedArmsPC 0.4.0 — A simpler launcher
+
+The launcher now opens to an Enchanted Arms inspired blue-and-silver design with original crystal/ring artwork, **Play** and **Settings**. Graphics, display, advanced rendering and ISO setup have their own Settings pages. Desktop shortcut creation lives under **Settings → Game**. Report, log and save-management controls have been removed from the interface.
+
+This pass also reduces launcher overhead: the backdrop is cached, game exits normally use events instead of polling/blocked wait threads, and build output goes to a single buffered, bounded log. Only setup-stage changes reach the UI. Settings are written only when changed, failed saves remain visible, cancellation checks whether Windows actually stopped the worker, and launch records are written after successful process creation.
+
+Release metadata now has a single source in `release.json`. Documentation, contributor guidance, bug forms, CI and archive validation have been refreshed. The Windows kit is checked for member hashes, duplicate/unlisted entries and private file exclusions. This remains an early preview: the invisible/dark NPC defects and campaign-wide performance work are not resolved by this launcher update. Use Original FPS for normal play; experimental higher limits can accelerate the game.
+
+**Download EnchantedArmsPC-0.4.0-windows-x64.zip under Assets**, extract the whole ZIP and open **EnchantedArmsLauncher.exe**. New users choose **Set up game**, then their supported ISO. Existing users should close the launcher and game, unpack over their project folder preserving `.local` and `bin`, then reopen the launcher. **If your native build is already 0.3.2, no rebuild is needed for this launcher update.** Earlier native builds can be updated through **Settings → Game → Rebuild game**.
+
+Validated: launcher compilation; settings round trips across every FPS option; bounded-log and process-exit callback tests; 14 synthetic setup/archive tests; archive reproducibility from identical inputs; native frame-pacing/FPS/capture probe regression checks; visible home screen; and complete-kit bootstrap/ISO validation from a path with spaces under Windows PowerShell 5.1. Live settings input testing was limited; values were checked automatically. Full campaign and fresh-machine installation coverage remain incomplete.
+
+The native game integration and renderer are unchanged from 0.3.2 and 0.3.0. **ReXGlueSpatial-0.3.0-source.tar.gz** is the renderer's corresponding source. The Windows kit contains no game assets, translated game source, compiled game executable or saves; every player supplies their own supported disc image.

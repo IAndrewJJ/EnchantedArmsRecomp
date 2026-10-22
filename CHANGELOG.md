@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1 — Confirmed uninstall
+
+- Add Settings → Game → Uninstall EnchantedArmsPC with an explicit folder/save-deletion popup and Cancel selected by default.
+- Remove the current installation and matching standard shortcuts after the launcher closes; clean up the temporary helper afterward.
+- Refuse protected/shared roots, changed directory identities and active game/launcher processes. Never traverse linked external folders or scan for external ISOs/other installations.
+- Test deletion boundaries, external links, long/read-only paths, shortcut matching and helper cleanup with disposable fixtures. Native build 0.3.4 and renderer 0.3.0 are unchanged; no game rebuild is required.
+
 ## 0.5.0 — Controls, texture packs and update recovery
 
 - Add keyboard/controller remapping, trigger swaps, stick dead zones, camera response/inversion and mouse controls. Assign reconnected pads to guest player 0.

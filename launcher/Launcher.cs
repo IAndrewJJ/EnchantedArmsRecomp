@@ -182,6 +182,31 @@ namespace EnchantedArmsPC
         [STAThread]
         static int Main(string[] args)
         {
+            if (args.Length == 2 && args[0] == "--uninstall-helper")
+                return Uninstall.RunHelper(args[1]);
+            if (args.Length == 2 && args[0] == "--uninstall-preview")
+            {
+                Application.EnableVisualStyles();
+                using (var dialog = new UninstallDialog(@"D:\Games\EnchantedArmsPC"))
+                {
+                    dialog.StartPosition = FormStartPosition.Manual;
+                    dialog.Location = new Point(-20000, -20000);
+                    dialog.Show();
+                    Application.DoEvents();
+                    using (var bitmap = new Bitmap(dialog.Width, dialog.Height))
+                    {
+                        dialog.DrawToBitmap(bitmap,
+                                            new Rectangle(0, 0, dialog.Width, dialog.Height));
+                        bitmap.Save(args[1], System.Drawing.Imaging.ImageFormat.Png);
+                    }
+                }
+                return 0;
+            }
+            if (args.Length == 1 && args[0] == "--uninstall-wait-fixture")
+            {
+                System.Threading.Thread.Sleep(2000);
+                return 0;
+            }
             if (args.Length == 1 && args[0] == "--lifecycle-fixture")
             {
                 System.Threading.Thread.Sleep(100);

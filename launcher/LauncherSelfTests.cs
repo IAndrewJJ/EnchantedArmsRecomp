@@ -233,6 +233,9 @@ namespace EnchantedArmsPC
             }
             if (typeof(Program).Assembly.GetName().Version.ToString(3) != ReleaseInfo.Version)
                 return 22;
+            int uninstall = UninstallSelfTests.Run();
+            if (uninstall != 0)
+                return uninstall;
             return 0;
         }
     }

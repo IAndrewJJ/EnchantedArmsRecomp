@@ -10,6 +10,7 @@ namespace EnchantedArmsPC
     {
         public Preferences Settings;
         public bool BuildRequested;
+        public bool UninstallRequested;
         public string UpdateStage;
         public bool RollbackRequested;
         readonly ComboBox preset =
@@ -252,6 +253,33 @@ namespace EnchantedArmsPC
                     Program.Diagnostic("Shortcut failed: " + error);
                     shortcutStatus.Text =
                         "Could not create the shortcut. Check desktop folder access.";
+                }
+            };
+            var uninstall = Theme.Button("Uninstall EnchantedArmsPC…", 300);
+            uninstall.Margin = new Padding(0, 24, 0, 4);
+            uninstall.Enabled = !running;
+            Full(gamePage, uninstall);
+            Full(gamePage, Theme.Label("Permanently removes this installation and its saves, " +
+                                       "settings, caches and tools. You will be asked to confirm.",
+                                       480));
+            uninstall.Click += (s, e) =>
+            {
+                try
+                {
+                    Uninstall.ValidateRoot(Program.Root);
+                    using (var confirmation = new UninstallDialog(Program.Root))
+                    {
+                        if (confirmation.ShowDialog(this) != DialogResult.OK)
+                            return;
+                    }
+                    UninstallRequested = true;
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                catch (Exception error)
+                {
+                    MessageBox.Show(this, error.Message, "Cannot uninstall", MessageBoxButtons.OK,
+                                    MessageBoxIcon.Information);
                 }
             };
             var footer = new FlowLayoutPanel { Dock = DockStyle.Fill,

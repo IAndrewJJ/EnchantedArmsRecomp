@@ -65,9 +65,13 @@ Build the [spatial renderer](../renderer/README.md) and place its verified binar
 
 ```powershell
 python tools/package_release.py
-python tools/validate_package.py dist/EnchantedArmsPC-0.5.0-windows-x64.zip
+python tools/validate_package.py dist/EnchantedArmsPC-0.5.1-windows-x64.zip
 ```
 
 The package uses an explicit allowlist, stable ZIP metadata and a per-file hash ledger. Identical input files produce identical ZIPs; this does not imply that separate compiler invocations produce identical executables. The validator rejects duplicate/unlisted members, hash mismatches, private paths and unexpected executables. The packager derives the kit version from `release.json`.
 
 Publish the Windows kit with `SHA256SUMS.txt` and the corresponding renderer source archive. The unchanged renderer in this release uses `ReXGlueSpatial-0.3.0-source.tar.gz`. Never publish `.local`, `bin`, ISOs, XEX files, saves, dumps, shader caches or translated game code.
+
+Launcher self-tests also exercise uninstall safety using newly created temporary
+folders, including long paths, linked external data and temporary-helper cleanup.
+They never uninstall the development project or remove real saves.

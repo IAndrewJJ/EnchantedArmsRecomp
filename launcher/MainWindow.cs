@@ -25,6 +25,7 @@ namespace EnchantedArmsPC
         bool busy, cancelRequested, failed, closeWhenStopped;
         readonly bool preview;
         bool preferencesCanSave = true;
+        bool uninstalling;
         public Launcher(bool preview = false)
         {
             this.preview = preview;
@@ -224,6 +225,26 @@ namespace EnchantedArmsPC
             {
                 if (dialog.ShowDialog(this) != DialogResult.OK)
                     return;
+                if (dialog.UninstallRequested)
+                {
+                    if (GameRunning())
+                    {
+                        MessageBox.Show(this, "Close the game before uninstalling.");
+                        return;
+                    }
+                    try
+                    {
+                        Uninstall.Start();
+                        uninstalling = true;
+                        Close();
+                    }
+                    catch (Exception error)
+                    {
+                        MessageBox.Show(this, error.Message, "Uninstall could not start",
+                                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    return;
+                }
                 preferences = dialog.Settings;
                 failed = false;
                 lastFailure = null;
@@ -587,7 +608,7 @@ namespace EnchantedArmsPC
         }
         async void OnClosing(object sender, FormClosingEventArgs e)
         {
-            if (preview)
+            if (preview || uninstalling)
                 return;
             if (busy)
             {

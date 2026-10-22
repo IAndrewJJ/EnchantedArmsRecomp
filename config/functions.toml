@@ -1,0 +1,26 @@
+# Direct tail-branch destinations missed by the initial ReXGlue 0.10.0 scan.
+# These hints seed code discovery; they do not replace or bypass guest code.
+# Extents are inferred unless explicitly supplied after instruction review.
+# Source default.xex SHA-256:
+# 79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22
+
+[functions]
+# Referenced by b at 0x8218AC9C.
+0x8219F200 = { name = "sub_8219F200" }
+# Referenced by b at 0x8218634C.
+0x8219F2B8 = { name = "sub_8219F2B8" }
+# Referenced by b at 0x822E38D4.
+0x822E37A0 = { name = "sub_822E37A0" }
+# Indirect startup callback observed in audit/boot-initial.log.
+0x82654ED8 = { name = "sub_82654ED8" }
+# Indirect game initialization call observed in audit/boot-runtime1.log.
+0x823417D8 = { name = "sub_823417D8" }
+# Indirect initialization call observed in audit/boot-runtime2.log.
+0x82321010 = { name = "sub_82321010" }
+# Virtual dispatch thunk observed in audit/boot-runtime3.log.
+0x821B8880 = { name = "sub_821B8880" }
+# Conditional tail-call wrapper observed in audit/boot-runtime5.log.
+0x8262A468 = { name = "sub_8262A468" }
+# First-scene method wrapper: resolves a relative argument then dispatches slot 0x48.
+# Six original instructions; reached after the corrected scene dispatcher.
+0x8232E5A8 = { size = 24, name = "sub_8232E5A8" }

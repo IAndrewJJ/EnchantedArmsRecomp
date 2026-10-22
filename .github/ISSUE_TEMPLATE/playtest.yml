@@ -1,0 +1,27 @@
+name: Playtest failure
+description: Report a crash, rendering problem, audio issue or persistent stutter.
+body:
+  - type: textarea
+    id: issue
+    attributes:
+      label: What happened and how can we reproduce it?
+      description: Include location, last working save, action, expected result, and whether it repeats.
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Windows version, CPU, GPU and driver
+    validations:
+      required: true
+  - type: input
+    id: settings
+    attributes:
+      label: Preview version, visual preset, window size, input device
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Playtest report
+      description: Attach the launcher's exported report after reviewing it. Do not upload game files, saves or memory dumps.

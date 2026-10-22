@@ -1,0 +1,28 @@
+name: Launcher kit
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate-and-package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test ISO/setup helpers with synthetic fixtures
+        run: python tools/test_setup.py -v
+      - name: Compile launcher
+        shell: powershell
+        run: ./scripts/build-launcher.ps1
+      - name: Check launcher settings and arguments
+        shell: powershell
+        run: |
+          $process = Start-Process ./EnchantedArmsLauncher.exe --self-test -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw 'Launcher self-test failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Launcher-only-build-check
+          path: EnchantedArmsLauncher.exe

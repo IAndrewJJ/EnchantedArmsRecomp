@@ -1,0 +1,22 @@
+# Local game data and translated game code must not enter the source repository.
+/private/
+/assets/
+/generated/default/
+/out/
+/bin/
+/logs/
+/.local/
+/audit/
+/dist/
+/renderer/*.dll
+/renderer/*.lib
+/renderer/renderer-capabilities.json
+/EnchantedArmsLauncher.exe
+/EnchantedArmsLauncher.pdb
+__pycache__/
+*.pyc
+*.iso
+*.xex
+*.xexp
+*.dmp
+CMakeUserPresets.json

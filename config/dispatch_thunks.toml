@@ -1,0 +1,62 @@
+# Exact 16-byte virtual dispatch thunks in the loaded .text image.
+# All begin after a return, indirect tail branch, zero padding, or nop.
+# Patterns: lwz r11/r12,0(r3); lwz rN,slot(r11/r12); mtctr rN; bctr.
+# This is original guest code, not a replacement implementation.
+
+[functions]
+# Virtual method offset 0x50; preceding word 0x4e800020.
+0x820F32D4 = { size = 16, name = "sub_820F32D4" }
+# Virtual method offset 0x90; preceding word 0x4e800420.
+0x821B8870 = { size = 16, name = "sub_821B8870" }
+# Virtual method offset 0x4; preceding word 0x4e800420.
+0x823215F4 = { size = 16, name = "sub_823215F4" }
+# Virtual method offset 0x8; preceding word 0x4e800420.
+0x82321604 = { size = 16, name = "sub_82321604" }
+# Virtual method offset 0xc; preceding word 0x4e800420.
+0x82321614 = { size = 16, name = "sub_82321614" }
+# Virtual method offset 0x10; preceding word 0x4e800420.
+0x82321624 = { size = 16, name = "sub_82321624" }
+# Virtual method offset 0x14; preceding word 0x4e800420.
+0x82321634 = { size = 16, name = "sub_82321634" }
+# Virtual method offset 0x18; preceding word 0x4e800420.
+0x82321644 = { size = 16, name = "sub_82321644" }
+# Virtual method offset 0x1c; preceding word 0x4e800420.
+0x82321654 = { size = 16, name = "sub_82321654" }
+# Virtual method offset 0x20; preceding word 0x4e800420.
+0x82321664 = { size = 16, name = "sub_82321664" }
+# Virtual method offset 0x24; preceding word 0x4e800420.
+0x82321674 = { size = 16, name = "sub_82321674" }
+# Virtual method offset 0x28; preceding word 0x4e800420.
+0x82321684 = { size = 16, name = "sub_82321684" }
+# Virtual method offset 0xc0; preceding word 0x4e800020.
+0x82328C78 = { size = 16, name = "sub_82328C78" }
+# Virtual method offset 0x4; preceding word 0x4e800020.
+0x823BCA3C = { size = 16, name = "sub_823BCA3C" }
+
+# Additional register variants reviewed after New Game failure at 0x8232F8E8.
+# Table r12, target r11, slot 0xC0.
+0x82228438 = { size = 16, name = "sub_82228438" }
+# Table r12, target r11, slot 0xB8.
+0x822867E8 = { size = 16, name = "sub_822867E8" }
+# Table r12, target r11, slot 0x60.
+0x8232F8E8 = { size = 16, name = "sub_8232F8E8" }
+# Table r12, target r11, slot 0x270.
+0x823CBB20 = { size = 16, name = "sub_823CBB20" }
+# Table r12, target r11, slot 0x274.
+0x823CBB30 = { size = 16, name = "sub_823CBB30" }
+# Table r12, target r11, slot 0x258.
+0x823CBB40 = { size = 16, name = "sub_823CBB40" }
+# Table r12, target r11, slot 0x278.
+0x823CBB50 = { size = 16, name = "sub_823CBB50" }
+# Table r12, target r11, slot 0x27C.
+0x823CBB60 = { size = 16, name = "sub_823CBB60" }
+# Table r12, target r11, slot 0x260.
+0x823CBB70 = { size = 16, name = "sub_823CBB70" }
+# Table r12, target r11, slot 0x280.
+0x823CBB80 = { size = 16, name = "sub_823CBB80" }
+# Table r12, target r11, slot 0x264.
+0x823CBB90 = { size = 16, name = "sub_823CBB90" }
+# Table r12, target r11, slot 0x284.
+0x823CBBA0 = { size = 16, name = "sub_823CBBA0" }
+# Table r11, target r10, slot 0x84.
+0x82528460 = { size = 16, name = "sub_82528460" }

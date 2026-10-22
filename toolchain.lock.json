@@ -1,0 +1,117 @@
+[
+  {
+    "name": "7zr.exe",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.05/7zr.exe",
+    "algorithm": "sha256",
+    "digest": "9bf582b894dfa665f852d7e9112b02290a1c303c2d95a21fcdc41ffcb03143b7",
+    "bytes": 602624,
+    "destination": "7zip-bootstrap",
+    "probe": "7zip-bootstrap/7zr.exe",
+    "kind": "file"
+  },
+  {
+    "name": "7z2605-x64.exe",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-x64.exe",
+    "algorithm": "sha256",
+    "digest": "fd99e86f57d8f429ef5ed045bf98315af962e2309b0f1ba87a147a44c71647d0",
+    "bytes": 1663506,
+    "destination": "7zip",
+    "probe": "7zip/7z.exe",
+    "kind": "7z",
+    "extractor": "7zip-bootstrap/7zr.exe"
+  },
+  {
+    "url": "https://github.com/Kitware/CMake/releases/download/v4.4.4/cmake-4.4.4-windows-x86_64.zip",
+    "algorithm": "sha256",
+    "digest": "bace36e94b31c68ab6fa295f26dfa11219e0701cf7c94b0284a7d1cb13dac536",
+    "bytes": 54400562,
+    "name": "cmake-4.4.4-windows-x86_64.zip",
+    "destination": "cmake",
+    "probe": "cmake/cmake-4.4.4-windows-x86_64/bin/cmake.exe",
+    "kind": "zip"
+  },
+  {
+    "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-win64.exe",
+    "algorithm": "sha256",
+    "digest": "3197846a2b19063687dd56e93e34cd941e3548d907f23a6131571321bdf9fe7b",
+    "bytes": 385658654,
+    "name": "LLVM-20.1.8-win64.exe",
+    "destination": "llvm-20.1.8",
+    "probe": "llvm-20.1.8/bin/clang++.exe",
+    "kind": "nsis",
+    "extractor": "7zip/7z.exe"
+  },
+  {
+    "url": "https://download.visualstudio.microsoft.com/download/pr/c610cd8c-801b-44b8-a80a-82cc382aeb43/852382a9aa73502b7849c1bcadfb603ba7175c4e8b60e6aba03c7de711d4ece5/Microsoft.VC.14.44.17.14.CRT.Headers.base.vsix",
+    "algorithm": "sha256",
+    "digest": "852382a9aa73502b7849c1bcadfb603ba7175c4e8b60e6aba03c7de711d4ece5",
+    "bytes": 2116223,
+    "name": "microsoft.vc.14.44.17.14.crt.headers.base-0.vsix",
+    "destination": "msvc",
+    "probe": "msvc/VC/Tools/MSVC/14.44.35207/include/vcruntime.h",
+    "kind": "zip",
+    "strip_contents": true
+  },
+  {
+    "url": "https://download.visualstudio.microsoft.com/download/pr/67cf767c-5e71-47c2-a54a-cd5631e28942/f01f701a7bcd9587a340898c851424f6a52bb913a70c185ff0d5bf0288c5831a/Microsoft.VC.14.44.17.14.CRT.x64.Desktop.base.vsix",
+    "algorithm": "sha256",
+    "digest": "f01f701a7bcd9587a340898c851424f6a52bb913a70c185ff0d5bf0288c5831a",
+    "bytes": 50776097,
+    "name": "microsoft.vc.14.44.17.14.crt.x64.desktop.base-0.vsix",
+    "destination": "msvc",
+    "probe": "msvc/VC/Tools/MSVC/14.44.35207/lib/x64/libcmt.lib",
+    "kind": "zip",
+    "strip_contents": true
+  },
+  {
+    "url": "https://download.visualstudio.microsoft.com/download/pr/67cf767c-5e71-47c2-a54a-cd5631e28942/9135b03c0df53c7a0aa9bef7230a1c2ff4263a0ee7baa7e419d034f484f6bb56/Microsoft.VC.14.44.17.14.CRT.x64.Store.base.vsix",
+    "algorithm": "sha256",
+    "digest": "9135b03c0df53c7a0aa9bef7230a1c2ff4263a0ee7baa7e419d034f484f6bb56",
+    "bytes": 27596908,
+    "name": "microsoft.vc.14.44.17.14.crt.x64.store.base-0.vsix",
+    "destination": "msvc",
+    "probe": "msvc/VC/Tools/MSVC/14.44.35207/lib/x64/store/vcruntime.lib",
+    "kind": "zip",
+    "strip_contents": true
+  },
+  {
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp/10.0.26100.8249/microsoft.windows.sdk.cpp.10.0.26100.8249.nupkg",
+    "algorithm": "sha512",
+    "digest": "c159cde4a043b71ad30b7f197290cc52c19e21b914063849fb6041d405f413a630525b9da8e41486ff4ec6264497205b2c8fc473246ddb464f8f7d832dc4e1ac",
+    "bytes": 160432822,
+    "name": "microsoft.windows.sdk.cpp.10.0.26100.8249.nupkg",
+    "destination": "windows-sdk/microsoft.windows.sdk.cpp",
+    "probe": "windows-sdk/microsoft.windows.sdk.cpp/c/bin/10.0.26100.0/x64/rc.exe",
+    "kind": "zip"
+  },
+  {
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp.x64/10.0.26100.8249/microsoft.windows.sdk.cpp.x64.10.0.26100.8249.nupkg",
+    "algorithm": "sha512",
+    "digest": "50e3cb3e7947fd0f855fc976eae47cefec163d2a02414f52c26a097bcd058807192e9dbb90697d1f60fa82fd82ec1dd1d569a8b34e8c03382a44a975df8fcd26",
+    "bytes": 52951912,
+    "name": "microsoft.windows.sdk.cpp.x64.10.0.26100.8249.nupkg",
+    "destination": "windows-sdk/microsoft.windows.sdk.cpp.x64",
+    "probe": "windows-sdk/microsoft.windows.sdk.cpp.x64/c/um/x64/kernel32.lib",
+    "kind": "zip"
+  },
+  {
+    "url": "https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-win.zip",
+    "algorithm": "sha256",
+    "digest": "07fc8261b42b20e71d1720b39068c2e14ffcee6396b76fb7a795fb460b78dc65",
+    "bytes": 291570,
+    "name": "ninja-win.zip",
+    "destination": "ninja",
+    "probe": "ninja/ninja.exe",
+    "kind": "zip"
+  },
+  {
+    "name": "rexglue-sdk-0.10.0-win-amd64.zip",
+    "url": "https://github.com/rexglue/rexglue-sdk/releases/download/v0.10.0/rexglue-sdk-0.10.0-win-amd64.zip",
+    "algorithm": "sha256",
+    "digest": "ad4485da853fbe932e9f5dbb643f9b5fe85dc73775ebbad4df6879fe6df0c11b",
+    "bytes": 44751910,
+    "destination": "rexglue-sdk-0.10.0",
+    "probe": "rexglue-sdk-0.10.0/win-amd64/bin/rexglue.exe",
+    "kind": "zip"
+  }
+]

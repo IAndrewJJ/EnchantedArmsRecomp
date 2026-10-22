@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.25)
+project(ea_graphics_probe LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 23)
+find_package(rexglue 0.10.0 EXACT REQUIRED CONFIG)
+add_executable(ea_graphics_probe probe.cpp)
+target_compile_definitions(ea_graphics_probe PRIVATE REX_HAS_FIDELITYFX_SDK=1)
+target_link_libraries(ea_graphics_probe PRIVATE rex::runtime)
+rexglue_apply_target_settings(ea_graphics_probe)

@@ -28,7 +28,7 @@ The complete Windows kit includes a checksum-verified portable Python bootstrap 
 
 ## Visual settings
 
-The complete **0.3.1 FPS counter preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
+The complete **0.3.2 rendering diagnostics preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
 
 | Preset | Internal scale | Output effect | Post AA | Filtering |
 | --- | --- | --- | --- | --- |
@@ -62,12 +62,15 @@ The window size is separate from internal rendering resolution. The launcher set
 | Arrow keys | Right stick |
 | Shift + arrow keys | D-pad |
 | F6 | Show / hide the FPS counter |
+| F8 | Save a screenshot of the current guest output |
 | F3 / F4 / Backtick | SDK debug / settings / console |
 | Alt + F4 | Close |
 
 Briefly hold a key if a very short tap is missed. A pinned SDL controller mapping database is bundled and copied alongside the native build. Physical controller compatibility and button mapping still need broader testing.
 
 **F6 toggles a compact FPS and frame-interval counter in the top-right corner.** It starts hidden, updates every half second, and does not capture game input. Holding F6 toggles once. The reading counts the game's swap submissions rather than UI redraws or monitor refresh; it is not a GPU execution-time measurement or a count of unique displayed images. Hiding it removes the overlay. For diagnostic startup display, the native executable accepts `--ea_show_fps`.
+
+**F8 saves a PNG** in `.local/runtime/captures`; use **Open captures** in the launcher. It captures guest output before presenter effects and overlays, and can briefly pause rendering while reading back the frame. Report ZIPs do not include screenshots. Frame logs include mean, median, p95/p99, maximum intervals and counts over 50 ms every five seconds; these include pacing and are not GPU timings. See the [rendering comparison guide](docs/RELEASE-0.3.2.md) for the new ROV/RTV, resolve readback and background shader compilation controls. No NPC fix or performance gain has been confirmed yet.
 
 Everything generated for your installation stays in `.local/` and `bin/`:
 

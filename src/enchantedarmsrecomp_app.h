@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <fstream>
 #include "fps_counter.h"
+#include "frame_capture.h"
 
 REXCVAR_DECLARE(bool, ea_trace_input);
 REXCVAR_DECLARE(int32_t, ea_fps_limit);
@@ -21,6 +22,21 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   using rex::ReXApp::ReXApp;
 
   void OnKeyDown(rex::ui::KeyEvent& event) override {
+    if (ea::IsFrameCaptureKey(event)) {
+      try {
+        if (!event.prev_state() && runtime() && runtime()->graphics_system()) {
+          auto* presenter = runtime()->graphics_system()->presenter();
+          std::filesystem::path saved;
+          std::string error;
+          if (presenter && ea::CaptureFrame(*presenter, user_data_root().parent_path() / "captures", saved, error)) {
+            REXLOG_INFO("EA screenshot saved: {} (guest output before presenter scaling/overlays)", saved.string());
+          } else {
+            REXLOG_WARN("EA screenshot failed: {}", presenter ? error : "Presenter is unavailable");
+          }
+        }
+      } catch (const std::exception& error) { REXLOG_WARN("EA screenshot failed: {}", error.what()); }
+      event.set_handled(true); return;
+    }
     if (ea::IsFpsCounterKey(event)) {
       // SDL reports prev_state for key-repeat: holding F6 toggles only once.
       if (ea::ShouldToggleFpsCounter(event) && imgui_drawer()) {
@@ -39,7 +55,7 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   }
 
   void OnKeyUp(rex::ui::KeyEvent& event) override {
-    if (ea::IsFpsCounterKey(event)) { event.set_handled(true); return; }
+    if (ea::IsFpsCounterKey(event) || ea::IsFrameCaptureKey(event)) { event.set_handled(true); return; }
     if (REXCVAR_GET(ea_trace_input)) {
       REXLOG_INFO("Host key up: {:02X}", static_cast<uint16_t>(event.virtual_key()));
     }
@@ -67,7 +83,7 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
                 rex::cvar::GetFlagByName("video_mode_refresh_rate"),
                 rex::cvar::GetFlagByName("ea_texture_lod_bias"));
     if (REXCVAR_GET(ea_fps_limit) != 0) {
-      REXLOG_WARN("Experimental frame rate enabled. Simulation speed, movies and audio synchronization require playtesting; use Original if timing changes.");
+      REXLOG_WARN("Experimental FPS can accelerate Enchanted Arms gameplay. A normal-speed high-FPS engine timing patch is not implemented; use Original for normal play.");
     }
     // GPU flags register when the renderer plugin loads. Record their applied
     // values here so a playtest report can distinguish them from launcher intent.
@@ -81,6 +97,11 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
                 rex::cvar::GetFlagByName("gpu_allow_invalid_fetch_constants"),
                 rex::cvar::GetFlagByName("async_shader_compilation"),
                 rex::cvar::GetFlagByName("occlusion_query_enable"));
+    REXLOG_INFO("EA coherency flags: readback_resolve={}, memexport={}, fast_memexport={}, page_state={}",
+                rex::cvar::GetFlagByName("readback_resolve"),
+                rex::cvar::GetFlagByName("readback_memexport"),
+                rex::cvar::GetFlagByName("readback_memexport_fast"),
+                rex::cvar::GetFlagByName("clear_memory_page_state"));
     REXLOG_INFO("EA presentation flags: output={}, AA={}, FSR_reduction={}, CAS_sharpness={}, "
                 "dither={}, fullscreen={}, letterbox={}, tearing={}, native_2x_msaa={}",
                 rex::cvar::GetFlagByName("present_effect"),

@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -21,6 +22,28 @@ namespace EnchantedArmsPC {
         internal static System.Threading.EventWaitHandle ActivateRequest;
         internal static System.Threading.EventWaitHandle RequestAcknowledged;
         static readonly object DiagnosticLock = new object();
+        [DllImport("user32.dll")] static extern IntPtr GetProcessWindowStation();
+        [DllImport("user32.dll")] static extern IntPtr GetThreadDesktop(uint threadId);
+        [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
+        [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        static extern bool GetUserObjectInformation(IntPtr handle, int index, StringBuilder value, int length, out int needed);
+        static string UserObjectName(IntPtr handle) {
+            var value = new StringBuilder(512); int needed;
+            if (handle == IntPtr.Zero || !GetUserObjectInformation(handle,2,value,value.Capacity * 2,out needed))
+                return "unknown-process-" + Process.GetCurrentProcess().Id;
+            return value.ToString();
+        }
+        static string DesktopContext() {
+            return UserObjectName(GetProcessWindowStation()) + "\\" + UserObjectName(GetThreadDesktop(GetCurrentThreadId()));
+        }
+        internal static string InstanceName(string root, string desktop) {
+            // A build/sandbox desktop must never claim the user's interactive
+            // launch request. Local kernel objects alone are scoped to session,
+            // not desktop. Keep activation within this installation AND desktop.
+            using (var hasher = System.Security.Cryptography.SHA256.Create())
+                return "Local\\EnchantedArmsPC." + BitConverter.ToString(hasher.ComputeHash(
+                    Encoding.UTF8.GetBytes(root.ToUpperInvariant() + "|" + desktop.ToUpperInvariant()))).Replace("-", "");
+        }
         internal static void Diagnostic(string message) {
             try {
                 lock (DiagnosticLock) {
@@ -33,9 +56,11 @@ namespace EnchantedArmsPC {
                 }
             } catch { }
         }
-        internal const string Version = "0.3.1-fps-counter-preview";
+        internal const string Version = "0.3.2-render-diagnostics-preview";
         internal static string NativeDirectory {
             get {
+                string diagnostics = Path.Combine(Root,"bin","graphics-0.3.2");
+                if (File.Exists(Path.Combine(diagnostics,"enchantedarmsrecomp.exe"))) return diagnostics;
                 string counter = Path.Combine(Root,"bin","graphics-0.3.1");
                 if (File.Exists(Path.Combine(counter,"enchantedarmsrecomp.exe"))) return counter;
                 string newest = Path.Combine(Root,"bin","graphics-0.3.0");
@@ -82,6 +107,13 @@ namespace EnchantedArmsPC {
         }
         [STAThread]
         static int Main(string[] args) {
+            if (args.Length == 1 && args[0] == "--launch-context") {
+                Directory.CreateDirectory(Path.Combine(Local,"logs"));
+                File.WriteAllText(Path.Combine(Local,"logs","launch-context.json"),Json.Serialize(new {
+                    desktop=DesktopContext(), session=Process.GetCurrentProcess().SessionId, interactive=Environment.UserInteractive
+                }));
+                return 0;
+            }
             if (args.Length == 2 && args[0] == "--graphics-preview") {
                 Application.EnableVisualStyles();
                 using (var dialog = new GraphicsDialog(new Preferences { Upscaler="fsr",PostAA="fxaa",Scale=2,Anisotropy=5,Dither=true,TextureDetail=1,FrameLimit=60 })) {
@@ -130,6 +162,22 @@ namespace EnchantedArmsPC {
                 }
                 invalid.FrameLimit=999; invalid.TextureDetail=9; invalid.Normalize();
                 if (invalid.FrameLimit != 0 || invalid.TextureDetail != 2) return 11;
+                if (migrated.RenderPath != "auto" || migrated.ResolveReadback != "none" || !migrated.AsyncShaders) return 12;
+                foreach (string path in new [] {"auto","rov","rtv"}) foreach (string readback in new [] {"none","fast","some","full"}) {
+                    var selected = new Preferences {RenderPath=path,ResolveReadback=readback,AsyncShaders=false};
+                    var arguments = selected.RendererArguments();
+                    if (!arguments.Contains("--render_target_path_d3d12=" + (path == "auto" ? "" : path)) ||
+                        !arguments.Contains("--readback_resolve=" + readback) || !arguments.Contains("--no-async_shader_compilation")) return 13;
+                    var saved = Json.Deserialize<Preferences>(Json.Serialize(selected));
+                    if (saved.RenderPath != path || saved.ResolveReadback != readback || saved.AsyncShaders) return 14;
+                    saved.ApplyPreset(1);
+                    if (saved.RenderPath != "auto" || saved.ResolveReadback != "none" || !saved.AsyncShaders) return 15;
+                }
+                invalid.RenderPath="invalid"; invalid.ResolveReadback="invalid"; invalid.Normalize();
+                if (invalid.RenderPath != "auto" || invalid.ResolveReadback != "none") return 16;
+                if (InstanceName("C:\\game","WinSta0\\Default") == InstanceName("C:\\game","WinSta0\\Build") ||
+                    InstanceName("C:\\game","WinSta0\\Default") != InstanceName("c:\\GAME","winsta0\\default") ||
+                    InstanceName("C:\\game","WinSta0\\Default") == InstanceName("C:\\other","WinSta0\\Default")) return 17;
                 return 0;
             }
             Application.EnableVisualStyles();
@@ -139,9 +187,8 @@ namespace EnchantedArmsPC {
                 MessageBox.Show(e.Exception.Message + "\r\nDetails: .local/logs/launcher.log","EnchantedArmsPC",MessageBoxButtons.OK,MessageBoxIcon.Error);
             };
             AppDomain.CurrentDomain.UnhandledException += (s,e) => Diagnostic("Unhandled exception: " + e.ExceptionObject);
-            string instance;
-            using (var hasher = System.Security.Cryptography.SHA256.Create())
-                instance = "Local\\EnchantedArmsPC." + BitConverter.ToString(hasher.ComputeHash(Encoding.UTF8.GetBytes(Root.ToUpperInvariant()))).Replace("-", "");
+            string desktop = DesktopContext();
+            string instance = InstanceName(Root, desktop);
             bool created;
             using (var mutex = new System.Threading.Mutex(true, instance, out created)) {
                 if (!created) {
@@ -159,7 +206,7 @@ namespace EnchantedArmsPC {
                 using (PlayRequest = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Play"))
                 using (ActivateRequest = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Activate"))
                 using (RequestAcknowledged = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Ack")) {
-                    Diagnostic("Launcher started " + Version);
+                    Diagnostic("Launcher started " + Version + ", desktop=" + desktop + ", session=" + Process.GetCurrentProcess().SessionId);
                     Application.Run(new Launcher());
                     Diagnostic("Launcher window closed; exiting");
                 }
@@ -225,7 +272,7 @@ namespace EnchantedArmsPC {
             for (int i = 0; i < 10; ++i) layout.RowStyles.Add(new RowStyle(i == 8 ? SizeType.Percent : SizeType.AutoSize, i == 8 ? 100 : 0));
             Controls.Add(layout);
             layout.Controls.Add(new Label { Text = "EnchantedArmsPC", Font = new Font("Segoe UI", 25, FontStyle.Bold), AutoSize = true, ForeColor = Color.FromArgb(24, 48, 72) }, 0, 0);
-            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. FPS counter preview 0.3.1 • F6 toggles FPS", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
+            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. Preview 0.3.2 • F6: FPS • F8: screenshot", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
             layout.Controls.Add(status, 0, 2);
             var source = new TableLayoutPanel { ColumnCount = 2, AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 6) };
             source.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); source.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -251,6 +298,7 @@ namespace EnchantedArmsPC {
             var report = MakeButton("Export playtest report", 175); actions.Controls.Add(report);
             actions.Controls.Add(backup);
             var logs = MakeButton("Open logs",110); actions.Controls.Add(logs);
+            var captures = MakeButton("Open captures",135); actions.Controls.Add(captures);
             var updates = MakeButton("Updates / issues",145); actions.Controls.Add(updates);
             layout.Controls.Add(actions, 0, 6); layout.Controls.Add(progress, 0, 7); layout.Controls.Add(log, 0, 8);
             layout.Controls.Add(new Label { Text = "First build downloads about 800 MB of tools and needs roughly 20 GB free. ISO stays local. Saves: .local/runtime/user", AutoSize = true, Margin = new Padding(0, 10, 0, 0) }, 0, 9);
@@ -265,6 +313,7 @@ namespace EnchantedArmsPC {
             report.Click += (s,e) => Guard(ExportReport);
             backup.Click += (s,e) => Guard(BackupSaves);
             logs.Click += (s,e) => Guard(() => { string path=Path.Combine(Program.Local,"runtime"); Directory.CreateDirectory(path); Process.Start("explorer.exe",Program.Quote(path)); });
+            captures.Click += (s,e) => Guard(() => { string path=Path.Combine(Program.Local,"runtime","captures"); Directory.CreateDirectory(path); Process.Start("explorer.exe",Program.Quote(path)); });
             updates.Click += (s,e) => Guard(() => Process.Start(new ProcessStartInfo("https://github.com/IAndrewJJ/EnchantedArmsRecomp") { UseShellExecute=true }));
             preset.SelectedIndexChanged += (s,e) => { if (!syncingGraphics && preset.SelectedIndex > 0) { preferences.ApplyPreset(preset.SelectedIndex); graphicsSummary.Text = preferences.Summary(); SavePreferences(); } };
             graphicsButton.Click += (s,e) => { using (var dialog = new GraphicsDialog(preferences)) {
@@ -382,7 +431,8 @@ namespace EnchantedArmsPC {
             SavePreferences();
             if ((preferences.TextureDetail != 0 || preferences.FrameLimit != 0) &&
                 Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.0") &&
-                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.1")) {
+                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.1") &&
+                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.2")) {
                 Append("Texture detail and experimental FPS require the 0.3.0 native build. Choose Build from ISO once to update."); return;
             }
             if (preferences.Upscaler != "bilinear" && !File.Exists(Path.Combine(Program.NativeDirectory,"renderer-capabilities.json"))) {
@@ -438,6 +488,13 @@ namespace EnchantedArmsPC {
                     add("report.txt","EnchantedArmsPC " + Program.Version + "\r\nUTC: " + DateTime.UtcNow.ToString("o") + "\r\nWindows: " + Environment.OSVersion + "\r\nSelected settings (next launch): " + preferences.Summary() + "\r\n" + Program.Json.Serialize(preferences) + "\r\nDescribe the location, action, and whether the issue repeats when warm.\r\n\r\n" + log.Text);
                     string launch=Path.Combine(Program.Local,"last-launch.json");
                     if (File.Exists(launch)) add("last-launch.json",File.ReadAllText(launch));
+                    string launcherLog = Path.Combine(Program.Local,"logs","launcher.log");
+                    if (File.Exists(launcherLog)) {
+                        using (var stream = new FileStream(launcherLog,FileMode.Open,FileAccess.Read,FileShare.ReadWrite)) {
+                            stream.Seek(Math.Max(0, stream.Length - 512 * 1024),SeekOrigin.Begin);
+                            using (var reader = new StreamReader(stream)) add("launcher.log",reader.ReadToEnd());
+                        }
+                    }
                     string last = Path.Combine(Program.Local,"runtime","latest-boot.txt");
                     if (File.Exists(last)) {
                         string path = Path.Combine(Program.Local,"runtime",Path.GetFileName(File.ReadAllText(last).Trim()));

@@ -1,0 +1,20 @@
+# EnchantedArmsPC 0.3.2 — Rendering comparisons and stutter diagnostics
+
+This preview adds tools for investigating dark patches on Toya, Makoto and other NPCs, and missing models such as The Diet Doctor and Smiling Salesgirl. **Those defects do not yet have a confirmed fix.**
+
+- **Graphics settings → Rendering method:** Automatic (default), ROV (accuracy comparison), RTV (performance comparison). ROV can be slower and may fall back to RTV on unsupported hardware.
+- **Resolve readback:** disabled (default), delayed every frame, delayed on demand, or immediate. Immediate readback is a diagnostic option that can cause heavy stalls.
+- **Compile shaders in background:** retained by default to reduce compilation stalls. Disable for a comparison that waits for pipelines instead of temporarily omitting unready draws.
+- **F8:** save a PNG of the current guest output. **Open captures** in the launcher opens `.local/runtime/captures`. Captures exclude presenter scaling/sharpening, letterboxing and overlays, making them useful for comparing the underlying game rendering. Taking a capture can briefly pause rendering; it is not a benchmark.
+- Five-second log summaries now include mean, median, p95, p99, maximum frame intervals and the number over 50 ms. They measure game-swap intervals including pacing, not GPU execution time. Interval collection uses bounded storage without per-frame allocations or file writes; percentiles use up to the latest 2048 intervals per window. Only the aggregate summaries are logged.
+- Playtest reports now include a bounded, path-redacted launcher log alongside game logs. Screenshots and saves stay outside report ZIPs.
+
+The launcher still opens first; only **Play Enchanted Arms** starts the game. Its single-instance activation is now scoped to the Windows desktop as well as the installation: an instance on a build/sandbox desktop can no longer intercept launches from the visible desktop. This fixes the reproduced running-but-invisible launcher case. **F6** still toggles the FPS counter. Existing graphics profiles keep their prior settings; the new comparison options default to the existing renderer behavior. **Original preset** restores the comparison defaults too. Shader caches and saves are preserved.
+
+For NPC comparisons, use Original at 1× and reload the same save. First try ROV alone. Then return to Automatic and test background compilation disabled. Test immediate readback separately if needed. Restart between changes and compare the same view after caches have warmed. These controls expose existing renderer paths; they are not a verified rendering or performance fix.
+
+**Use Original FPS for normal play.** [Upstream testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports game speed tied to FPS. The experimental limits can accelerate gameplay; a normal-speed high-FPS timing patch is not implemented.
+
+Validation: native compilation; launcher profile migration, round trips and arguments for all renderer/readback combinations; desktop-specific instance identity tests; launcher opened and visually verified on the interactive desktop with Play enabled; reopening restored the same visible window without starting a game; frame interval percentile/stall/reset/bounded-storage checks; PNG encoding followed by independent decoding to verify RGB ordering, padded rows and opaque output; F8 modifier filtering; existing F6 counter and synthetic setup checks. The new screenshot hotkey and NPC comparisons still need in-game playtesting. No campaign-wide performance gain is claimed.
+
+Download **EnchantedArmsPC-0.3.2-windows-x64.zip** under Assets, extract the complete ZIP and run **EnchantedArmsLauncher.exe**. Existing users should close the game and launcher, back up saves, unpack over their sources preserving `.local`, and choose **Build from ISO** once. The native update stages separately in `bin/graphics-0.3.2`. The unchanged renderer's corresponding source is **ReXGlueSpatial-0.3.0-source.tar.gz**. No game assets, translated game code, compiled game executable or saves are distributed.

@@ -43,6 +43,7 @@ set(ENCHANTEDARMSRECOMP_SOURCES
     src/scene_dispatch.cpp
     src/frame_pacing.cpp
     src/fps_counter.cpp
+    src/frame_capture.cpp
 )
 
 if(WIN32)
@@ -52,3 +53,6 @@ else()
 endif()
 
 rexglue_setup_target(enchantedarmsrecomp GPU_PLUGINS xenos)
+if(WIN32)
+    target_link_libraries(enchantedarmsrecomp PRIVATE windowscodecs ole32)
+endif()

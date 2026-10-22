@@ -1,5 +1,7 @@
 # EnchantedArmsPC 0.3.1 — F6 FPS counter
 
+**Superseded by 0.3.2:** if the launcher runs but its window is invisible, update to 0.3.2 for the additional Windows desktop activation fix.
+
 Press **F6** during play to show or hide a compact FPS and frame-interval counter in the top-right corner. The counter starts hidden, updates every half second, and does not capture game input. Holding F6 toggles once instead of flickering. Modified shortcuts such as Alt+F6 keep their normal behavior.
 
 The launcher now always opens first. Click **Play Enchanted Arms** to boot the game; old `--play` shortcuts also open only the launcher. Reopening an existing instance restores its window and confirms receipt of the request. Launcher closure exits its process cleanly, and `.local/logs/launcher.log` records activation/startup/exit diagnostics. This addresses a reported invisible launcher instance blocking later launch requests.

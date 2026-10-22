@@ -17,7 +17,7 @@ The goal is a dependable native PC edition that players can build from their own
 2. Complete two-machine installation and playtesting, including controller behavior, save/reload, battle transitions, videos and later areas. Record clean-machine toolchain failures separately from game crashes.
 3. Measure stutter with repeatable routes and warm shader caches. Separate shader compilation, pipeline creation, guest timing and streaming costs before choosing an optimization. Keep game pacing intact until timing dependencies have been tested.
 4. Expand AMD/NVIDIA/Intel coverage and verify graphics presets across gameplay, effects, UI and cutscenes. Adjust defaults using measured performance and image quality.
-5. Validate the experimental frame limits against movement distance per second, animations, battle effects and video/audio timing. Add per-system timing corrections where measurements establish frame dependence. Temporal reconstruction, frame generation, widescreen changes and texture replacement require separate engineering and testing.
+5. Develop and validate engine timing corrections for normal-speed high FPS. Upstream Enchanted Arms testing reports game speed tied to FPS; the current host limiter does not correct that dependency. Keep Original as the normal-play default. Temporal reconstruction, frame generation, widescreen changes and texture replacement require separate engineering and testing.
 
 Additional creatures, areas and other content mods are deferred until base-game compatibility is established.
 

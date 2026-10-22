@@ -36,3 +36,7 @@ The tester reports that parts of multiple NPC character models appear black wher
 ## EA-004 — Experimental FPS modes can accelerate gameplay
 
 Use **Original** for normal play. [Upstream Enchanted Arms testing](https://github.com/xenia-canary/game-compatibility/issues/2) reports that game speed depends on FPS and marks the title `vsync-off-speedup`. Our explicit FPS limits disable that throttle, so they must be treated as timing experiments. A host frame limiter does not decouple animation or simulation from frame rate. Normal-speed 60/120+ FPS needs a verified engine timing patch; that patch is not implemented. Original remains the default. Movies may retain their source cadence even when gameplay is accelerated.
+
+## EA-005 — Launcher process runs without a visible window
+
+Status: reproduced and fixed in 0.3.2. The launcher started on a build/sandbox Windows desktop. Session-scoped instance events forwarded later interactive launches to that hidden instance, which acknowledged them without displaying a window on the user's desktop. Version 0.3.2 includes the window station and desktop in instance identity. The updated launcher was opened and visually verified on the interactive desktop with Play enabled; a second launch restored that same window and left the game launch record unchanged. The game still starts only from Play. Versions 0.3.1 and older should be updated if affected.

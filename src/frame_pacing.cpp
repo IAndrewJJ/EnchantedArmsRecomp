@@ -1,5 +1,6 @@
 #include "generated/default/enchantedarmsrecomp_init.h"
 #include "frame_pacer.h"
+#include "fps_counter.h"
 #include <rex/cvar.h>
 #include <rex/hook.h>
 
@@ -16,6 +17,7 @@ REX_HOOK_RAW(sub_822A9680) {
     pacer.Wait(limit);
   }
   __imp__sub_822A9680(ctx, base);
+  ea::RecordGameFrame();
 
   struct Metrics {
     ea::FramePacer::Clock::time_point start = ea::FramePacer::Clock::now();

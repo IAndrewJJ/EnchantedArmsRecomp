@@ -10,15 +10,27 @@
 #include <rex/ui/keybinds.h>
 #include <cstdlib>
 #include <fstream>
+#include "fps_counter.h"
 
 REXCVAR_DECLARE(bool, ea_trace_input);
 REXCVAR_DECLARE(int32_t, ea_fps_limit);
+REXCVAR_DECLARE(bool, ea_show_fps);
 
 class EnchantedarmsrecompApp : public rex::ReXApp {
  public:
   using rex::ReXApp::ReXApp;
 
   void OnKeyDown(rex::ui::KeyEvent& event) override {
+    if (ea::IsFpsCounterKey(event)) {
+      // SDL reports prev_state for key-repeat: holding F6 toggles only once.
+      if (ea::ShouldToggleFpsCounter(event) && imgui_drawer()) {
+        if (fps_counter_) fps_counter_.reset();
+        else fps_counter_ = std::make_unique<ea::FpsCounterDialog>(imgui_drawer());
+        REXLOG_INFO("FPS counter {}", fps_counter_ ? "shown" : "hidden");
+      }
+      event.set_handled(true);
+      return;
+    }
     if (REXCVAR_GET(ea_trace_input)) {
       REXLOG_INFO("Host key down: {:02X}", static_cast<uint16_t>(event.virtual_key()));
     }
@@ -27,9 +39,14 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   }
 
   void OnKeyUp(rex::ui::KeyEvent& event) override {
+    if (ea::IsFpsCounterKey(event)) { event.set_handled(true); return; }
     if (REXCVAR_GET(ea_trace_input)) {
       REXLOG_INFO("Host key up: {:02X}", static_cast<uint16_t>(event.virtual_key()));
     }
+  }
+
+  void OnCreateDialogs(rex::ui::ImGuiDrawer* drawer) override {
+    if (REXCVAR_GET(ea_show_fps)) fps_counter_ = std::make_unique<ea::FpsCounterDialog>(drawer);
   }
 
   void OnPreSetup(rex::RuntimeConfig& config) override {
@@ -135,6 +152,9 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
     return std::unique_ptr<EnchantedarmsrecompApp>(new EnchantedarmsrecompApp(ctx, "enchantedarmsrecomp",
         PPCImageConfig));
   }
+
+ private:
+  std::unique_ptr<ea::FpsCounterDialog> fps_counter_;
 
   // Override virtual hooks for customization:
   // void OnPostInitLogging() override {}

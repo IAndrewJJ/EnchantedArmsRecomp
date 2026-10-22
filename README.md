@@ -1,6 +1,6 @@
 # EnchantedArmsRecomp / EnchantedArmsPC
 
-**[Download the Windows launcher kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.3.0)** — choose `EnchantedArmsPC-0.3.0-windows-x64.zip` under Assets. Extract the entire ZIP and open `EnchantedArmsLauncher.exe` inside. The repository file preview shows source code; the ready-to-run launcher is included in the release ZIP.
+**[Download the Windows launcher kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.3.1)** — choose `EnchantedArmsPC-0.3.1-windows-x64.zip` under Assets. Extract the entire ZIP and open `EnchantedArmsLauncher.exe` inside. The repository file preview shows source code; the ready-to-run launcher is included in the release ZIP.
 
 An early Windows x64 native recompilation of Enchanted Arms for Xbox 360, built with ReXGlue SDK 0.10.0. The public launcher kit takes your own supported ISO, extracts it locally, generates native C++ and compiles the PC executable. Game files and translated game code are never uploaded by the launcher.
 
@@ -12,7 +12,7 @@ The first tester reached exploration, used the character menus, saw character mo
 2. Open `EnchantedArmsLauncher.exe`.
 3. Choose your Enchanted Arms Xbox 360 ISO and press **Build from ISO**. Setup checks the executable revision before extraction, verifies the extracted files, downloads approximately 800 MB of pinned tools and compiles locally. Allow roughly 20 GB of free space in addition to your ISO. Compilation can take several minutes; the launcher shows its output.
 4. Choose a visual preset or open **Graphics settings**, then **Play Enchanted Arms**. Start with Original (1x) to establish a baseline. Settings apply at the next launch.
-5. Press **Create desktop shortcut** to create **EnchantedArmsPC** on your Windows desktop. That shortcut starts the game using the visual settings you last saved in the launcher. Keep the installation folder in place; recreate the shortcut if you move it.
+5. Press **Create desktop shortcut** to create **EnchantedArmsPC** on your Windows desktop. The shortcut opens the launcher first. Choose your settings, then click **Play Enchanted Arms** to start the game. Existing shortcuts with `--play` also open only the launcher. Keep the installation folder in place; recreate the shortcut if you move it.
 
 Only the USA/Europe Xbox 360 executable is currently supported:
 
@@ -61,10 +61,13 @@ These controls set an upper limit; they do not guarantee that FPS or correct tim
 | W / A / S / D | Left stick |
 | Arrow keys | Right stick |
 | Shift + arrow keys | D-pad |
+| F6 | Show / hide the FPS counter |
 | F3 / F4 / Backtick | SDK debug / settings / console |
 | Alt + F4 | Close |
 
 Briefly hold a key if a very short tap is missed. A pinned SDL controller mapping database is bundled and copied alongside the native build. Physical controller compatibility and button mapping still need broader testing.
+
+**F6 toggles a compact FPS and frame-interval counter in the top-right corner.** It starts hidden, updates every half second, and does not capture game input. Holding F6 toggles once. The reading counts the game's swap submissions rather than UI redraws or monitor refresh; it is not a GPU execution-time measurement or a count of unique displayed images. Hiding it removes the overlay. For diagnostic startup display, the native executable accepts `--ea_show_fps`.
 
 Everything generated for your installation stays in `.local/` and `bin/`:
 
@@ -73,6 +76,7 @@ Everything generated for your installation stays in `.local/` and `bin/`:
 - `.local/runtime/user`: saves; **Open saves** opens this folder.
 - `.local/runtime/cache`: shader caches, retained between sessions.
 - `.local/runtime/boot-*.log` and `.local/logs`: game/setup logs.
+- `.local/logs/launcher.log`: launcher activation, startup and exit diagnostics.
 - `.local/launcher.json`: your ISO path and visual settings.
 
 Rebuilding preserves saves and caches. Cancel stops this setup process tree; retrying verifies existing extracted files and resumes partial extraction. Conflicting existing game files are left intact and reported. **Back up saves** creates a private ZIP after you close the game. **Open logs** opens local runtime logs. **Export playtest report** writes path-redacted text logs, selected settings and the last launch settings to a ZIP you can review and share. Reports exclude game files, saves and memory dumps. **Updates / issues** opens this repository; nothing is uploaded automatically.
@@ -104,7 +108,7 @@ For command-line setup:
 ./scripts/setup.ps1 -Iso 'D:/MyGames/Enchanted Arms.iso' -Jobs 2
 ```
 
-For an existing extraction/toolchain, `scripts/build.ps1` regenerates and rebuilds the native application, staging the enhanced build in `bin/graphics-0.3.0`. The launcher prefers this build and prevents another launch/rebuild while its game is running. `scripts/run.ps1` opens the launcher to play with saved settings. `scripts/collect-crash.ps1` optionally collects a matching Windows crash event and symbolizes it using the local build. Its raw diagnostic report can contain local paths; review it before sharing.
+For an existing extraction/toolchain, `scripts/build.ps1` regenerates and rebuilds the native application, staging the enhanced build in `bin/graphics-0.3.1`. The launcher prefers this build and prevents another launch/rebuild while its game is running. Rebuild once after updating the kit to add F6 to an earlier native build. `scripts/run.ps1` opens the launcher to play with saved settings. `scripts/collect-crash.ps1` optionally collects a matching Windows crash event and symbolizes it using the local build. Its raw diagnostic report can contain local paths; review it before sharing.
 
 Run the synthetic setup tests with Python 3.12 or later:
 

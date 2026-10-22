@@ -1,4 +1,4 @@
-# Playtesting preview 0.3.0
+# Playtesting preview 0.3.1
 
 Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. Only the early game has been exercised. Mild stutter remains; a full campaign playthrough is still needed.
 
@@ -8,6 +8,7 @@ Reported defects are tracked in [known issues](KNOWN_ISSUES.md): EA-001 (The Die
 
 1. Start with Original (1×), create a new save slot, then close and reload it.
 2. Test keyboard controls or your controller and record which input device you used.
+   Press F6 to show the FPS/frame-interval counter; verify that pressing it again hides it and holding it does not flicker. Its game-swap rate can differ from monitor refresh or the selected FPS cap.
 3. Play through exploration, battles, cutscenes and area transitions. Record the last working save/location and the exact action before any failure.
 4. Repeat a stuttering section once after restarting. Note whether it improves after shaders have been cached.
 5. Try Balanced (FSR 1 / 1×), then Enhanced (FSR 1 / 2×) in the same scene. Compare image quality and stutter. High (3×) and Ultra (4×) use nine and sixteen times the native pixel count and need more GPU time/memory. Return to Original if rendering deteriorates.

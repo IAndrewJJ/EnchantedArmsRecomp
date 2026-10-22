@@ -26,3 +26,9 @@ Local logs, build identity and a copy of the available save files are retained p
 Status: reported by the first tester on October 21, 2026; investigating. No fix or workaround confirmed.
 
 The NPC named **Smiling Salesgirl** is invisible at the festival. Whether her shadow and interaction remain functional, and whether the issue persists after reloading at 1×, have not yet been established. A shared cause with EA-001 is possible but unconfirmed. Keep this location as a second reproduction case when testing character rendering.
+
+## EA-003 — Dark or black patches on multiple NPC models
+
+Status: reported October 22, 2026; investigating. No fix confirmed.
+
+The tester reports that parts of multiple NPC character models appear black where another color is expected. The affected location/materials and whether patches move with the camera are not yet established. This symptom is distinct from the two invisible NPC reports; a shared renderer cause is unconfirmed. The current installation records Original 1x scaling, game filtering, zero texture-detail bias and original frame pacing, so the initial investigation must include a baseline renderer comparison rather than assuming the new detail/FPS settings caused it.

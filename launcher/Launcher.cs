@@ -18,9 +18,26 @@ namespace EnchantedArmsPC {
         internal static readonly string Local = Path.Combine(Root, ".local");
         internal static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
         internal static System.Threading.EventWaitHandle PlayRequest;
-        internal const string Version = "0.3.0-detail-fps-preview";
+        internal static System.Threading.EventWaitHandle ActivateRequest;
+        internal static System.Threading.EventWaitHandle RequestAcknowledged;
+        static readonly object DiagnosticLock = new object();
+        internal static void Diagnostic(string message) {
+            try {
+                lock (DiagnosticLock) {
+                    string directory = Path.Combine(Local,"logs"); Directory.CreateDirectory(directory);
+                    string path = Path.Combine(directory,"launcher.log");
+                    if (File.Exists(path) && new FileInfo(path).Length > 2 * 1024 * 1024)
+                        File.Copy(path,path + ".previous",true);
+                    if (File.Exists(path) && new FileInfo(path).Length > 2 * 1024 * 1024) File.WriteAllText(path,"");
+                    File.AppendAllText(path,DateTime.UtcNow.ToString("o") + " [" + Process.GetCurrentProcess().Id + "] " + message + Environment.NewLine);
+                }
+            } catch { }
+        }
+        internal const string Version = "0.3.1-fps-counter-preview";
         internal static string NativeDirectory {
             get {
+                string counter = Path.Combine(Root,"bin","graphics-0.3.1");
+                if (File.Exists(Path.Combine(counter,"enchantedarmsrecomp.exe"))) return counter;
                 string newest = Path.Combine(Root,"bin","graphics-0.3.0");
                 if (File.Exists(Path.Combine(newest,"enchantedarmsrecomp.exe"))) return newest;
                 string enhanced = Path.Combine(Root,"bin","graphics-0.2.0");
@@ -53,9 +70,9 @@ namespace EnchantedArmsPC {
                 Type type = shortcut.GetType();
                 Action<string, object> set = (name, value) => type.InvokeMember(name, BindingFlags.SetProperty, null, shortcut, new object[] { value });
                 set("TargetPath", Path.Combine(Root, "EnchantedArmsLauncher.exe"));
-                set("Arguments", "--play");
+                set("Arguments", "");
                 set("WorkingDirectory", Root);
-                set("Description", "Play Enchanted Arms PC with your saved visual settings");
+                set("Description", "Open the EnchantedArmsPC launcher");
                 set("IconLocation", Path.Combine(Root, "EnchantedArmsLauncher.exe") + ",0");
                 type.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
             } finally {
@@ -117,21 +134,39 @@ namespace EnchantedArmsPC {
             }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Application.ThreadException += (s,e) => {
+                Diagnostic("UI exception: " + e.Exception);
+                MessageBox.Show(e.Exception.Message + "\r\nDetails: .local/logs/launcher.log","EnchantedArmsPC",MessageBoxButtons.OK,MessageBoxIcon.Error);
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s,e) => Diagnostic("Unhandled exception: " + e.ExceptionObject);
             string instance;
             using (var hasher = System.Security.Cryptography.SHA256.Create())
                 instance = "Local\\EnchantedArmsPC." + BitConverter.ToString(hasher.ComputeHash(Encoding.UTF8.GetBytes(Root.ToUpperInvariant()))).Replace("-", "");
             bool created;
             using (var mutex = new System.Threading.Mutex(true, instance, out created)) {
                 if (!created) {
-                    if (args.Contains("--play")) {
-                        try { using (var request = System.Threading.EventWaitHandle.OpenExisting(instance + ".Play")) request.Set(); }
-                        catch (System.Threading.WaitHandleCannotBeOpenedException) { }
-                    }
-                    return 0;
+                    try {
+                        using (var ack = System.Threading.EventWaitHandle.OpenExisting(instance + ".Ack"))
+                        using (var request = System.Threading.EventWaitHandle.OpenExisting(instance + ".Activate")) {
+                            ack.Reset(); request.Set();
+                            if (ack.WaitOne(5000)) { Diagnostic("Existing launcher acknowledged Activate"); return 0; }
+                        }
+                    } catch (System.Threading.WaitHandleCannotBeOpenedException error) { Diagnostic("Existing launcher request failed: " + error.Message); }
+                    Diagnostic("Existing launcher did not acknowledge the request");
+                    MessageBox.Show("The existing launcher is not responding. Close it and open EnchantedArmsLauncher.exe again. Your game and saves are unchanged.\r\nDetails: .local/logs/launcher.log", "EnchantedArmsPC",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                    return 1;
                 }
                 using (PlayRequest = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Play"))
-                    Application.Run(new Launcher(args.Contains("--play")));
+                using (ActivateRequest = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Activate"))
+                using (RequestAcknowledged = new System.Threading.EventWaitHandle(false, System.Threading.EventResetMode.AutoReset, instance + ".Ack")) {
+                    Diagnostic("Launcher started " + Version);
+                    Application.Run(new Launcher());
+                    Diagnostic("Launcher window closed; exiting");
+                }
             }
+            // Finish even if an outstanding child-process monitor still has a
+            // CLR worker alive. The independently running game is not stopped.
+            Environment.Exit(0);
             return 0;
         }
     }
@@ -160,16 +195,16 @@ namespace EnchantedArmsPC {
         bool busy;
         bool cancelRequested;
         bool failed;
-        readonly bool autoPlay;
         readonly Timer stateTimer = new Timer { Interval = 2000 };
+        System.Threading.RegisteredWaitHandle playWait;
+        System.Threading.RegisteredWaitHandle activateWait;
         static Button MakeButton(string text, int width) {
             return new Button { Text = text, Width = width, Height = 36, FlatStyle = FlatStyle.System, Margin = new Padding(0, 3, 10, 3) };
         }
         static Label Caption(string text) { return new Label { Text = text, AutoSize = true, Margin = new Padding(0, 8, 15, 5) }; }
         static FlowLayoutPanel Row() { return new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true, Margin = new Padding(0, 3, 0, 3) }; }
 
-        public Launcher(bool immediatelyPlay) {
-            autoPlay = immediatelyPlay;
+        public Launcher() {
             Text = "EnchantedArmsPC • Playtest Launcher";
             Font = new Font("Segoe UI", 10);
             Size = new Size(1010, 815); MinimumSize = new Size(920, 740);
@@ -190,7 +225,7 @@ namespace EnchantedArmsPC {
             for (int i = 0; i < 10; ++i) layout.RowStyles.Add(new RowStyle(i == 8 ? SizeType.Percent : SizeType.AutoSize, i == 8 ? 100 : 0));
             Controls.Add(layout);
             layout.Controls.Add(new Label { Text = "EnchantedArmsPC", Font = new Font("Segoe UI", 25, FontStyle.Bold), AutoSize = true, ForeColor = Color.FromArgb(24, 48, 72) }, 0, 0);
-            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. Detail / FPS preview 0.3.0", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
+            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. FPS counter preview 0.3.1 • F6 toggles FPS", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
             layout.Controls.Add(status, 0, 2);
             var source = new TableLayoutPanel { ColumnCount = 2, AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 6) };
             source.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); source.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -243,12 +278,32 @@ namespace EnchantedArmsPC {
             FormClosing += OnClosing;
             stateTimer.Tick += (s,e) => {
                 if (!busy) RefreshState();
-                if (Program.PlayRequest != null && Program.PlayRequest.WaitOne(0)) { Show(); Activate(); LaunchGame(); }
             };
             stateTimer.Start();
-            Shown += (s,e) => { if (autoPlay) LaunchGame(); };
+            Shown += (s,e) => {
+                Program.Diagnostic("Launcher window shown");
+                playWait = System.Threading.ThreadPool.RegisterWaitForSingleObject(Program.PlayRequest,(state,timedOut) => DispatchRequest(true),null,-1,false);
+                activateWait = System.Threading.ThreadPool.RegisterWaitForSingleObject(Program.ActivateRequest,(state,timedOut) => DispatchRequest(false),null,-1,false);
+            };
+            FormClosed += (s,e) => {
+                if (playWait != null) playWait.Unregister(null);
+                if (activateWait != null) activateWait.Unregister(null);
+                stateTimer.Stop(); stateTimer.Dispose();
+            };
             Append("Choose your USA/Europe Enchanted Arms Xbox 360 ISO, then build. An unsupported revision is rejected before extraction.");
             RefreshState();
+        }
+        void DispatchRequest(bool startGame) {
+            try {
+                if (IsDisposed || Disposing || !IsHandleCreated) return;
+                BeginInvoke(new Action(() => {
+                    Show(); if (WindowState == FormWindowState.Minimized) WindowState=FormWindowState.Normal; Activate();
+                    Program.Diagnostic(startGame ? "Play request received" : "Activate request received");
+                    Program.RequestAcknowledged.Set();
+                    // Legacy --play requests only restore the launcher. The
+                    // game starts exclusively from the Play button.
+                }));
+            } catch (InvalidOperationException error) { Program.Diagnostic("Request dispatch failed: " + error.Message); }
         }
         Preferences LoadPreferences() {
             try { return Program.Json.Deserialize<Preferences>(File.ReadAllText(Path.Combine(Program.Local, "launcher.json"))) ?? new Preferences(); }
@@ -281,6 +336,7 @@ namespace EnchantedArmsPC {
                 failed ? "Last setup or game run failed • see details below" : Ready() ? "Ready to play • campaign testing in progress" : "Setup needed • select your ISO below";
         }
         void Append(string message) {
+            Program.Diagnostic(message);
             if (IsDisposed || Disposing) return;
             if (InvokeRequired) { try { BeginInvoke(new Action<string>(Append), message); } catch (InvalidOperationException) {} return; }
             if (log.TextLength > 250000) log.Text = log.Text.Substring(log.TextLength - 180000);
@@ -321,11 +377,12 @@ namespace EnchantedArmsPC {
             } catch (Exception error) { Append("Could not stop setup: " + error.Message); cancelRequested = false; RefreshState(); }
         }
         async void LaunchGame() {
-            if (busy || GameRunning()) return;
+            if (busy || GameRunning()) { Append(busy ? "Setup is running; wait for it to finish before playing." : "The game is already running."); return; }
             if (!Ready()) { Append("Complete Build from ISO before playing."); return; }
             SavePreferences();
             if ((preferences.TextureDetail != 0 || preferences.FrameLimit != 0) &&
-                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.0")) {
+                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.0") &&
+                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.1")) {
                 Append("Texture detail and experimental FPS require the 0.3.0 native build. Choose Build from ISO once to update."); return;
             }
             if (preferences.Upscaler != "bilinear" && !File.Exists(Path.Combine(Program.NativeDirectory,"renderer-capabilities.json"))) {
@@ -340,6 +397,7 @@ namespace EnchantedArmsPC {
                     WorkingDirectory = Program.NativeDirectory, UseShellExecute = false, CreateNoWindow = true
                 };
                 Process launched = Process.Start(start); game = launched; failed = false; RefreshState();
+                Program.Diagnostic("Native game PID " + launched.Id + ", executable " + start.FileName);
                 Append("Game started: " + preferences.Summary() + ". Hold Enter briefly for Start; Space is A; P is Y.");
                 await Task.Run(() => launched.WaitForExit());
                 int exit = launched.ExitCode; failed = exit != 0;
@@ -397,7 +455,7 @@ namespace EnchantedArmsPC {
         }
         async void OnClosing(object sender, FormClosingEventArgs e) {
             if (busy) { e.Cancel = true; await CancelSetup(); Append("Wait for setup to stop, then close the launcher."); }
-            else { SavePreferences(); stateTimer.Stop(); stateTimer.Dispose(); }
+            else { SavePreferences(); Program.Diagnostic("Launcher closing"); }
         }
     }
 }

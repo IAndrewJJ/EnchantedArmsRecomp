@@ -42,6 +42,7 @@ set(ENCHANTEDARMSRECOMP_SOURCES
     src/input_diagnostics.cpp
     src/scene_dispatch.cpp
     src/frame_pacing.cpp
+    src/fps_counter.cpp
 )
 
 if(WIN32)

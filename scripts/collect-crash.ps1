@@ -7,7 +7,8 @@ $projectDirectory = Split-Path $PSScriptRoot -Parent
 $executables = @(
     (Join-Path $projectDirectory 'bin/enchantedarmsrecomp.exe'),
     (Join-Path $projectDirectory 'bin/graphics-0.2.0/enchantedarmsrecomp.exe'),
-    (Join-Path $projectDirectory 'bin/graphics-0.3.0/enchantedarmsrecomp.exe')
+    (Join-Path $projectDirectory 'bin/graphics-0.3.0/enchantedarmsrecomp.exe'),
+    (Join-Path $projectDirectory 'bin/graphics-0.3.1/enchantedarmsrecomp.exe')
 )
 $symbolizer = Join-Path $projectDirectory '.local/toolchain/llvm-20.1.8/bin/llvm-symbolizer.exe'
 $event = Get-WinEvent -FilterHashtable @{LogName='Application'; Id=1000; StartTime=$Since} -ErrorAction SilentlyContinue |

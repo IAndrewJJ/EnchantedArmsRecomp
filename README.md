@@ -2,7 +2,7 @@
 
 **An unofficial native PC recompilation of Enchanted Arms for Xbox 360.** Build and play on Windows using your own supported disc image.
 
-[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.2) · [Known issues](docs/KNOWN_ISSUES.md) · [Setup help](docs/SETUP_TROUBLESHOOTING.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
+[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.0) · [Known issues](docs/KNOWN_ISSUES.md) · [Setup help](docs/SETUP_TROUBLESHOOTING.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
 
 [![Launcher checks](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml/badge.svg)](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml)
 
@@ -10,10 +10,10 @@
 
 ## Start playing
 
-1. Download **EnchantedArmsPC-0.4.2-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
+1. Download **EnchantedArmsPC-0.5.0-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
 2. Open **EnchantedArmsLauncher.exe**. Choose **Set up game**, select your Xbox 360 ISO under **Settings → Game**, then **Build game**.
 3. When setup finishes, click **Play Enchanted Arms**. The launcher always opens first; shortcuts never start the game automatically.
-4. Use **Settings → Graphics** for visual presets, **Display** for window/FPS options, or **Game → Create desktop shortcut** for an **EnchantedArmsPC** desktop icon.
+4. Use **Settings** for graphics, display, controls, local texture packs and updates. **Game → Create desktop shortcut** creates an **EnchantedArmsPC** desktop icon.
 
 Requires **Windows 10/11 x64**, **.NET Framework 4.8**, the [Microsoft Visual C++ v14 x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) and a **Direct3D 12 GPU**. First setup downloads about **800 MB** of pinned build tools and needs roughly **20 GB free** in addition to the ISO. Compilation takes several minutes. Python and Visual Studio do not need to be installed separately.
 
@@ -27,7 +27,7 @@ The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP an
 - Mild stutter has been reported. Repeatable measurements and broader GPU/controller coverage are needed.
 - **60 FPS is a preview option with automatic game-speed corrections.** Opening-area character movement, menu background and a runic wall have passed a player comparison. Full campaign timing and higher limits remain unverified; Original stays the default. See [timing details](docs/TIMING.md).
 
-See [known issues](docs/KNOWN_ISSUES.md) and [playtesting guidance](docs/PLAYTESTING.md) for details. The launcher polish in 0.4.0 does not establish a campaign-wide FPS improvement.
+See [known issues](docs/KNOWN_ISSUES.md), [playtesting guidance](docs/PLAYTESTING.md) and the [0.5.0 release notes](docs/RELEASE-0.5.0.md). No campaign-wide performance improvement is claimed.
 
 ## Graphics
 
@@ -41,9 +41,11 @@ See [known issues](docs/KNOWN_ISSUES.md) and [playtesting guidance](docs/PLAYTES
 
 Settings apply on the next game launch. Internal resolution is separate from window size. Start with Original to establish a baseline: 2×, 3× and 4× render four, nine and sixteen times the native pixel count.
 
-FSR 1 provides spatial upscaling; CAS provides sharpening. Texture detail selects sharper existing mipmaps, with possible shimmer at Strong. Source textures and movies keep their original detail. Temporal FSR, frame generation and replacement texture packs are not implemented.
+FSR 1 provides spatial upscaling; CAS provides sharpening. Texture detail selects sharper existing mipmaps, with possible shimmer at Strong. **Supersampling + FXAA** raises the internal scale above the selected display size for cleaner edges at a substantial GPU cost. Source movies keep their original detail/cadence. Temporal FSR and frame generation are not implemented.
 
-**Settings → Advanced** contains ROV/RTV, resolve readback and background shader compilation comparisons. Change one option at a time when investigating rendering problems. Immediate readback can stall heavily; these controls are not confirmed NPC fixes.
+**Settings → Textures** installs/selects local preconverted DDS/XPR2 replacement packs. It uses a separate game overlay and preserves disc files; no enhanced texture assets are bundled. See [supported formats, requirements and authoring](docs/TEXTURE_PACKS.md).
+
+**Settings → Advanced** contains ROV/RTV, resolve readback, background shader compilation and worker count controls. Change one option at a time when investigating rendering problems. Immediate readback can stall heavily; these controls are not confirmed NPC fixes. **Display → Frame-time graph** adds recent interval, p95 and peak measurements to F6.
 
 ## Controls
 
@@ -56,11 +58,12 @@ FSR 1 provides spatial upscaling; CAS provides sharpening. Texture detail select
 | W A S D | Left stick |
 | Arrow keys | Right stick |
 | Shift + arrows | D-pad |
+| F2 | Release/capture mouse camera |
 | F6 | Toggle FPS counter |
 | F8 | Save screenshot |
 | Alt + F4 | Close |
 
-Briefly hold a key if a short tap is missed. A pinned SDL controller database is included; physical controllers need broader testing. F6 counts game swap submissions, not monitor refresh or GPU execution time. F8 captures guest output before presenter effects and overlays and can briefly pause rendering.
+**Settings → Controls** remaps keyboard keys and controller buttons, adjusts stick dead zones, camera response/inversion and mouse sensitivity, and swaps triggers. New/reconnected controllers feed the single player's slot. A pinned SDL controller database is included; physical controllers need broader testing. F6 counts game swap submissions, not monitor refresh or GPU execution time. F8 captures guest output before presenter effects and overlays and can briefly pause rendering.
 
 ## Supported game and updates
 
@@ -72,7 +75,9 @@ Only the **USA/Europe Xbox 360 release**, title `555307E6`, media `41637F65`, XE
 
 Setup opens the ISO read-only and rejects unsupported executables before extraction. Files, translated code and compilation stay on the player's PC.
 
-To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.2 launcher uses native build 0.3.3. Rebuild through Settings → Game → Rebuild game to receive the timing fixes.** A legacy build remains usable in Original mode; high FPS requires the updated native build. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
+For the first update from an older launcher, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. After 0.5.0, **Settings → Updates** checks/downloads verified releases, installs after closing the launcher, and can restore the previous kit. See [recovery instructions](docs/RELEASE-0.5.0.md).
+
+**Launcher 0.5.0 uses native build 0.3.4. Rebuild through Settings → Game → Rebuild game for the new input transforms and frame-time graph.** The launcher prompts for a rebuild when selected settings require it. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
 
 Local data lives under `.local`: `runtime/user` for saves, `runtime/cache` for shader caches, `runtime/captures` for F8 images, and `runtime/boot-*.log` plus `logs` for diagnostics. Rebuilding preserves saves and caches. Report/log/save-management buttons have been removed from the simplified interface.
 

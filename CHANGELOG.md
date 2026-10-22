@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — Controls, texture packs and update recovery
+
+- Add keyboard/controller remapping, trigger swaps, stick dead zones, camera response/inversion and mouse controls. Assign reconnected pads to guest player 0.
+- Add display-aware supersampling with FXAA, an optional F6 frame-time graph and shader worker controls. Retain existing timing corrections and shader caches.
+- Install/select local preconverted DDS/XPR2 texture packs through separate NTFS game overlays; keep original disc files intact. No enhanced texture assets are bundled.
+- Add verified GitHub update downloads, transactional file replacement, interrupted-update recovery and rollback preserving private saves/settings/native builds/cache.
+- Extend portable input, launcher settings, archive validation, update recovery and texture-pack tests. Add a local frame-log analysis tool without report/log buttons.
+- Native integration is 0.3.4; renderer remains 0.3.0. Opening NPC rendering defects, full campaign timing and higher FPS validation remain open. See [release details](docs/RELEASE-0.5.0.md).
+
 ## 0.4.2 — Normal-speed 60 FPS preview
 
 - Convert elapsed frame time into the engine's 30 Hz units for exploration, interface, menu scenes and alternate event/script updates. Keep Original timing as the default.

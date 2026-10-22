@@ -95,7 +95,7 @@ namespace EnchantedArmsPC
             play.Click += async (s, e) =>
             {
                 if (Ready() && !Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
-                    LaunchGame();
+                    await LaunchGame();
                 else
                     await OpenSettings(3);
             };
@@ -230,6 +230,24 @@ namespace EnchantedArmsPC
                 if (!SavePreferences())
                     return;
                 RefreshState();
+                if (dialog.UpdateStage != null || dialog.RollbackRequested)
+                {
+                    if (GameRunning())
+                    {
+                        MessageBox.Show(this, "Close the game before installing updates.");
+                        return;
+                    }
+                    try
+                    {
+                        LocalTools.ApplyUpdate(dialog.UpdateStage, dialog.RollbackRequested);
+                        Close();
+                    }
+                    catch (Exception error)
+                    {
+                        MessageBox.Show(this, error.Message, "Update could not start");
+                    }
+                    return;
+                }
                 if (dialog.BuildRequested)
                     await Setup();
             }
@@ -327,7 +345,7 @@ namespace EnchantedArmsPC
             bool running = GameRunning();
             play.Enabled = !busy && !running;
             settings.Enabled = !busy;
-            cancel.Visible = busy;
+            cancel.Visible = busy && worker != null;
             cancel.Enabled = busy && !cancelRequested;
             progress.Visible = busy;
             progress.Style = busy ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
@@ -343,7 +361,7 @@ namespace EnchantedArmsPC
                           : failed ? (lastFailure ?? "Unable to start. Open Settings to try again.")
                           : Ready()
                               ? (Program.TimingUpdateRequired(preferences, Program.NativeDirectory)
-                                     ? "Rebuild your game to enable corrected high FPS"
+                                     ? "Rebuild your game to use these settings"
                                      : "Ready to play")
                               : "Choose your game disc to begin";
             summary.Text = busy ? "First setup may take a while."
@@ -486,7 +504,7 @@ namespace EnchantedArmsPC
                 RefreshState();
             }
         }
-        void LaunchGame()
+        async Task LaunchGame()
         {
             if (busy || GameRunning() || !Ready() || !SavePreferences())
                 return;
@@ -494,23 +512,37 @@ namespace EnchantedArmsPC
             {
                 if (Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
                     throw new InvalidOperationException(
-                        "High FPS needs the updated game build. Open Settings → Game and " +
-                        "rebuild from your ISO, or select Original FPS to use the existing build.");
+                        "These settings need the updated game build. Open Settings → Game and " +
+                        "rebuild from your ISO.");
                 if (preferences.Upscaler != "bilinear" &&
                     !File.Exists(
                         Path.Combine(Program.NativeDirectory, "renderer-capabilities.json")))
                     throw new InvalidOperationException(
                         "This installation needs an update. Open " +
                         "Settings → Game and rebuild from your ISO.");
+                string gameRoot = null;
+                if (!String.IsNullOrEmpty(preferences.TexturePack))
+                {
+                    busy = true;
+                    setupStage = "Preparing your textures…";
+                    RefreshState();
+                    var prepared =
+                        await LocalTools.Run("texture_packs.py", "prepare", "--root", Program.Root,
+                                             "--token", preferences.TexturePack);
+                    gameRoot = Convert.ToString(prepared["game_root"]);
+                }
+                if (closeWhenStopped)
+                    return;
                 string runtime = Path.Combine(Program.Local, "runtime");
                 Directory.CreateDirectory(runtime);
                 string logPath = Path.Combine(
                     runtime, "boot-" + DateTime.UtcNow.ToString("yyyyMMddTHHmmssfffZ") + ".log");
                 var start = new ProcessStartInfo(
                     Path.Combine(Program.NativeDirectory, "enchantedarmsrecomp.exe"),
-                    Program.Join(Program.GameArguments(
-                        preferences, logPath))) { WorkingDirectory = Program.NativeDirectory,
-                                                  UseShellExecute = false, CreateNoWindow = true };
+                    Program.Join(Program.GameArguments(preferences, logPath, gameRoot))) {
+                    WorkingDirectory = Program.NativeDirectory, UseShellExecute = false,
+                    CreateNoWindow = true
+                };
                 Process launched = Process.Start(start);
                 TrackGame(launched);
                 failed = false;
@@ -544,6 +576,13 @@ namespace EnchantedArmsPC
                 RefreshState();
                 MessageBox.Show(this, error.Message, "Unable to start game", MessageBoxButtons.OK,
                                 MessageBoxIcon.Information);
+            }
+            finally
+            {
+                busy = false;
+                RefreshState();
+                if (closeWhenStopped)
+                    Close();
             }
         }
         async void OnClosing(object sender, FormClosingEventArgs e)

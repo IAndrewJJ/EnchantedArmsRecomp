@@ -89,7 +89,8 @@ namespace EnchantedArmsPC
         }
         internal static bool TimingUpdateRequired(Preferences p, string nativeDirectory)
         {
-            return p.FrameLimit != 0 && p.FrameLimit != 30 &&
+            return ((p.FrameLimit != 0 && p.FrameLimit != 30) || p.CustomNativeControls ||
+                    p.FrameTimeGraph) &&
                    !String.Equals(Path.GetFullPath(nativeDirectory),
                                   Path.GetFullPath(CurrentNativeDirectory),
                                   StringComparison.OrdinalIgnoreCase);
@@ -100,6 +101,9 @@ namespace EnchantedArmsPC
                 string diagnostics = CurrentNativeDirectory;
                 if (File.Exists(Path.Combine(diagnostics, "enchantedarmsrecomp.exe")))
                     return diagnostics;
+                string timing = Path.Combine(Root, "bin", "graphics-0.3.3");
+                if (File.Exists(Path.Combine(timing, "enchantedarmsrecomp.exe")))
+                    return timing;
                 string prior = Path.Combine(Root, "bin", "graphics-0.3.2");
                 if (File.Exists(Path.Combine(prior, "enchantedarmsrecomp.exe")))
                     return prior;
@@ -128,9 +132,12 @@ namespace EnchantedArmsPC
         {
             return String.Join(" ", args.Select(Quote));
         }
-        internal static string[] GameArguments(Preferences p, string log)
+        internal static string[] GameArguments(Preferences p, string log, string gameRoot = null)
         {
-            return new[] { "--game_data_root=" + Path.Combine(Local, "game"),
+            bool current = String.Equals(Path.GetFullPath(NativeDirectory),
+                                         Path.GetFullPath(CurrentNativeDirectory),
+                                         StringComparison.OrdinalIgnoreCase);
+            return new[] { "--game_data_root=" + (gameRoot ?? Path.Combine(Local, "game")),
                            "--user_data_root=" + Path.Combine(Local, "runtime", "user"),
                            "--cache_root=" + Path.Combine(Local, "runtime", "cache"),
                            "--log_file=" + log,
@@ -140,6 +147,10 @@ namespace EnchantedArmsPC
                            "--no-ea_trace_input",
                            "--mnk_mode" }
                 .Concat(p.RendererArguments())
+                .Concat(p.ControlArguments(current))
+                .Concat(current ? new[] { p.FrameTimeGraph ? "--ea_frame_graph"
+                                                           : "--no-ea_frame_graph" }
+                                : new string[0])
                 .ToArray();
         }
         internal static void Shortcut(string directory)
@@ -207,13 +218,19 @@ namespace EnchantedArmsPC
                                          interactive = Environment.UserInteractive }));
                 return 0;
             }
-            if (args.Length == 2 && args[0] == "--graphics-preview")
+            if ((args.Length == 2 && args[0] == "--graphics-preview") ||
+                (args.Length == 3 && args[0] == "--settings-preview"))
             {
+                int page = 0;
+                if (args.Length == 3 &&
+                    (!Int32.TryParse(args[1], out page) || page < 0 || page > 6))
+                    return 2;
                 Application.EnableVisualStyles();
                 using (var dialog = new GraphicsDialog(
                            new Preferences { Upscaler = "fsr", PostAA = "fxaa", Scale = 2,
                                              Anisotropy = 5, Dither = true, TextureDetail = 1,
-                                             FrameLimit = 60 }))
+                                             FrameLimit = 60 },
+                           false, false, page))
                 {
                     dialog.StartPosition = FormStartPosition.Manual;
                     dialog.Location = new Point(-20000, -20000);
@@ -224,7 +241,7 @@ namespace EnchantedArmsPC
                     {
                         dialog.DrawToBitmap(bitmap,
                                             new Rectangle(0, 0, dialog.Width, dialog.Height));
-                        bitmap.Save(args[1], System.Drawing.Imaging.ImageFormat.Png);
+                        bitmap.Save(args[args.Length - 1], System.Drawing.Imaging.ImageFormat.Png);
                     }
                 }
                 return 0;

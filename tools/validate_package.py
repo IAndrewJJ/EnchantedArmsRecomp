@@ -2,12 +2,32 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path, PurePosixPath
 import zipfile
 
 PREFIX = "EnchantedArmsRecomp/"
 PRIVATE_PARTS = {".local", ".git", "bin", "private", "assets", "audit", "__pycache__"}
 RENDERER_FILES = {"rexruntimerd.dll", "rexruntimerd.lib", "rexgpu-xenosrd.dll", "rexgpu-xenosrd.lib", "TracyClientrd.dll"}
+
+
+def validate_name(name):
+    relative = PurePosixPath(name)
+    reserved = {'con','prn','aux','nul'} | {f'{p}{n}' for p in ('com','lpt') for n in range(1,10)}
+    if (not name or "\\" in name or relative.is_absolute() or relative.as_posix()!=name or
+        any(p in {'.','..'} or p.endswith((' ','.')) or
+            any(c in p for c in ':*?"<>|\x00') or p.split('.')[0].lower() in reserved for p in relative.parts)):
+        raise ValueError("Unsafe archive path: "+name)
+    parts = {p.casefold() for p in relative.parts}
+    suffix = relative.suffix.casefold()
+    if PRIVATE_PARTS & parts or name.casefold().startswith("generated/default/"):
+        raise ValueError("Private path in Windows kit: "+name)
+    if suffix in {'.iso','.xex','.xexp','.dmp','.pdb','.log'}:
+        raise ValueError("Private file type in Windows kit: "+name)
+    if suffix=='.exe' and name!='EnchantedArmsLauncher.exe':
+        raise ValueError("Unexpected executable in Windows kit: "+name)
+    if suffix in {'.dll','.lib'} and name not in {'renderer/'+n for n in RENDERER_FILES}:
+        raise ValueError("Unexpected runtime binary: "+name)
 
 
 def validate(path):
@@ -22,20 +42,9 @@ def validate(path):
         if not isinstance(hashes, dict) or set(names) != {PREFIX + n for n in hashes} | {PREFIX + "SHA256SUMS.json"}:
             raise ValueError("Hash ledger does not describe exactly the archive contents")
         for name, expected in hashes.items():
-            relative = PurePosixPath(name)
-            if (not name or "\\" in name or relative.is_absolute() or relative.as_posix() != name or
-                any(p in {"..", "."} or ":" in p for p in relative.parts)):
-                raise ValueError("Unsafe archive path: " + name)
-            parts = {p.casefold() for p in relative.parts}
-            suffix = relative.suffix.casefold()
-            if PRIVATE_PARTS & parts or name.casefold().startswith("generated/default/"):
-                raise ValueError("Private path in Windows kit: " + name)
-            if suffix in {".iso", ".xex", ".xexp", ".dmp", ".pdb", ".log"}:
-                raise ValueError("Private file type in Windows kit: " + name)
-            if suffix == ".exe" and name != "EnchantedArmsLauncher.exe":
-                raise ValueError("Unexpected executable in Windows kit: " + name)
-            if suffix in {".dll", ".lib"} and name not in {"renderer/" + n for n in RENDERER_FILES}:
-                raise ValueError("Unexpected runtime binary: " + name)
+            validate_name(name)
+            if not isinstance(expected,str) or not re.fullmatch(r'[0-9a-f]{64}',expected):
+                raise ValueError("Invalid file checksum: "+name)
             if hashlib.sha256(archive.read(PREFIX + name)).hexdigest() != expected:
                 raise ValueError("Hash mismatch: " + name)
         return len(hashes)

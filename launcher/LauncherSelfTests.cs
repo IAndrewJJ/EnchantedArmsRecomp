@@ -118,6 +118,41 @@ namespace EnchantedArmsPC
                 Program.InstanceName("C:\\game", "WinSta0\\Default") ==
                     Program.InstanceName("C:\\other", "WinSta0\\Default"))
                 return 17;
+            var controls = new Preferences { LeftDeadzone = 15,    RightDeadzone = 20,
+                                             CameraResponse = 125, MouseSensitivity = 150,
+                                             InvertCameraY = true, MouseCamera = true,
+                                             SwapTriggers = true,  FrameTimeGraph = true,
+                                             ShaderWorkers = 3 };
+            controls.PadButtons[0] = 1;
+            controls.PadButtons[1] = 0;
+            controls.Keys[0] = "Ctrl+G";
+            var mapped = controls.ControlArguments(true);
+            if (!mapped.Contains("--keybind_b=Ctrl+G") ||
+                !mapped.Contains("--ea_pad_map=1,0,2,3,4,5,6,7,8,9,10,11,12,13") ||
+                !mapped.Contains("--ea_right_deadzone=0.2") ||
+                !mapped.Contains("--ea_swap_triggers"))
+                return 24;
+            if (controls.ControlArguments(false).Any(a => a.StartsWith("--ea_")) ||
+                !controls.ControlArguments(false).Contains("--keybind_a=Ctrl+G"))
+                return 25;
+            if (Preferences.ValidBinding("F2") || Preferences.ValidBinding("F6") ||
+                Preferences.ValidBinding("F8") || Preferences.ValidBinding("Ctrl+invalid"))
+                return 26;
+            controls.Normalize();
+            using (var dialog = new GraphicsDialog(controls))
+            {
+                dialog.ReadValues();
+                if (Program.Json.Serialize(controls) != Program.Json.Serialize(dialog.Settings))
+                    return 27;
+            }
+            foreach (int width in new[] { 1280, 1920, 2560, 3840 })
+            {
+                var supersampling = new Preferences { Width = width, PostAA = "ssaa" };
+                var arguments = supersampling.RendererArguments();
+                if (supersampling.Scale * 1280 <= width ||
+                    !arguments.Contains("--swap_post_effect=fxaa"))
+                    return 28;
+            }
             foreach (int limit in Preferences.FrameLimits)
             {
                 var selected = new Preferences { Iso = "test.iso",

@@ -11,6 +11,7 @@ The goal is a dependable native PC edition that players can build from their own
 
 - 0.3.0 adds texture mip-detail bias and experimental host frame limits. These need motion and timing comparisons against Original; higher-FPS campaign compatibility is unverified.
 - 0.4.2 adds engine/UV timing corrections with an opening-area 60 FPS player comparison. Full campaign timing remains unverified.
+- 0.5.0 adds input remapping, camera/dead-zone options, controller slot recovery, supersampling + FXAA, a frame-time graph, verified kit updates/rollback and local DDS/XPR2 pack support. No enhanced textures or confirmed NPC fixes are included.
 
 ## Next compatibility milestones
 
@@ -18,7 +19,7 @@ The goal is a dependable native PC edition that players can build from their own
 2. Complete two-machine installation and playtesting, including controller behavior, save/reload, battle transitions, videos and later areas. Record clean-machine toolchain failures separately from game crashes.
 3. Measure stutter with repeatable routes and warm shader caches. Separate shader compilation, pipeline creation, guest timing and streaming costs before choosing an optimization. Keep game pacing intact until timing dependencies have been tested.
 4. Expand AMD/NVIDIA/Intel coverage and verify graphics presets across gameplay, effects, UI and cutscenes. Adjust defaults using measured performance and image quality.
-5. Extend 60 FPS timing validation through battles, scripts, transitions and the full campaign; investigate residual fast or slow effects against Original. The 0.4.2 corrections have only an opening-area comparison, and higher rates remain experimental. Temporal reconstruction, frame generation, widescreen changes and texture replacement require separate engineering and testing.
+5. Extend 60 FPS timing validation through battles, scripts, transitions and the full campaign; investigate residual fast or slow effects against Original. The timing corrections have only an opening-area comparison, and higher rates remain experimental. Temporal reconstruction, frame generation, widescreen changes and support for textures inside additional game containers require separate engineering and testing.
 
 Additional creatures, areas and other content mods are deferred until base-game compatibility is established.
 

@@ -16,6 +16,8 @@ jobs:
         run: |
           c++ -std=c++17 tools/graphics-probe/timing.cpp -o "$RUNNER_TEMP/ea_timing_probe"
           "$RUNNER_TEMP/ea_timing_probe"
+          c++ -std=c++17 tools/graphics-probe/input.cpp -o "$RUNNER_TEMP/ea_input_probe"
+          "$RUNNER_TEMP/ea_input_probe"
   validate-and-package:
     runs-on: windows-latest
     timeout-minutes: 20
@@ -28,6 +30,9 @@ jobs:
         run: |
           python tools/test_setup.py -v
           python tools/test_release.py -v
+          python tools/test_updates.py -v
+          python tools/test_texture_packs.py -v
+          python tools/test_session.py -v
       - name: Install and verify all pinned tools in a fresh folder
         run: python tools/check_toolchain.py --directory "${{ runner.temp }}/Full toolchain fresh install"
       - name: Compile launcher

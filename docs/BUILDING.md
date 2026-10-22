@@ -34,6 +34,9 @@ Tool URLs, sizes and digests are pinned in `toolchain.lock.json` and `launcher/p
 ```powershell
 python tools/test_setup.py -v
 python tools/test_release.py -v
+python tools/test_updates.py -v
+python tools/test_texture_packs.py -v
+python tools/test_session.py -v
 ```
 
 The separate network integration check requires Windows and a **new** directory. It downloads, verifies, extracts and runs the official SDK without an ISO or existing toolchain:
@@ -44,9 +47,17 @@ python tools/check_toolchain.py --sdk-only --directory '.local/fresh SDK check'
 
 Omit `--sdk-only` to install/check every pinned build tool. CI installs all pinned tools, runs the SDK version check, then checks reuse in a fresh Windows runner folder with spaces.
 
-Launcher `--self-test` additionally checks settings migration/round trips, culture-independent arguments, desktop-scoped instance identity, bounded logging, process-exit callbacks and compiled release metadata. Its windowless child fixture never launches a game.
+Launcher `--self-test` additionally checks settings migration/round trips, remapped input arguments, supersampling scales, culture-independent arguments, desktop-scoped instance identity, bounded logging, process-exit callbacks and compiled release metadata. Its windowless child fixture never launches a game.
 
-`tools/graphics-probe` contains native probes for FSR/CAS initialization, pacing, FPS overlay and PNG/frame-interval diagnostics. Most require the prepared SDK. The portable timing probe can also be compiled directly with C++17 or newer and needs no game data. These checks do not establish complete campaign compatibility. See [timing validation](TIMING.md).
+`tools/graphics-probe` contains native probes for FSR/CAS initialization, pacing, FPS overlay and PNG/frame-interval diagnostics. Most require the prepared SDK. The portable `timing.cpp` and `input.cpp` probes compile directly with C++17 or newer and need no game data. These checks do not establish complete campaign compatibility. See [timing validation](TIMING.md).
+
+For repeatable stutter comparisons, use the same route/settings with a warm shader cache and summarize each private boot log:
+
+```powershell
+python tools/analyze_session.py .local/runtime/boot-YOUR-SESSION.log
+```
+
+The summary reports swap intervals including pacing/loading. It does not isolate GPU time or combine window percentiles into a campaign-wide percentile.
 
 ## Full release kit
 
@@ -54,7 +65,7 @@ Build the [spatial renderer](../renderer/README.md) and place its verified binar
 
 ```powershell
 python tools/package_release.py
-python tools/validate_package.py dist/EnchantedArmsPC-0.4.2-windows-x64.zip
+python tools/validate_package.py dist/EnchantedArmsPC-0.5.0-windows-x64.zip
 ```
 
 The package uses an explicit allowlist, stable ZIP metadata and a per-file hash ledger. Identical input files produce identical ZIPs; this does not imply that separate compiler invocations produce identical executables. The validator rejects duplicate/unlisted members, hash mismatches, private paths and unexpected executables. The packager derives the kit version from `release.json`.

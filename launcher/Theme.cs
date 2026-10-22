@@ -51,6 +51,34 @@ namespace EnchantedArmsPC
             return new EtherButton { Text = text, Width = width, Height = 42, Primary = primary,
                                      Margin = new Padding(0, 5, 10, 5) };
         }
+        internal static ComboBox Choice(int width, params string[] values)
+        {
+            var choice = new EtherCombo { DropDownStyle = ComboBoxStyle.DropDownList,
+                                          Width = width,
+                                          ItemHeight = 25,
+                                          DrawMode = DrawMode.OwnerDrawFixed,
+                                          BackColor = Panel,
+                                          ForeColor = Text,
+                                          Margin = new Padding(0, 4, 0, 4) };
+            choice.Items.AddRange(values);
+            choice.DrawItem += (s, e) =>
+            {
+                if (e.Index < 0)
+                    return;
+                using (var fill = new SolidBrush((e.State & DrawItemState.Selected) != 0
+                                                     ? Color.FromArgb(33, 78, 96)
+                                                     : Panel))
+                    e.Graphics.FillRectangle(fill, e.Bounds);
+                TextRenderer.DrawText(
+                    e.Graphics, choice.Items[e.Index].ToString(), choice.Font,
+                    new Rectangle(e.Bounds.X + 7, e.Bounds.Y, e.Bounds.Width - 10, e.Bounds.Height),
+                    Text,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
+                        TextFormatFlags.EndEllipsis);
+                e.DrawFocusRectangle();
+            };
+            return choice;
+        }
         internal static void Tracked(Graphics g, string text, Font font, Brush brush, float x,
                                      float y, float tracking)
         {

@@ -4,14 +4,19 @@
 
 #pragma once
 
-#include <rex/rex_app.h>
 #include <rex/cvar.h>
 #include <rex/filesystem.h>
+#include <rex/input/input_system.h>
+#include <rex/input/mnk/mnk_input_driver.h>
+#include <rex/rex_app.h>
 #include <rex/ui/keybinds.h>
+
 #include <cstdlib>
 #include <fstream>
+
 #include "fps_counter.h"
 #include "frame_capture.h"
+#include "input_controls.h"
 
 REXCVAR_DECLARE(bool, ea_trace_input);
 REXCVAR_DECLARE(int32_t, ea_fps_limit);
@@ -23,26 +28,40 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   using rex::ReXApp::ReXApp;
 
   void OnKeyDown(rex::ui::KeyEvent& event) override {
+    if (event.virtual_key() == rex::ui::VirtualKey::kF2 && !event.is_shift_pressed() &&
+        !event.is_ctrl_pressed() && !event.is_alt_pressed()) {
+      if (!event.prev_state())
+        rex::input::mnk::SetMouseLookActive(!rex::input::mnk::IsMouseLookActive());
+      event.set_handled(true);
+      return;
+    }
     if (ea::IsFrameCaptureKey(event)) {
       try {
         if (!event.prev_state() && runtime() && runtime()->graphics_system()) {
           auto* presenter = runtime()->graphics_system()->presenter();
           std::filesystem::path saved;
           std::string error;
-          if (presenter && ea::CaptureFrame(*presenter, user_data_root().parent_path() / "captures", saved, error)) {
-            REXLOG_INFO("EA screenshot saved: {} (guest output before presenter scaling/overlays)", saved.string());
+          if (presenter && ea::CaptureFrame(*presenter, user_data_root().parent_path() / "captures",
+                                            saved, error)) {
+            REXLOG_INFO("EA screenshot saved: {} (guest output before presenter scaling/overlays)",
+                        saved.string());
           } else {
             REXLOG_WARN("EA screenshot failed: {}", presenter ? error : "Presenter is unavailable");
           }
         }
-      } catch (const std::exception& error) { REXLOG_WARN("EA screenshot failed: {}", error.what()); }
-      event.set_handled(true); return;
+      } catch (const std::exception& error) {
+        REXLOG_WARN("EA screenshot failed: {}", error.what());
+      }
+      event.set_handled(true);
+      return;
     }
     if (ea::IsFpsCounterKey(event)) {
       // SDL reports prev_state for key-repeat: holding F6 toggles only once.
       if (ea::ShouldToggleFpsCounter(event) && imgui_drawer()) {
-        if (fps_counter_) fps_counter_.reset();
-        else fps_counter_ = std::make_unique<ea::FpsCounterDialog>(imgui_drawer());
+        if (fps_counter_)
+          fps_counter_.reset();
+        else
+          fps_counter_ = std::make_unique<ea::FpsCounterDialog>(imgui_drawer());
         REXLOG_INFO("FPS counter {}", fps_counter_ ? "shown" : "hidden");
       }
       event.set_handled(true);
@@ -56,7 +75,14 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   }
 
   void OnKeyUp(rex::ui::KeyEvent& event) override {
-    if (ea::IsFpsCounterKey(event) || ea::IsFrameCaptureKey(event)) { event.set_handled(true); return; }
+    if (event.virtual_key() == rex::ui::VirtualKey::kF2) {
+      event.set_handled(true);
+      return;
+    }
+    if (ea::IsFpsCounterKey(event) || ea::IsFrameCaptureKey(event)) {
+      event.set_handled(true);
+      return;
+    }
     if (REXCVAR_GET(ea_trace_input)) {
       REXLOG_INFO("Host key up: {:02X}", static_cast<uint16_t>(event.virtual_key()));
     }
@@ -76,6 +102,8 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   }
 
   void OnPostSetup() override {
+    if (auto* input = dynamic_cast<rex::input::InputSystem*>(runtime()->input_system()))
+      ea::ConfigureInput(*input);
     // The plugin has now registered vsync. Its worker reads it on every tick.
     // Change only its throttle; retain the guest video mode and timebase.
     rex::cvar::SetFlagByName("vsync", REXCVAR_GET(ea_fps_limit) == 0 ? "true" : "false");
@@ -85,39 +113,44 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
                 rex::cvar::GetFlagByName("ea_texture_lod_bias"));
     if (REXCVAR_GET(ea_fps_limit) != 0 && REXCVAR_GET(ea_fps_limit) != 30) {
       if (REXCVAR_GET(ea_timing_correction)) {
-        REXLOG_INFO("Engine timing correction is active. Normal-speed 60 FPS has been checked in the opening area; campaign and higher-rate validation are ongoing.");
+        REXLOG_INFO(
+            "Engine timing correction is active. Normal-speed 60 FPS has been checked in the "
+            "opening area; campaign and higher-rate validation are ongoing.");
       } else {
-        REXLOG_WARN("Experimental FPS can accelerate Enchanted Arms gameplay. Normal-speed high FPS is not validated; use Original for normal play.");
+        REXLOG_WARN(
+            "Experimental FPS can accelerate Enchanted Arms gameplay. Normal-speed high FPS is not "
+            "validated; use Original for normal play.");
       }
     }
     // GPU flags register when the renderer plugin loads. Record their applied
     // values here so a playtest report can distinguish them from launcher intent.
-    REXLOG_INFO("EA renderer flags: scale={}, draw_x={}, draw_y={}, AF={}, target_path={}, "
-                "invalid_fetch={}, async_shaders={}, occlusion_queries={}",
-                rex::cvar::GetFlagByName("resolution_scale"),
-                rex::cvar::GetFlagByName("draw_resolution_scale_x"),
-                rex::cvar::GetFlagByName("draw_resolution_scale_y"),
-                rex::cvar::GetFlagByName("anisotropic_override"),
-                rex::cvar::GetFlagByName("render_target_path_d3d12"),
-                rex::cvar::GetFlagByName("gpu_allow_invalid_fetch_constants"),
-                rex::cvar::GetFlagByName("async_shader_compilation"),
-                rex::cvar::GetFlagByName("occlusion_query_enable"));
-    REXLOG_INFO("EA coherency flags: readback_resolve={}, memexport={}, fast_memexport={}, page_state={}",
-                rex::cvar::GetFlagByName("readback_resolve"),
-                rex::cvar::GetFlagByName("readback_memexport"),
-                rex::cvar::GetFlagByName("readback_memexport_fast"),
-                rex::cvar::GetFlagByName("clear_memory_page_state"));
-    REXLOG_INFO("EA presentation flags: output={}, AA={}, FSR_reduction={}, CAS_sharpness={}, "
-                "dither={}, fullscreen={}, letterbox={}, tearing={}, native_2x_msaa={}",
-                rex::cvar::GetFlagByName("present_effect"),
-                rex::cvar::GetFlagByName("swap_post_effect"),
-                rex::cvar::GetFlagByName("present_fsr_sharpness_reduction"),
-                rex::cvar::GetFlagByName("present_cas_additional_sharpness"),
-                rex::cvar::GetFlagByName("present_dither"),
-                rex::cvar::GetFlagByName("fullscreen"),
-                rex::cvar::GetFlagByName("present_letterbox"),
-                rex::cvar::GetFlagByName("d3d12_allow_variable_refresh_rate_and_tearing"),
-                rex::cvar::GetFlagByName("native_2x_msaa"));
+    REXLOG_INFO(
+        "EA renderer flags: scale={}, draw_x={}, draw_y={}, AF={}, target_path={}, "
+        "invalid_fetch={}, async_shaders={}, occlusion_queries={}",
+        rex::cvar::GetFlagByName("resolution_scale"),
+        rex::cvar::GetFlagByName("draw_resolution_scale_x"),
+        rex::cvar::GetFlagByName("draw_resolution_scale_y"),
+        rex::cvar::GetFlagByName("anisotropic_override"),
+        rex::cvar::GetFlagByName("render_target_path_d3d12"),
+        rex::cvar::GetFlagByName("gpu_allow_invalid_fetch_constants"),
+        rex::cvar::GetFlagByName("async_shader_compilation"),
+        rex::cvar::GetFlagByName("occlusion_query_enable"));
+    REXLOG_INFO(
+        "EA coherency flags: readback_resolve={}, memexport={}, fast_memexport={}, page_state={}",
+        rex::cvar::GetFlagByName("readback_resolve"),
+        rex::cvar::GetFlagByName("readback_memexport"),
+        rex::cvar::GetFlagByName("readback_memexport_fast"),
+        rex::cvar::GetFlagByName("clear_memory_page_state"));
+    REXLOG_INFO(
+        "EA presentation flags: output={}, AA={}, FSR_reduction={}, CAS_sharpness={}, "
+        "dither={}, fullscreen={}, letterbox={}, tearing={}, native_2x_msaa={}",
+        rex::cvar::GetFlagByName("present_effect"), rex::cvar::GetFlagByName("swap_post_effect"),
+        rex::cvar::GetFlagByName("present_fsr_sharpness_reduction"),
+        rex::cvar::GetFlagByName("present_cas_additional_sharpness"),
+        rex::cvar::GetFlagByName("present_dither"), rex::cvar::GetFlagByName("fullscreen"),
+        rex::cvar::GetFlagByName("present_letterbox"),
+        rex::cvar::GetFlagByName("d3d12_allow_variable_refresh_rate_and_tearing"),
+        rex::cvar::GetFlagByName("native_2x_msaa"));
   }
 
   void OnConfigurePaths(rex::PathConfig& paths) override {
@@ -154,16 +187,16 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   // Opt-in local diagnostic: inspect indirect callbacks that static discovery
   // missed. The loaded image stays in a caller-selected private workspace file.
   void OnPostLoadXexImage() override {
-    #if defined(_WIN32)
+#if defined(_WIN32)
     char* dump_path = nullptr;
     size_t path_size = 0;
     if (_dupenv_s(&dump_path, &path_size, "EA_RECOMP_DUMP_IMAGE") != 0) {
       return;
     }
     std::unique_ptr<char, decltype(&std::free)> owned_path(dump_path, &std::free);
-    #else
+#else
     const char* dump_path = std::getenv("EA_RECOMP_DUMP_IMAGE");
-    #endif
+#endif
     if (dump_path && *dump_path) {
       std::ofstream output(dump_path, std::ios::binary);
       if (output) {
@@ -173,10 +206,9 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
     }
   }
 
-  static std::unique_ptr<rex::ui::WindowedApp> Create(
-      rex::ui::WindowedAppContext& ctx) {
-    return std::unique_ptr<EnchantedarmsrecompApp>(new EnchantedarmsrecompApp(ctx, "enchantedarmsrecomp",
-        PPCImageConfig));
+  static std::unique_ptr<rex::ui::WindowedApp> Create(rex::ui::WindowedAppContext& ctx) {
+    return std::unique_ptr<EnchantedarmsrecompApp>(
+        new EnchantedarmsrecompApp(ctx, "enchantedarmsrecomp", PPCImageConfig));
   }
 
  private:

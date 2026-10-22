@@ -1,4 +1,4 @@
-# Playtesting preview 0.4.1
+# Playtesting preview 0.5.0
 
 Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. Only the early game has been exercised. Mild stutter remains; a full campaign playthrough is still needed.
 

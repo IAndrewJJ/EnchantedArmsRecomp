@@ -1,8 +1,8 @@
 # Known issues
 
-## EA-001 — The Diet Doctor model is invisible in the opening cafeteria
+## EA-001 — Invisible NPC models in the opening cafeteria
 
-Status: reported by the first tester on October 21, 2026; investigating. No fix or workaround confirmed.
+Status: first reported October 21, 2026; reproduced in a new playthrough on October 22. Investigating; no fix or workaround confirmed.
 
 Observed behavior:
 
@@ -20,6 +20,10 @@ Environment at report: Windows x64, ReXGlue SDK 0.10.0, Direct3D 12, AMD Radeon 
 Triage: interaction and shadow rendering remain functional, which narrows the symptoms to the NPC's visible model or its draw path; this does not identify a root cause. The session contains repeated invalid texture-fetch warnings earlier in gameplay. Their connection to this NPC is unproven. Do not treat suppressing those warnings, replacing the model, or changing a global renderer setting as a verified fix.
 
 Local logs, build identity and a copy of the available save files are retained privately for investigation. They are excluded from the public launcher kit.
+
+October 22 retest: the player started a new playthrough using launcher 0.4.1 / native build 0.3.2 and reports a steady 30 FPS with Original FPS selected. **The Diet Doctor** and **Flirtatious TFC Member 063** are confirmed invisible in the opening cafeteria; shadows remain visible and interaction works. More affected NPCs are suspected but are not yet confirmed. This expands the reproduction targets without establishing that both NPCs share one underlying defect.
+
+The launch receipt records 2× internal scale, 1920×1080 output, CAS at 100% sharpness, FXAA strong, 16× AF, Crisp texture detail, Automatic rendering, background shader compilation enabled and no resolve readback. These are selected settings; the current session's effective renderer flags have not yet been read from its buffered log. A new playthrough does not imply a cleared shader cache. The steady FPS report establishes the observed cadence in this scene, not the cause of the missing models.
 
 ## EA-002 — Smiling Salesgirl model is invisible at the festival
 

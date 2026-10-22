@@ -12,7 +12,7 @@ The [SDL GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB) mappi
 
 The launcher downloads portable build dependencies directly from their publishers, with pinned digests in `toolchain.lock.json` and `launcher/python.lock.json`:
 
-- [Python](https://www.python.org/): PSF license; its embedded distribution includes its license.
+- [Python](https://www.python.org/): the complete kit bundles the official 3.12.10 embedded archive, verified against `launcher/python.lock.json`. Its `LICENSE.txt` includes the PSF license and accompanying dependency notices; setup retains them locally.
 - [7-Zip](https://www.7-zip.org/): see the license and unRAR restrictions included in its extracted distribution. The bootstrap 7zr executable is public domain.
 - [LLVM](https://github.com/llvm/llvm-project): Apache 2.0 with LLVM exceptions and included third-party notices.
 - [CMake](https://github.com/Kitware/CMake): BSD 3-Clause and included notices.

@@ -15,6 +15,13 @@ if (-not (Test-Path -LiteralPath $python)) {
     $downloadDirectory = Join-Path $localDirectory 'downloads'
     New-Item -ItemType Directory -Path $downloadDirectory -Force | Out-Null
     $archive = Join-Path $downloadDirectory $lock.name
+    $bundled = Join-Path $projectDirectory ("bootstrap/" + $lock.name)
+    if (Test-Path -LiteralPath $bundled) {
+        if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $lock.sha256) { throw 'Bundled Python checksum mismatch. Re-download the complete launcher kit.' }
+        if (-not (Test-Path -LiteralPath $archive) -or (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $lock.sha256) {
+            Copy-Item -LiteralPath $bundled -Destination $archive -Force
+        }
+    }
     if (-not (Test-Path -LiteralPath $archive) -or (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $lock.sha256) {
         $partial = $archive + '.partial'
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

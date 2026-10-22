@@ -8,6 +8,7 @@
 /.local/
 /audit/
 /dist/
+/bootstrap/*.zip
 /renderer/*.dll
 /renderer/*.lib
 /renderer/renderer-capabilities.json

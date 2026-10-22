@@ -2,12 +2,13 @@
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", ".gitignore", ".gitattributes", "CMakeLists.txt",
          "CMakePresets.json", "enchantedarmsrecomp_manifest.toml", "toolchain.lock.json",
-         "generated/rexglue.cmake", "renderer/README.md"]
+         "generated/rexglue.cmake", "renderer/README.md", "bootstrap/README.md"]
 DIRECTORIES = ["src", "config", "launcher", "scripts", "tools", "docs", "licenses", "data", ".github"]
 ALLOWED_SUFFIXES = {".md", ".txt", ".cpp", ".h", ".cs", ".manifest", ".ps1", ".py", ".toml", ".json", ".yml", ".yaml", ".cmake"}
 
@@ -30,6 +31,16 @@ def main():
     if not launcher.exists():
         raise SystemExit("Run scripts/build-launcher.ps1 first")
     paths = source_files() + [launcher]
+    python_lock = json.loads((ROOT / "launcher/python.lock.json").read_text())
+    python_archive = ROOT / "bootstrap" / python_lock["name"]
+    if not python_archive.exists():
+        cached = ROOT / ".local/downloads" / python_lock["name"]
+        if not cached.exists(): raise ValueError("The pinned Python bootstrap archive is required for a complete release kit")
+        if hashlib.sha256(cached.read_bytes()).hexdigest() != python_lock["sha256"]: raise ValueError("Python bootstrap checksum mismatch")
+        shutil.copy2(cached,python_archive)
+    if python_archive.stat().st_size != python_lock["bytes"] or hashlib.sha256(python_archive.read_bytes()).hexdigest() != python_lock["sha256"]:
+        raise ValueError("Python bootstrap checksum mismatch")
+    paths.append(python_archive)
     renderer = ROOT / "renderer"
     manifest = json.loads((renderer / "renderer-capabilities.json").read_text())
     allowed_renderer_files = {"rexruntimerd.dll","rexruntimerd.lib","rexgpu-xenosrd.dll","rexgpu-xenosrd.lib","TracyClientrd.dll"}
@@ -44,7 +55,7 @@ def main():
         relative = path.relative_to(ROOT)
         if any(part in {".local", "audit", "bin", "default", "private", "assets", "__pycache__"} for part in relative.parts):
             raise ValueError("Private path selected: " + str(relative))
-        if path != launcher and path.suffix not in {".dll", ".lib"}:
+        if path not in {launcher,python_archive} and path.suffix not in {".dll", ".lib"}:
             contents = path.read_text(encoding="utf-8-sig")
             if ("C:" + chr(92) + "Users" + chr(92)) in contents or ("C:" + "/Users/") in contents:
                 raise ValueError("Personal absolute path in source: " + str(relative))

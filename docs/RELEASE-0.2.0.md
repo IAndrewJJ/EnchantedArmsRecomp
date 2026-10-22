@@ -4,6 +4,8 @@ Download **EnchantedArmsPC-0.2.0-windows-x64.zip** and unpack it into a writable
 
 This preview adds spatial AMD FSR 1 and CAS through rebuilt native D3D12 shader paths, independent 1–4x internal resolution, FXAA, texture filtering up to 16x AF, sharpening, borderless/windowed display, dithering and aspect options. Graphics profiles can be exported/imported. It also adds private save backups, log access, controller mappings and reports that distinguish selected settings from the last launch.
 
+The complete kit also bundles the checksum-pinned official portable Python archive, avoiding an initial Windows HTTPS download.
+
 Validation: native game compilation; nine synthetic extraction/setup tests; launcher settings/argument self-test; visual inspection of the graphics dialog; FSR and CAS GPU pipeline initialization probes on an RX 6700 XT. Earlier user testing confirmed opening exploration, menus, models, audio and save/load. The new presets and full campaign still require playtesting. Diet Doctor and Smiling Salesgirl invisibility remain open bugs. Fresh-machine setup and additional GPUs/controllers need coverage.
 
 FSR 1 is spatial. FSR 2/3, frame generation and frame-rate unlocking are not included. Pre-rendered videos and source textures retain their original detail.

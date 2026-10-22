@@ -22,6 +22,8 @@ Only the USA/Europe Xbox 360 executable is currently supported:
 
 The ISO is opened read-only. A different executable revision is rejected rather than compiled with incompatible function hints. After setup, the extracted game is used at launch and the ISO can remain elsewhere.
 
+The complete Windows kit includes a checksum-verified portable Python bootstrap archive. No separate Python installation is required. Subsequent tool downloads use that runtime.
+
 ## Visual settings
 
 The complete **0.2.0 graphics preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.

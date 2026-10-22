@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from apply_renderer_patches import apply as apply_patches
 
 PROJECT = Path(__file__).resolve().parents[1]
 COMMIT = "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2"
@@ -40,7 +44,7 @@ def package_runtime(source, destination):
         if not source_file.exists(): raise FileNotFoundError(source_file)
         shutil.copy2(source_file,destination / name)
         hashes[name] = hashlib.sha256(source_file.read_bytes()).hexdigest()
-    manifest = dict(version="0.2.0",sdk_commit=COMMIT,spatial_fsr=True,cas=True,temporal_fsr=False,frame_generation=False,files=hashes)
+    manifest = dict(version="0.3.0",sdk_commit=COMMIT,spatial_fsr=True,cas=True,texture_detail=True,temporal_fsr=False,frame_generation=False,files=hashes)
     (destination / "renderer-capabilities.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print("Spatial FSR/CAS runtime packaged and hashed.",flush=True)
 
@@ -67,6 +71,7 @@ def main():
             if actual != COMMIT: raise ValueError("Unexpected SDK source revision")
             run([args.git,"-c","http.sslBackend=openssl","-c","safe.directory=" + str(args.source),"-C",args.source,"submodule","update","--init","--depth","1","--jobs","4","--",*["thirdparty/" + s for s in SUBMODULES]])
             materialize_mspack_links(args.git,args.source)
+        apply_patches(args.source)
         prefix = Path(os.path.commonpath([str(PROJECT.resolve()),str(args.source.resolve())])).as_posix()
         maps = " -ffile-prefix-map=" + prefix + "=/build -fdebug-prefix-map=" + prefix + "=/build"
         linker = "-fuse-ld=lld -Wl,/pdbaltpath:ReXGlueSpatial.pdb"

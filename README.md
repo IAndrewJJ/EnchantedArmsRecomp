@@ -1,5 +1,7 @@
 # EnchantedArmsRecomp / EnchantedArmsPC
 
+**[Download the Windows launcher kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.3.0)** — choose `EnchantedArmsPC-0.3.0-windows-x64.zip` under Assets. Extract the entire ZIP and open `EnchantedArmsLauncher.exe` inside. The repository file preview shows source code; the ready-to-run launcher is included in the release ZIP.
+
 An early Windows x64 native recompilation of Enchanted Arms for Xbox 360, built with ReXGlue SDK 0.10.0. The public launcher kit takes your own supported ISO, extracts it locally, generates native C++ and compiles the PC executable. Game files and translated game code are never uploaded by the launcher.
 
 The first tester reached exploration, used the character menus, saw character models, heard normal audio, and created and loaded a save. Mild stutter remains. Full campaign compatibility is still being tested. See [playtesting status](docs/PLAYTESTING.md).
@@ -26,7 +28,7 @@ The complete Windows kit includes a checksum-verified portable Python bootstrap 
 
 ## Visual settings
 
-The complete **0.2.0 graphics preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
+The complete **0.3.0 detail/FPS preview** kit bundles a rebuilt, game-independent ReXGlue renderer with spatial FidelityFX shaders enabled. Download the Windows ZIP from [Releases](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases); GitHub's source ZIP and the CI launcher-only artifact do not include that renderer.
 
 | Preset | Internal scale | Output effect | Post AA | Filtering |
 | --- | --- | --- | --- | --- |
@@ -40,7 +42,13 @@ The complete **0.2.0 graphics preview** kit bundles a rebuilt, game-independent 
 
 FSR 1 spatially upscales the rendered image to the output size; when upscaling is unnecessary the presenter uses sharpening. CAS provides contrast-adaptive sharpening. These use the runtime's actual D3D12 shader paths. FSR 2/3, temporal antialiasing and frame generation are not implemented. The GPU initialization probes passed on an RX 6700 XT; the new graphics presets still need scene-by-scene playtesting.
 
-The window size is separate from internal rendering resolution. The launcher sets the renderer's actual resolution-scale flags on each launch. Higher scales demand more GPU time and memory and need additional scene coverage. Pre-rendered videos and source textures retain their original detail. Frame pacing is unchanged; no frame-rate unlock is included.
+The window size is separate from internal rendering resolution. The launcher sets the renderer's actual resolution-scale flags on each launch. Higher scales demand more GPU time and memory and need additional scene coverage. Pre-rendered videos and source textures retain their original detail. Original FPS mode preserves the console pacing. See the experimental options below.
+
+**Texture detail boost** offers Original, Crisp (-0.5 mip bias) and Strong (-1.0). This favors sharper existing mip levels on eligible linear-filtered, mipmapped surfaces; point-filtered and base-map requests keep their existing sampling. It works alongside AF and CAS. It does not create new texture detail or provide an HD/AI texture pack. Strong can shimmer during movement; return to Original if the image becomes unstable.
+
+**Frame-rate limit** offers Original, 30, 60, 90, 120, 144, 165, 180, 240, 360 and Unlimited. Original preserves the console vblank throttle and is the default for existing/new profiles. All explicit limits and Unlimited are **experimental**: they remove that throttle and apply a host limiter at the game's original D3D swap boundary. The guest timebase, video-mode refresh and audio clock are not rescaled. The complete original swap routine still runs.
+
+These controls set an upper limit; they do not guarantee that FPS or correct timing throughout the game. Frame-dependent movement, effects, battle timing and movie/audio synchronization need playtesting. Use a separate save slot and compare against Original. Return to Original if the game runs too fast or timing changes. Pre-rendered movies retain their source cadence. Logs report swap submissions per second, which is not a measurement of unique displayed frames.
 
 ## Controls and saves
 
@@ -96,7 +104,7 @@ For command-line setup:
 ./scripts/setup.ps1 -Iso 'D:/MyGames/Enchanted Arms.iso' -Jobs 2
 ```
 
-For an existing extraction/toolchain, `scripts/build.ps1` regenerates and rebuilds the native application, staging the enhanced build in `bin/graphics-0.2.0`. The launcher prefers this build and prevents another launch/rebuild while its game is running. `scripts/run.ps1` opens the launcher to play with saved settings. `scripts/collect-crash.ps1` optionally collects a matching Windows crash event and symbolizes it using the local build. Its raw diagnostic report can contain local paths; review it before sharing.
+For an existing extraction/toolchain, `scripts/build.ps1` regenerates and rebuilds the native application, staging the enhanced build in `bin/graphics-0.3.0`. The launcher prefers this build and prevents another launch/rebuild while its game is running. `scripts/run.ps1` opens the launcher to play with saved settings. `scripts/collect-crash.ps1` optionally collects a matching Windows crash event and symbolizes it using the local build. Its raw diagnostic report can contain local paths; review it before sharing.
 
 Run the synthetic setup tests with Python 3.12 or later:
 

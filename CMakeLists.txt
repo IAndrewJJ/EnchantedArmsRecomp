@@ -41,6 +41,7 @@ set(ENCHANTEDARMSRECOMP_SOURCES
     src/audio_runtime.cpp
     src/input_diagnostics.cpp
     src/scene_dispatch.cpp
+    src/frame_pacing.cpp
 )
 
 if(WIN32)

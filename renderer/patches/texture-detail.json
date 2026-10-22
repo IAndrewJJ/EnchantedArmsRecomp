@@ -1,0 +1,31 @@
+{
+  "sdk_commit": "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2",
+  "files": [
+    {
+      "path": "include/rex/graphics/d3d12/texture_cache.h",
+      "replacements": [
+        {
+          "before": "uint32_t mip_base_map : 1;            // 22",
+          "after": "uint32_t mip_base_map : 1;            // 22\n      uint32_t detail_eligible : 1;         // 23: linear-filtered textures with mipmaps"
+        }
+      ]
+    },
+    {
+      "path": "src/graphics/d3d12/texture_cache.cpp",
+      "replacements": [
+        {
+          "before": "namespace rex::graphics::d3d12 {",
+          "after": "REXCVAR_DEFINE_DOUBLE(ea_texture_lod_bias, 0.0, \"Enchanted Arms\",\n    \"Texture detail bias for linear-filtered mipmapped surfaces; 0=original, -0.5=crisp, -1=strong\")\n    .range(-1.0, 0.0).lifecycle(rex::cvar::Lifecycle::kRequiresRestart);\n\nnamespace rex::graphics::d3d12 {"
+        },
+        {
+          "before": "  parameters.mip_base_map = mip_base_map;",
+          "after": "  parameters.mip_base_map = mip_base_map;\n  parameters.detail_eligible = has_mips && !mip_base_map && min_mag_linear &&\n                               mip_filter_bilinear_or_trilinear;"
+        },
+        {
+          "before": "  // LOD biasing is performed in shaders.\n  desc.MipLODBias = 0.0f;",
+          "after": "  // Guest LOD bias stays in the shader. Add an optional host detail bias\n  // only to filtered mipmapped surfaces; preserve point-sampled UI and base-map fetches.\n  desc.MipLODBias = parameters.detail_eligible\n      ? float(std::clamp(REXCVAR_GET(ea_texture_lod_bias), -1.0, 0.0)) : 0.0f;"
+        }
+      ]
+    }
+  ]
+}

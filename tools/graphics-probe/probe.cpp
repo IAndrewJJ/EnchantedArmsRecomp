@@ -25,6 +25,10 @@ int main(int argc,char** argv) {
       rex::cvar::GetFlagByName("draw_resolution_scale_y") != "2" ||
       rex::cvar::GetFlagByName("anisotropic_override") != "5" ||
       rex::cvar::GetFlagByName("swap_post_effect") != "fxaa") return 7;
+  const auto bias = rex::cvar::GetFlagByName("ea_texture_lod_bias");
+  if (bias.empty() || std::abs(std::stod(bias) + 0.5) > 0.001) {
+    std::cerr << "Unexpected texture LOD bias: " << bias << "\n"; return 8;
+  }
   std::cout << "PASS: D3D12 presenter initialized spatial shader pipelines; effect=" << name
-            << ", draw scale=2x2, AF=16x, post-AA=fxaa, sharpness applied.\n";
+            << ", draw scale=2x2, AF=16x, post-AA=fxaa, sharpness applied, texture LOD bias=-0.5.\n";
 }

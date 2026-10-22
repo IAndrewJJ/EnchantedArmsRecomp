@@ -9,13 +9,15 @@ The goal is a dependable native PC edition that players can build from their own
 - Import/export graphics profiles, desktop shortcut, private save backups and local log/report access.
 - Pinned SDL controller mappings, renderer source/build instructions and game-data-free public packages.
 
+- 0.3.0 adds texture mip-detail bias and experimental host frame limits. These need motion and timing comparisons against Original; higher-FPS campaign compatibility is unverified.
+
 ## Next compatibility milestones
 
 1. Reproduce EA-001 and EA-002 from the same locations with Original and enhanced settings. Capture effective renderer flags and draw diagnostics before changing global behavior.
 2. Complete two-machine installation and playtesting, including controller behavior, save/reload, battle transitions, videos and later areas. Record clean-machine toolchain failures separately from game crashes.
 3. Measure stutter with repeatable routes and warm shader caches. Separate shader compilation, pipeline creation, guest timing and streaming costs before choosing an optimization. Keep game pacing intact until timing dependencies have been tested.
 4. Expand AMD/NVIDIA/Intel coverage and verify graphics presets across gameplay, effects, UI and cutscenes. Adjust defaults using measured performance and image quality.
-5. Investigate deeper presentation improvements only after reliable frame delivery. Temporal reconstruction, frame generation, arbitrary frame-rate unlocks, widescreen changes and texture replacement require separate engineering and testing; they are not implemented by exposing existing spatial settings.
+5. Validate the experimental frame limits against movement distance per second, animations, battle effects and video/audio timing. Add per-system timing corrections where measurements establish frame dependence. Temporal reconstruction, frame generation, widescreen changes and texture replacement require separate engineering and testing.
 
 Additional creatures, areas and other content mods are deferred until base-game compatibility is established.
 

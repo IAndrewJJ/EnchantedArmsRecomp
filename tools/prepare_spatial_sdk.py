@@ -10,9 +10,9 @@ def prepare():
     renderer = PROJECT / "renderer"
     marker = renderer / "renderer-capabilities.json"
     if not marker.exists():
-        raise ValueError("Enhanced renderer files are missing. Use the complete 0.2.0 launcher kit or build them with tools/build_spatial_renderer.py.")
+        raise ValueError("Enhanced renderer files are missing. Use the complete 0.3.0 launcher kit or build them with tools/build_spatial_renderer.py.")
     manifest = json.loads(marker.read_text())
-    if manifest.get("sdk_commit") != "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2" or not manifest.get("spatial_fsr"):
+    if manifest.get("sdk_commit") != "f5337cdc947ff6d4c4196737e2c807a48f2a1fc2" or not manifest.get("spatial_fsr") or not manifest.get("texture_detail"):
         raise ValueError("Unsupported enhanced renderer")
     allowed = {"rexruntimerd.dll","rexruntimerd.lib","rexgpu-xenosrd.dll","rexgpu-xenosrd.lib","TracyClientrd.dll"}
     if set(manifest["files"]) != allowed: raise ValueError("Unexpected renderer package contents")

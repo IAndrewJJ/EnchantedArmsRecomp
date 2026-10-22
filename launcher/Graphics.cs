@@ -14,7 +14,10 @@ namespace EnchantedArmsPC {
         public int Width = 1920;
         public int Height = 1080;
         public int Jobs = 2;
-        public int Schema = 2;
+        public int Schema = 3;
+        public int TextureDetail = 0;
+        public int FrameLimit = 0;
+        public static readonly int[] FrameLimits = {0,30,60,90,120,144,165,180,240,360,-1};
         public string Upscaler = "bilinear";
         public string PostAA = "none";
         public int Sharpness = 80;
@@ -29,6 +32,8 @@ namespace EnchantedArmsPC {
             Anisotropy = Math.Max(-1, Math.Min(5, Anisotropy));
             Sharpness = Math.Max(0, Math.Min(100, Sharpness));
             Jobs = Math.Max(1, Math.Min(8, Jobs));
+            TextureDetail = Math.Max(0,Math.Min(2,TextureDetail));
+            if (!FrameLimits.Contains(FrameLimit)) FrameLimit = 0;
             if (!new [] { "bilinear", "fsr", "cas" }.Contains(Upscaler)) Upscaler = "bilinear";
             if (!new [] { "none", "fxaa", "fxaa_extreme" }.Contains(PostAA)) PostAA = "none";
             int[] widths = {1280,1920,2560,3840};
@@ -36,7 +41,7 @@ namespace EnchantedArmsPC {
             if (index < 0) index = 1;
             Width = widths[index]; Height = new [] {720,1080,1440,2160}[index];
             if (Iso == null) Iso = "";
-            Schema = 2;
+            Schema = 3;
         }
         public Preferences Copy() {
             var json = new JavaScriptSerializer();
@@ -44,7 +49,7 @@ namespace EnchantedArmsPC {
         }
         public void ApplyPreset(int index) {
             NativeMsaa = true; KeepAspect = true;
-            if (index == 1) { Scale = 1; Anisotropy = -1; Upscaler = "bilinear"; PostAA = "none"; Dither = false; }
+            if (index == 1) { Scale = 1; Anisotropy = -1; Upscaler = "bilinear"; PostAA = "none"; Dither = false; TextureDetail=0; FrameLimit=0; }
             if (index == 2) { Scale = 1; Anisotropy = 4; Upscaler = "fsr"; PostAA = "fxaa"; Sharpness = 80; Dither = true; }
             if (index == 3) { Scale = 2; Anisotropy = 4; Upscaler = "fsr"; PostAA = "fxaa"; Sharpness = 80; Dither = true; }
             if (index == 4) { Scale = 3; Anisotropy = 5; Upscaler = "cas"; PostAA = "fxaa"; Sharpness = 40; Dither = true; }
@@ -55,7 +60,9 @@ namespace EnchantedArmsPC {
             string scaler = Upscaler == "fsr" ? "FSR 1 spatial" : Upscaler == "cas" ? "CAS sharpening" : "Bilinear";
             string filter = Anisotropy < 0 ? "game filtering" : Anisotropy == 0 ? "AF off" : (1 << (Anisotropy - 1)) + "x AF";
             return Scale + "x internal • " + scaler + " • " + (PostAA == "none" ? "post AA off" : PostAA == "fxaa" ? "FXAA" : "FXAA strong") +
-                " • " + filter + " • " + (Fullscreen ? "borderless fullscreen" : "windowed");
+                " • " + filter + " • detail " + new [] {"original","crisp","strong"}[TextureDetail] +
+                " • " + (FrameLimit == 0 ? "original FPS" : FrameLimit < 0 ? "uncapped (experimental)" : FrameLimit + " FPS limit (experimental)") +
+                " • " + (Fullscreen ? "borderless fullscreen" : "windowed");
         }
         public string[] RendererArguments() {
             Normalize();
@@ -63,6 +70,10 @@ namespace EnchantedArmsPC {
                 "--resolution_scale=" + Scale, "--draw_resolution_scale_x=" + Scale, "--draw_resolution_scale_y=" + Scale,
                 "--anisotropic_override=" + Anisotropy, "--swap_post_effect=" + PostAA,
                 "--present_effect=" + Upscaler, "--window_width=" + Width, "--window_height=" + Height,
+                "--ea_fps_limit=" + FrameLimit,
+                "--ea_texture_lod_bias=" + (-TextureDetail * 0.5).ToString("0.#",CultureInfo.InvariantCulture),
+                "--video_mode_refresh_rate=60",
+                FrameLimit == 0 ? "--vsync" : "--no-vsync",
                 Fullscreen ? "--fullscreen" : "--no-fullscreen",
                 Dither ? "--present_dither" : "--no-present_dither",
                 KeepAspect ? "--present_letterbox" : "--no-present_letterbox",
@@ -86,6 +97,8 @@ namespace EnchantedArmsPC {
         readonly ComboBox scaler = Choice("Bilinear • original scaling", "AMD FSR 1 • spatial upscaling", "AMD FidelityFX CAS • sharpening");
         readonly ComboBox aa = Choice("Off • keep game AA", "FXAA", "FXAA strong");
         readonly ComboBox filtering = Choice("Game requested filtering", "Anisotropic filtering off", "1x", "2x", "4x", "8x", "16x");
+        readonly ComboBox detail = Choice("Original texture detail", "Crisp • sharper mip selection", "Strong • may shimmer in motion");
+        readonly ComboBox fps = Choice("Original • recommended", "30 FPS • experimental", "60 FPS • experimental", "90 FPS • experimental", "120 FPS • experimental", "144 FPS • experimental", "165 FPS • experimental", "180 FPS • experimental", "240 FPS • experimental", "360 FPS • experimental", "Unlimited • experimental");
         readonly ComboBox display = Choice("Windowed", "Borderless fullscreen");
         readonly ComboBox size = Choice("1280 x 720", "1920 x 1080", "2560 x 1440", "3840 x 2160");
         readonly TrackBar sharpness = new TrackBar { Minimum = 0, Maximum = 100, TickFrequency = 10, Width = 300, Height = 42 };
@@ -111,7 +124,7 @@ namespace EnchantedArmsPC {
         public GraphicsDialog(Preferences current) {
             Settings = current.Copy(); Settings.Normalize();
             Text = "EnchantedArmsPC • Graphics settings"; StartPosition = FormStartPosition.CenterParent;
-            Font = new Font("Segoe UI",10); ClientSize = new Size(800,815); MinimumSize = new Size(760,760);
+            Font = new Font("Segoe UI",10); ClientSize = new Size(800,930); MinimumSize = new Size(760,760);
             BackColor = Color.White; MaximizeBox = false; MinimizeBox = false;
             var table = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(22), ColumnCount = 2, RowCount = 2, AutoScroll = true };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,210)); table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); Controls.Add(table);
@@ -121,13 +134,16 @@ namespace EnchantedArmsPC {
             table.Controls.Add(info,0,1); table.SetColumnSpan(info,2);
             Add(table,"Internal render scale",scale); Add(table,"Output scaler / sharpener",scaler);
             Add(table,"Post-process antialiasing",aa); Add(table,"Texture filtering",filtering);
+            Add(table,"Texture detail boost",detail); Add(table,"Frame-rate limit",fps);
             var sharpRow = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
             sharpRow.Controls.Add(sharpness); sharpRow.Controls.Add(sharpnessValue); Add(table,"Sharpening strength",sharpRow);
             Add(table,"Display mode",display); Add(table,"Window size",size);
             foreach (var check in new [] { dither,aspect,tearing,msaa }) FullRow(table,check);
             var help = new Label { Text = "FSR 1 upscales lower-resolution frames; the presenter uses sharpening when upscaling is unnecessary. " +
                 "Fullscreen uses your desktop resolution. Higher internal scales cost GPU time and memory. " +
-                "The game controls its frame rate. Temporal FSR 2/3 and frame generation are not included.", AutoSize = true,
+                "Detail boost sharpens existing mipmapped surfaces; it does not replace textures. " +
+                "Experimental FPS modes may change game speed or movie/audio timing. Return to Original if this happens. " +
+                "Limits do not guarantee that frame rate. Temporal FSR and frame generation are not included.", AutoSize = true,
                 MaximumSize = new Size(700,0), ForeColor = Color.FromArgb(75,85,95), Margin = new Padding(0,12,0,12) };
             FullRow(table,help);
             var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
@@ -174,6 +190,7 @@ namespace EnchantedArmsPC {
             scale.SelectedIndex = Settings.Scale - 1; scaler.SelectedIndex = Array.IndexOf(new [] {"bilinear","fsr","cas"},Settings.Upscaler);
             aa.SelectedIndex = Array.IndexOf(new [] {"none","fxaa","fxaa_extreme"},Settings.PostAA);
             filtering.SelectedIndex = Settings.Anisotropy + 1; display.SelectedIndex = Settings.Fullscreen ? 1 : 0;
+            detail.SelectedIndex = Settings.TextureDetail; fps.SelectedIndex = Array.IndexOf(Preferences.FrameLimits,Settings.FrameLimit);
             size.SelectedIndex = Array.IndexOf(new [] {1280,1920,2560,3840},Settings.Width);
             sharpness.Value = Settings.Sharpness; sharpnessValue.Text = sharpness.Value + "%";
             dither.Checked = Settings.Dither; aspect.Checked = Settings.KeepAspect; tearing.Checked = Settings.AllowTearing; msaa.Checked = Settings.NativeMsaa;
@@ -181,6 +198,7 @@ namespace EnchantedArmsPC {
         void ReadValues() {
             Settings.Scale = scale.SelectedIndex + 1; Settings.Upscaler = new [] {"bilinear","fsr","cas"}[scaler.SelectedIndex];
             Settings.PostAA = new [] {"none","fxaa","fxaa_extreme"}[aa.SelectedIndex]; Settings.Anisotropy = filtering.SelectedIndex - 1;
+            Settings.TextureDetail = detail.SelectedIndex; Settings.FrameLimit = Preferences.FrameLimits[fps.SelectedIndex];
             Settings.Fullscreen = display.SelectedIndex == 1; Settings.Width = new [] {1280,1920,2560,3840}[size.SelectedIndex];
             Settings.Sharpness = sharpness.Value; Settings.Dither = dither.Checked; Settings.KeepAspect = aspect.Checked;
             Settings.AllowTearing = tearing.Checked; Settings.NativeMsaa = msaa.Checked; Settings.Normalize();

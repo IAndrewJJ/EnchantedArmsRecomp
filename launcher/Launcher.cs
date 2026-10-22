@@ -18,9 +18,11 @@ namespace EnchantedArmsPC {
         internal static readonly string Local = Path.Combine(Root, ".local");
         internal static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
         internal static System.Threading.EventWaitHandle PlayRequest;
-        internal const string Version = "0.2.0-graphics-preview";
+        internal const string Version = "0.3.0-detail-fps-preview";
         internal static string NativeDirectory {
             get {
+                string newest = Path.Combine(Root,"bin","graphics-0.3.0");
+                if (File.Exists(Path.Combine(newest,"enchantedarmsrecomp.exe"))) return newest;
                 string enhanced = Path.Combine(Root,"bin","graphics-0.2.0");
                 return File.Exists(Path.Combine(enhanced,"enchantedarmsrecomp.exe")) ? enhanced : Path.Combine(Root,"bin");
             }
@@ -65,7 +67,7 @@ namespace EnchantedArmsPC {
         static int Main(string[] args) {
             if (args.Length == 2 && args[0] == "--graphics-preview") {
                 Application.EnableVisualStyles();
-                using (var dialog = new GraphicsDialog(new Preferences { Upscaler="fsr",PostAA="fxaa",Scale=2,Anisotropy=5,Dither=true })) {
+                using (var dialog = new GraphicsDialog(new Preferences { Upscaler="fsr",PostAA="fxaa",Scale=2,Anisotropy=5,Dither=true,TextureDetail=1,FrameLimit=60 })) {
                     dialog.StartPosition = FormStartPosition.Manual; dialog.Location = new Point(-20000,-20000);
                     dialog.Show(); Application.DoEvents(); dialog.PerformLayout();
                     using (var bitmap = new Bitmap(dialog.Width,dialog.Height)) {
@@ -100,6 +102,17 @@ namespace EnchantedArmsPC {
                 var invalid = new Preferences { Scale=99,Sharpness=-4,Anisotropy=42,Upscaler="unknown",PostAA="unknown",Width=-1 };
                 invalid.Normalize();
                 if (invalid.Scale != 4 || invalid.Sharpness != 0 || invalid.Anisotropy != 5 || invalid.Upscaler != "bilinear" || invalid.PostAA != "none" || invalid.Width != 1920) return 7;
+                if (migrated.FrameLimit != 0 || migrated.TextureDetail != 0) return 8;
+                foreach (int limit in Preferences.FrameLimits) {
+                    var selected = new Preferences { FrameLimit=limit, TextureDetail=1 };
+                    var arguments = selected.RendererArguments();
+                    if (!arguments.Contains("--ea_fps_limit=" + limit) || !arguments.Contains("--ea_texture_lod_bias=-0.5") ||
+                        !arguments.Contains(limit == 0 ? "--vsync" : "--no-vsync") || !arguments.Contains("--video_mode_refresh_rate=60")) return 9;
+                    var saved = Json.Deserialize<Preferences>(Json.Serialize(selected));
+                    if (saved.FrameLimit != limit || saved.TextureDetail != 1) return 10;
+                }
+                invalid.FrameLimit=999; invalid.TextureDetail=9; invalid.Normalize();
+                if (invalid.FrameLimit != 0 || invalid.TextureDetail != 2) return 11;
                 return 0;
             }
             Application.EnableVisualStyles();
@@ -177,7 +190,7 @@ namespace EnchantedArmsPC {
             for (int i = 0; i < 10; ++i) layout.RowStyles.Add(new RowStyle(i == 8 ? SizeType.Percent : SizeType.AutoSize, i == 8 ? 100 : 0));
             Controls.Add(layout);
             layout.Controls.Add(new Label { Text = "EnchantedArmsPC", Font = new Font("Segoe UI", 25, FontStyle.Bold), AutoSize = true, ForeColor = Color.FromArgb(24, 48, 72) }, 0, 0);
-            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. Graphics preview 0.2.0", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
+            layout.Controls.Add(new Label { Text = "Build from your Xbox 360 ISO. Play natively on Windows. Detail / FPS preview 0.3.0", AutoSize = true, Margin = new Padding(0, 0, 0, 8) }, 0, 1);
             layout.Controls.Add(status, 0, 2);
             var source = new TableLayoutPanel { ColumnCount = 2, AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 6) };
             source.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); source.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -311,6 +324,10 @@ namespace EnchantedArmsPC {
             if (busy || GameRunning()) return;
             if (!Ready()) { Append("Complete Build from ISO before playing."); return; }
             SavePreferences();
+            if ((preferences.TextureDetail != 0 || preferences.FrameLimit != 0) &&
+                Program.NativeDirectory != Path.Combine(Program.Root,"bin","graphics-0.3.0")) {
+                Append("Texture detail and experimental FPS require the 0.3.0 native build. Choose Build from ISO once to update."); return;
+            }
             if (preferences.Upscaler != "bilinear" && !File.Exists(Path.Combine(Program.NativeDirectory,"renderer-capabilities.json"))) {
                 Append("FSR 1 and CAS require the enhanced renderer. Choose Build from ISO once to update this installation."); return;
             }

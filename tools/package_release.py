@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", ".gitignore", ".gitattributes", "CMakeLists.txt",
          "CMakePresets.json", "enchantedarmsrecomp_manifest.toml", "toolchain.lock.json",
          "generated/rexglue.cmake", "renderer/README.md", "bootstrap/README.md"]
-DIRECTORIES = ["src", "config", "launcher", "scripts", "tools", "docs", "licenses", "data", ".github"]
+DIRECTORIES = ["src", "config", "launcher", "scripts", "tools", "docs", "licenses", "data", ".github", "renderer/patches"]
 ALLOWED_SUFFIXES = {".md", ".txt", ".cpp", ".h", ".cs", ".manifest", ".ps1", ".py", ".toml", ".json", ".yml", ".yaml", ".cmake"}
 
 
@@ -59,7 +59,7 @@ def main():
             contents = path.read_text(encoding="utf-8-sig")
             if ("C:" + chr(92) + "Users" + chr(92)) in contents or ("C:" + "/Users/") in contents:
                 raise ValueError("Personal absolute path in source: " + str(relative))
-    archive = destination / "EnchantedArmsPC-0.2.0-windows-x64.zip"
+    archive = destination / "EnchantedArmsPC-0.3.0-windows-x64.zip"
     hashes = {}
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for path in paths:

@@ -12,6 +12,7 @@
 #include <fstream>
 
 REXCVAR_DECLARE(bool, ea_trace_input);
+REXCVAR_DECLARE(int32_t, ea_fps_limit);
 
 class EnchantedarmsrecompApp : public rex::ReXApp {
  public:
@@ -41,6 +42,16 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
   }
 
   void OnPostSetup() override {
+    // The plugin has now registered vsync. Its worker reads it on every tick.
+    // Change only its throttle; retain the guest video mode and timebase.
+    rex::cvar::SetFlagByName("vsync", REXCVAR_GET(ea_fps_limit) == 0 ? "true" : "false");
+    REXLOG_INFO("EA timing/detail: fps_limit={}, vsync={}, video_hz={}, texture_lod_bias={}",
+                REXCVAR_GET(ea_fps_limit), rex::cvar::GetFlagByName("vsync"),
+                rex::cvar::GetFlagByName("video_mode_refresh_rate"),
+                rex::cvar::GetFlagByName("ea_texture_lod_bias"));
+    if (REXCVAR_GET(ea_fps_limit) != 0) {
+      REXLOG_WARN("Experimental frame rate enabled. Simulation speed, movies and audio synchronization require playtesting; use Original if timing changes.");
+    }
     // GPU flags register when the renderer plugin loads. Record their applied
     // values here so a playtest report can distinguish them from launcher intent.
     REXLOG_INFO("EA renderer flags: scale={}, draw_x={}, draw_y={}, AF={}, target_path={}, "

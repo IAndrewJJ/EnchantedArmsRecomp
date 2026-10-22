@@ -202,7 +202,7 @@ def main():
                         str(PROJECT / "scripts/build.ps1"), "-Jobs", str(args.jobs)], cwd=PROJECT, check=True)
         # Written only after successful staging; existing saves/caches are never removed.
         (local / "installation.json").write_text(json.dumps({"xex_sha256": XEX_SHA256,
-            "build": "0.2.0-graphics-preview", "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=2))
+            "build": "0.3.0-detail-fps-preview", "completed_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=2))
         say("STAGE: Ready to play")
 
 

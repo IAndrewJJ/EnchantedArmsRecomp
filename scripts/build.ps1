@@ -54,7 +54,7 @@ $manifestTool = if ($taskSdkBinDirectory) { (Join-Path $taskSdkBinDirectory 'mt.
 if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed: $LASTEXITCODE" }
 & cmake --build $buildDirectory --parallel $Jobs
 if ($LASTEXITCODE -ne 0) { throw "Native build failed: $LASTEXITCODE" }
-$stagingDirectory = Join-Path $projectRoot $(if ($spatialRenderer) { 'bin/graphics-0.2.0' } else { 'bin' })
+$stagingDirectory = Join-Path $projectRoot $(if ($spatialRenderer) { 'bin/graphics-0.3.0' } else { 'bin' })
 New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
 foreach ($pattern in @('enchantedarmsrecomp.exe', 'enchantedarmsrecomp.pdb', '*.dll')) {
     Get-ChildItem -LiteralPath $buildDirectory -Filter $pattern -File | ForEach-Object {

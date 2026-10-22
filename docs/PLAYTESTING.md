@@ -1,4 +1,4 @@
-# Playtesting preview 0.2.0
+# Playtesting preview 0.3.0
 
 Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. Only the early game has been exercised. Mild stutter remains; a full campaign playthrough is still needed.
 
@@ -19,7 +19,9 @@ Reported defects are tracked in [known issues](KNOWN_ISSUES.md): EA-001 (The Die
 - Only XEX SHA-256 `79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22` is supported. Other regional or patched executables need separate analysis.
 - Higher resolution uses existing renderer scaling. Source textures and pre-rendered movies keep their source detail; no texture replacement or AI upscaling is included.
 - Spatial FSR/CAS pipeline initialization passed on the RX 6700 XT, with actual resolution, AF, FXAA and sharpening flags verified. That check does not establish correct rendering throughout the game. Test both missing NPC locations after restarting with Original and an enhanced preset.
-- Frame rate unlocking, shader stutter fixes, content mods, achievements and later-game compatibility remain future work.
+- Experimental FPS choices remove the console throttle and limit submissions at the original D3D swap boundary. Correct movement, battle, animation and movie/audio timing at higher rates is unverified. Movies retain their source cadence. Test Original against 60 first, using a separate save slot, before trying higher targets. The selected limit is not a promise of achieved FPS.
+- Texture detail favors sharper existing mipmaps on eligible filtered surfaces. It is not a higher-resolution texture replacement pack; Strong can introduce shimmer. Compare Original/Crisp/Strong in motion.
+- Shader stutter fixes, content mods, achievements and later-game compatibility remain future work.
 - A clean-machine installation still needs testing. Windows security blocked reads of the pinned SDK archive on the development PC. The existing supported SDK installation can be reused. Setup stops if required downloads or executables are inaccessible; do not change security settings to force setup through.
 
 Keep the entire installed folder when updating; `.local/runtime/user` holds saves and `.local/runtime/cache` holds shader caches. Back up the user folder before replacing an installation. New releases should be unpacked over the project sources, without deleting `.local`.

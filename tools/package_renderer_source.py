@@ -27,7 +27,8 @@ def main():
         raise ValueError("Unexpected SDK revision")
     provenance = {"sdk_commit": COMMIT, "submodules": {}, "archive_adjustments": [
         "Materialized libmspack symlinks for Windows.",
-        "Replaced the Git-metadata submodule check with a directory check; source archive contains no .git metadata."]}
+        "Replaced the Git-metadata submodule check with a directory check; source archive contains no .git metadata.",
+        "Applied renderer/patches/texture-detail.json: optional mipmapped-surface detail bias."]}
     selected = set()
     for root in [source] + [source / "thirdparty" / name for name in SUBMODULES]:
         if root != source:
@@ -42,9 +43,9 @@ def main():
                 selected.add(root / name)
     destination = PROJECT / "dist"
     destination.mkdir(exist_ok=True)
-    archive = destination / "ReXGlueSpatial-0.2.0-source.tar.gz"
+    archive = destination / "ReXGlueSpatial-0.3.0-source.tar.gz"
     hashes = {}
-    prefix = "ReXGlueSpatial-0.2.0/"
+    prefix = "ReXGlueSpatial-0.3.0/"
     with tarfile.open(archive, "w:gz", compresslevel=6) as output:
         def add(name, data):
             item = tarfile.TarInfo(prefix + name)
@@ -66,10 +67,12 @@ def main():
             add(name, data)
         add("SOURCE_PROVENANCE.json", (json.dumps(provenance, indent=2) + "\n").encode())
         add("build_spatial_renderer.py", (PROJECT / "tools/build_spatial_renderer.py").read_bytes())
+        add("apply_renderer_patches.py", (PROJECT / "tools/apply_renderer_patches.py").read_bytes())
+        add("texture-detail.json", (PROJECT / "renderer/patches/texture-detail.json").read_bytes())
         add("BUILDING-SPATIAL.md", b"""# Spatial renderer corresponding source
 
 This archive contains the ReXGlue SDK and the exact Windows submodule revisions used
-for the 0.2.0 runtime. SOURCE_PROVENANCE.json records revisions and archive adjustments.
+for the 0.3.0 runtime. SOURCE_PROVENANCE.json records revisions and archive adjustments.
 Original sources and their license files are retained. No game data is included.
 
 Install the pinned compiler environment through the EnchantedArmsRecomp launcher
@@ -77,12 +80,16 @@ kit, then run in PowerShell from that kit's directory (replace D:/Source with th
 actual extracted archive path):
 
     . ./scripts/environment.ps1
-    ./.local/python/python.exe ./tools/build_spatial_renderer.py --offline-source --source D:/Source/ReXGlueSpatial-0.2.0 --rc "$taskSdkBinDirectory/rc.exe" --mt "$taskSdkBinDirectory/mt.exe"
+    ./.local/python/python.exe ./tools/build_spatial_renderer.py --offline-source --source D:/Source/ReXGlueSpatial-0.3.0 --rc "$taskSdkBinDirectory/rc.exe" --mt "$taskSdkBinDirectory/mt.exe"
 
 The source archive needs no Git metadata or network downloads for configuration.
 Use the build script from the same release kit. It enables spatial FSR/CAS with
 REX_HAS_FIDELITYFX_SDK=1 across all C++ targets, SSE4.1, and the existing D3D12 shader
 headers. REXGLUE_ENABLE_FIDELITYFX remains OFF (no temporal backend). It remaps
+compiler paths. The texture-detail patch adds a sampler bias only for eligible
+filtered mipmapped surfaces; point-sampled and base-map requests keep their behavior.
+The build script applies that patch idempotently, including to this archive.
+It remaps
 compiler paths and the PDB reference to avoid embedding developer home paths.
 Build type is RelWithDebInfo; targets are rexruntime and rexgpu-xenos. The complete
 compiler command lines are also generated in the local Ninja build directory.

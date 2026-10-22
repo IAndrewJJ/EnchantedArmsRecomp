@@ -1,0 +1,13 @@
+# EnchantedArmsPC 0.4.1 — More reliable first setup
+
+This update addresses setup recovery after an external tester reported `Invalid argument` downloading the ReXGlue SDK. Temporary file-access errors now get bounded retries; a completed, checksum-verified `.partial` download can be reused after a failed final rename. Interrupted connections are retried, incomplete SDK installations are repaired, and tools are prepared before extracting the game. No checksum or Windows access check is bypassed.
+
+A full isolated installation also exposed a separate path-length failure in Windows SDK extraction. ZIP extraction now handles long Windows paths without requiring administrator access or a registry change. SDK startup checks identify missing runtime DLL failures and explain the Microsoft Visual C++ v14 x64 runtime prerequisite.
+
+Persistent failures now identify the file operation and available OS error codes, preserve the full exception chain in the local setup log, and show the log location in the launcher dialog. The reported SDK error's original summary did not establish its underlying Windows cause; this release adds recovery and the diagnostics needed if it recurs. See [setup help](SETUP_TROUBLESHOOTING.md).
+
+Download **EnchantedArmsPC-0.4.1-windows-x64.zip** under release **Assets**, extract the entire ZIP and open **EnchantedArmsLauncher.exe**. For a failed earlier attempt, close the launcher/game and copy the new kit's project contents over your existing folder, preserving `.local` and `bin`. Retry **Settings → Game → Build game**. Do not delete your extracted files or downloads to start over. Existing working native build 0.3.2 installations do not need to rebuild.
+
+Validation: 24 synthetic setup/archive tests; launcher compilation and self-tests; a fresh official SDK download, checksum verification, extraction and version check; and complete tool download, game extraction, code generation and native compilation in an isolated release-kit folder with spaces using Windows PowerShell 5.1. The long-path failure was reproduced and fixed during that test. CI now installs all pinned tools on a fresh Windows runner and checks reuse. This is not a second physical PC or a complete campaign playthrough; the brother's retry is still needed to establish the result on his PC.
+
+The native integration and renderer are unchanged at 0.3.2 and 0.3.0. The renderer's corresponding source remains **ReXGlueSpatial-0.3.0-source.tar.gz**. No game assets, translated code, native game executable or saves are included. Known NPC rendering defects and experimental high-FPS speedup remain; use Original FPS for normal play.

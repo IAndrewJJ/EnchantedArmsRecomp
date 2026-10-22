@@ -1,6 +1,8 @@
 """Local-only ISO validation, extraction, pinned toolchain setup and recompilation."""
 import argparse
+import errno
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -8,6 +10,8 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
+import urllib.error
 import urllib.request
 import zipfile
 
@@ -17,6 +21,33 @@ from inspect_disc import Disc, inspect_xex
 
 PROJECT = Path(__file__).resolve().parents[1]
 XEX_SHA256 = "79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22"
+
+
+class SetupError(ValueError):
+    """An actionable setup failure, with the original exception retained in the log."""
+
+
+def file_operation(action, path, operation, attempts=4):
+    # Windows can briefly deny access while a newly written download is being inspected
+    # or another process holds it. Retry the same operation, never bypass an access rule.
+    for attempt in range(attempts):
+        try:
+            return operation()
+        except OSError as error:
+            transient = (getattr(error, "winerror", None) in (5, 32, 33) or
+                         error.errno in (errno.EACCES, errno.EBUSY, errno.EINVAL))
+            if transient and attempt < attempts - 1:
+                say(f"Retrying {action} ({attempt + 1}/{attempts - 1}): {Path(path).name}")
+                time.sleep(1 << attempt)
+                continue
+            codes = f"errno={error.errno}"
+            if getattr(error, "winerror", None) is not None:
+                codes += f", winerror={error.winerror}"
+            affected = f" Affected file: {error.filename}." if error.filename and str(error.filename) != str(path) else ""
+            raise SetupError(f"Could not {action}: {path} ({codes})." + affected + " "
+                             "Check that the folder is writable and close programs using this file, then retry Build game. "
+                             "Verified downloads and extracted game files will be reused. "
+                             "The local setup log contains the underlying error.") from error
 
 
 def say(message):
@@ -39,9 +70,23 @@ def checked_member(destination, name):
     return target
 
 
+def filesystem_path(path):
+    """Use Windows' extended path syntax for deep SDK archive members.
+
+    The embedded interpreter must work without changing LongPathsEnabled or
+    requiring administrator access. Validate containment before calling this.
+    """
+    path = Path(path).resolve()
+    value = str(path)
+    if os.name == "nt" and not value.startswith("\\\\?\\"):
+        value = "\\\\?\\UNC\\" + value[2:] if value.startswith("\\\\") else "\\\\?\\" + value
+        return Path(value)
+    return path
+
+
 def unpack_zip(archive, destination, strip_contents=False):
     destination = Path(destination)
-    with zipfile.ZipFile(archive) as source:
+    with zipfile.ZipFile(filesystem_path(archive)) as source:
         # Check every name before writing anything.
         for member in source.infolist():
             checked_member(destination, member.filename)
@@ -53,65 +98,102 @@ def unpack_zip(archive, destination, strip_contents=False):
                 name = name[len("Contents/"):]
             if not name or member.is_dir():
                 continue
-            target = checked_member(destination, name)
+            target = filesystem_path(checked_member(destination, name))
             target.parent.mkdir(parents=True, exist_ok=True)
             with source.open(member) as reader, target.open("wb") as writer:
                 shutil.copyfileobj(reader, writer, 2 * 1024 * 1024)
 
 
 def download(package, cache):
+    cache = Path(cache)
     target = cache / package["name"]
-    try:
-        cached_digest = digest(target, package["algorithm"]) if target.exists() else None
-    except OSError as error:
-        raise ValueError("Windows refused access to the cached download " + target.name +
-                         ". The file may be blocked by Windows security. Setup stopped without changing security settings.") from error
-    if cached_digest == package["digest"]:
+
+    def verified(path):
+        def check():
+            try:
+                size = path.stat().st_size
+            except FileNotFoundError:
+                return False
+            return (("bytes" not in package or size == package["bytes"]) and
+                    digest(path, package["algorithm"]) == package["digest"])
+        return file_operation("verify cached download", path, check)
+
+    if verified(target):
         say("Verified cached " + target.name)
         return target
     temporary = target.with_name(target.name + ".partial")
+    # A previous download may have completed but failed during Windows' final rename.
+    # Recheck its size and digest before promotion; never trust the filename alone.
+    if verified(temporary):
+        say("Recovered verified download " + target.name)
+        file_operation("finalize verified download", target, lambda: temporary.replace(target))
+        return target
     request = urllib.request.Request(package["url"], headers={"User-Agent": "EnchantedArmsRecomp-Setup"})
     say("Downloading " + target.name)
-    count, last = 0, time.monotonic()
-    hasher = hashlib.new(package["algorithm"])
-    with urllib.request.urlopen(request, timeout=60) as response, temporary.open("wb") as output:
-        while block := response.read(2 * 1024 * 1024):
-            output.write(block)
-            hasher.update(block)
-            count += len(block)
-            if time.monotonic() - last > 5:
-                say(f"  {count // 1048576} / {package['bytes'] // 1048576} MiB")
-                last = time.monotonic()
-    if count != package["bytes"] or hasher.hexdigest() != package["digest"]:
-        raise ValueError("Download verification failed: " + target.name)
-    temporary.replace(target)
+    for attempt in range(3):
+        count, last = 0, time.monotonic()
+        hasher = hashlib.new(package["algorithm"])
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                with file_operation("create download", temporary, lambda: temporary.open("wb")) as output:
+                    while block := response.read(2 * 1024 * 1024):
+                        # A failed write may already have written some bytes; don't replay it.
+                        file_operation("write download", temporary, lambda: output.write(block), attempts=1)
+                        hasher.update(block)
+                        count += len(block)
+                        if count > package["bytes"]:
+                            raise SetupError("Download exceeded the pinned size: " + target.name)
+                        if time.monotonic() - last > 5:
+                            say(f"  {count // 1048576} / {package['bytes'] // 1048576} MiB")
+                            last = time.monotonic()
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as error:
+            retryable = not isinstance(error, urllib.error.HTTPError) or error.code in (408, 429, 500, 502, 503, 504)
+            if retryable and attempt < 2:
+                say(f"Download interrupted; retrying {target.name} ({attempt + 1}/2)")
+                time.sleep(1 << attempt)
+                continue
+            raise SetupError("Could not download " + target.name + ": " + str(error) +
+                             ". Check your internet connection and retry Build game.") from error
+        if count != package["bytes"] or hasher.hexdigest() != package["digest"]:
+            raise SetupError("Download verification failed: " + target.name +
+                             ". No unverified tool was installed. Retry Build game to download it again.")
+        break
+    # Read back the completed file before it can become an installable cache entry.
+    if not verified(temporary):
+        raise SetupError("Download verification failed on disk: " + target.name)
+    file_operation("finalize verified download", target, lambda: temporary.replace(target))
     return target
 
 
-def prepare_toolchain(local):
-    say("STAGE: Preparing verified build tools")
-    root = local / "toolchain"
+def package_ready(package, root):
+    required = [package["probe"], *package.get("required", [])]
+    if not all((root / name).is_file() for name in required):
+        return False
+    if "version" in package:
+        probe = root / package["probe"]
+        try:
+            result = subprocess.run([str(probe), "--version"], capture_output=True, text=True,
+                                    check=True, timeout=30)
+        except (OSError, subprocess.SubprocessError) as error:
+            if isinstance(error, subprocess.CalledProcessError) and error.returncode & 0xFFFFFFFF == 0xC0000135:
+                raise SetupError("The SDK cannot load a required DLL. Install or repair the Microsoft Visual C++ "
+                                 "v14 x64 Redistributable from Microsoft's official download page, then retry Build game. "
+                                 "See docs/SETUP_TROUBLESHOOTING.md for the link.") from error
+            raise SetupError("The installed SDK could not run: " + str(probe) +
+                             ". See the local setup log for the Windows error.") from error
+        if result.stdout.strip() != package["version"]:
+            raise SetupError("Unexpected SDK version: " + result.stdout.strip())
+    return True
+
+
+def install_package(package, root):
     cache = root / "downloads"
     cache.mkdir(parents=True, exist_ok=True)
-    packages = json.loads((PROJECT / "toolchain.lock.json").read_text(encoding="utf-8"))
-    for package in packages:
-        # Completion receipts prevent re-extracting large packages on a retry.
-        receipt = root / ".receipts" / (package["name"] + ".json")
-        probe = root / package["probe"]
-        if receipt.exists() and probe.exists() and receipt.read_text() == package["digest"]:
-            say("Ready: " + package["name"])
-            continue
-        if package["name"].startswith("rexglue-sdk-") and probe.exists():
-            # Existing development installations are usable without their original archive.
-            # Let Windows enforce access to the executable; never alter security settings.
-            sdk = root / package["destination"] / "win-amd64"
-            if (sdk / "lib/cmake/rexglue/rexglueConfig.cmake").exists():
-                version = subprocess.run([str(probe), "--version"], capture_output=True, text=True, check=True).stdout.strip()
-                if version == "0.10.0":
-                    say("Using installed ReXGlue SDK " + version)
-                    continue
-        archive = download(package, cache)
-        destination = root / package["destination"]
+    archive = download(package, cache)
+    destination = root / package["destination"]
+    say("Installing " + package["name"])
+
+    def extract():
         if package["kind"] == "file":
             destination.mkdir(parents=True, exist_ok=True)
             shutil.copy2(archive, destination / package["name"])
@@ -121,10 +203,35 @@ def prepare_toolchain(local):
             extractor = root / package["extractor"]
             subprocess.run([str(extractor), "x", "-y", "-bd", "-bso0", "-bsp0",
                             "-o" + str(destination), str(archive)], check=True)
-        if not probe.exists():
-            raise ValueError("Package did not produce expected file: " + package["probe"])
-        receipt.parent.mkdir(parents=True, exist_ok=True)
-        receipt.write_text(package["digest"])
+
+    file_operation("extract tool package", archive, extract)
+    if not package_ready(package, root):
+        raise SetupError("Package did not produce all required files: " + package["name"])
+    receipt = root / ".receipts" / (package["name"] + ".json")
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    file_operation("record completed tool installation", receipt,
+                   lambda: receipt.write_text(package["digest"], encoding="utf-8"))
+
+
+def prepare_toolchain(local):
+    say("STAGE: Preparing verified build tools")
+    root = local / "toolchain"
+    cache = root / "downloads"
+    cache.mkdir(parents=True, exist_ok=True)
+    packages = json.loads((PROJECT / "toolchain.lock.json").read_text(encoding="utf-8"))
+    for index, package in enumerate(packages, 1):
+        say(f"STAGE: Preparing build tools ({index}/{len(packages)})")
+        # Completion receipts prevent re-extracting large packages on a retry.
+        receipt = root / ".receipts" / (package["name"] + ".json")
+        if receipt.exists() and receipt.read_text() == package["digest"] and package_ready(package, root):
+            say("Ready: " + package["name"])
+            continue
+        if "version" in package and package_ready(package, root):
+            # Existing development installations are usable without their original archive.
+            # Let Windows enforce access to the executable; never alter security settings.
+            say("Using installed ReXGlue SDK " + package["version"])
+            continue
+        install_package(package, root)
 
 
 def validate_disc(disc):
@@ -190,10 +297,12 @@ def main():
                 entries = validate_disc(disc)
                 if args.validate_only:
                     return
+                prepare_toolchain(local)
                 extract_game(disc, entries, local)
             finally:
                 disc.stream.close()
-        prepare_toolchain(local)
+        else:
+            prepare_toolchain(local)
         if args.tools_only:
             return
         say("STAGE: Generating and compiling native code (this can take a while)")
@@ -215,5 +324,6 @@ if __name__ == "__main__":
     try:
         main()
     except (Exception, KeyboardInterrupt) as error:
+        traceback.print_exc(file=sys.stdout)
         say("SETUP FAILED: " + str(error))
         sys.exit(1)

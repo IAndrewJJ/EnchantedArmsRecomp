@@ -426,8 +426,9 @@ namespace EnchantedArmsPC
                         lastFailure = "Setup could not finish. Open Settings to try again.";
                         MessageBox.Show(
                             this,
-                            failureReason ?? "Game setup could not finish. Check ISO " +
-                                                 "access and free disk space, then try again.",
+                            (failureReason ?? "Game setup could not finish. Check ISO " +
+                                                  "access and free disk space, then try again.") +
+                                "\n\nDetails: .local/logs/" + Path.GetFileName(setupLog),
                             "Setup incomplete", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }

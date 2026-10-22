@@ -1,0 +1,31 @@
+name: Setup failure
+description: Report a download, ISO validation, tool installation or build failure.
+body:
+  - type: markdown
+    attributes:
+      value: Read [setup help](https://github.com/IAndrewJJ/EnchantedArmsRecomp/blob/main/docs/SETUP_TROUBLESHOOTING.md) and retry with the current complete Windows kit first. Keep your .local folder.
+  - type: input
+    id: version
+    attributes:
+      label: Kit version and download used
+      description: Complete Windows kit, source ZIP, or launcher-only artifact?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows version, free disk space, and folder type
+      description: Is the project folder local, synced or on a network drive? Do not include your Windows username.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Last stage and error excerpt
+      description: The error names a log under .local/logs. Include SETUP FAILED and nearby exception lines, with personal paths removed. Never upload game files, saves, generated code or authentication files.
+    validations:
+      required: true
+  - type: textarea
+    id: retry
+    attributes:
+      label: Does retrying change the result?

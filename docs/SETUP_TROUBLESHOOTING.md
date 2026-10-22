@@ -1,0 +1,35 @@
+# Setup help
+
+Use the complete **EnchantedArmsPC-0.4.1-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.1). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+
+## Updating after a failed setup
+
+1. Close the launcher and game. Extract the new kit, then copy the contents of its `EnchantedArmsRecomp` folder over your existing project folder. Replace the project files when prompted. Avoid nesting a second project folder inside the first.
+2. Keep your existing `.local` and `bin` folders. Do not delete the installation to retry: `.local` contains extracted files, tools, settings and any saves.
+3. Open **EnchantedArmsLauncher.exe**, select your supported ISO under **Settings → Game**, and click **Build game** (or **Rebuild game**).
+
+Setup checks the game revision first, prepares the build tools, then verifies/extracts your game and compiles it. It reuses verified downloads and extracted files. If a download completed but its final rename failed, the next attempt verifies and reuses that `.partial` file too. An incomplete or altered download is downloaded again. Checksums remain mandatory.
+
+## `Invalid argument` downloading the ReXGlue SDK
+
+This error was reported with `rexglue-sdk-0.10.0-win-amd64.zip`. The old summary did not identify the failing file operation, so it is not sufficient to determine the underlying Windows cause. The ordinary path and doubled backslash in an escaped log do not, by themselves, mean the folder name is invalid.
+
+Version 0.4.1 retries temporary file-access errors during cache checks, download finalization and extraction, with a short, bounded delay. It also retries interrupted connections. A persistent refusal stops setup with the exact operation, path and available Windows error codes; the complete exception chain is written to the local setup log. Retrying does not disable Windows protection or change access permissions.
+
+If the error persists, confirm the project folder is writable and close programs holding the named file. A short local folder such as `C:/Games/EnchantedArmsRecomp` is a useful comparison if your folder is synced or deeply nested; move the whole installation and recreate its desktop shortcut after moving it. Administrator mode and disabling protection are not required by setup. Check Windows Security's Protection history if Windows reports a security block, and report it for investigation.
+
+The official SDK has been freshly downloaded, checksum-verified, extracted and run during 0.4.1 development. CI now checks SDK installation on a fresh Windows runner. These checks do not establish the cause of every access refusal on another PC.
+
+The full setup test also found a separate path-length failure while extracting the Windows SDK in a deep project folder. Version 0.4.1 uses extended Windows paths for ZIP extraction; it does not require a registry change or administrator mode.
+
+## Reporting a remaining failure
+
+The launcher error gives the file under `.local/logs/setup-*.log`. Open the newest setup log and include the last stage, the `SETUP FAILED` line and nearby exception lines in a [setup issue](https://github.com/IAndrewJJ/EnchantedArmsRecomp/issues/new?template=setup.yml). Include your kit version, Windows version, free disk space and whether the folder is local, synced or on a network drive. Remove your username and personal paths before sharing excerpts. Do not attach your ISO, extracted game files, saves or generated code.
+
+Other common failures:
+
+- **Unsupported game revision:** only the USA/Europe Xbox 360 executable listed in the README is supported. Renaming an ISO does not change its revision.
+- **Insufficient space:** allow roughly 20 GB beyond the ISO for the extracted game, tools and compilation.
+- **Another setup is running:** let that attempt finish or cancel it in its launcher before retrying. An old `setup.lock` file alone does not hold the lock after its process exits.
+- **Checksum mismatch:** no unverified tool is installed. Retry with a stable connection; report repeated failures with the package name.
+- **Required DLL missing / exit code `0xC0000135`:** the SDK depends on the Microsoft Visual C++ runtime. Install or repair the **X64** v14 Redistributable from [Microsoft's official downloads](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist), then retry. This is separate from Visual Studio; setup does not install or modify that system runtime automatically.

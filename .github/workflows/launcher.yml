@@ -10,7 +10,7 @@ concurrency:
 jobs:
   validate-and-package:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,6 +20,8 @@ jobs:
         run: |
           python tools/test_setup.py -v
           python tools/test_release.py -v
+      - name: Install and verify all pinned tools in a fresh folder
+        run: python tools/check_toolchain.py --directory "${{ runner.temp }}/Full toolchain fresh install"
       - name: Compile launcher
         shell: powershell
         run: ./scripts/build-launcher.ps1

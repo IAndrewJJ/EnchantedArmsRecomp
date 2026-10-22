@@ -1,4 +1,4 @@
-# Playtesting preview 0.4.0
+# Playtesting preview 0.4.1
 
 Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. Only the early game has been exercised. Mild stutter remains; a full campaign playthrough is still needed.
 
@@ -24,7 +24,7 @@ Reported defects are tracked in [known issues](KNOWN_ISSUES.md): EA-001 (The Die
 - Texture detail favors sharper existing mipmaps on eligible filtered surfaces. It is not a higher-resolution texture replacement pack; Strong can introduce shimmer. Compare Original/Crisp/Strong in motion.
 - For dark/missing NPCs, start with Original at 1× and compare ROV alone, then Automatic with background compilation off, then readback separately as described in the [rendering comparison guide](RELEASE-0.3.2.md). Restart between changes. F8 saves guest output before presenter effects/overlays to `.local/runtime/captures`. Immediate readback may cause heavy stalls and is not a general performance setting.
 - Verified shader stutter fixes, content mods, achievements and later-game compatibility remain future work.
-- A clean-machine installation still needs testing. Windows security blocked reads of the pinned SDK archive on the development PC. The existing supported SDK installation can be reused. Setup stops if required downloads or executables are inaccessible; do not change security settings to force setup through.
+- Independent-PC installation still needs broader testing. The reported SDK `Invalid argument` failure is covered by bounded file-operation retries, verified partial-download recovery and detailed errors in 0.4.1. A fresh SDK download/extraction/version check passes locally, and CI now repeats it on Windows. The original summary did not establish the cause; see [setup help](SETUP_TROUBLESHOOTING.md) if it recurs.
 
 Keep the entire installed folder when updating; `.local/runtime/user` holds saves and `.local/runtime/cache` holds shader caches. Back up the user folder before replacing an installation. New releases should be unpacked over the project sources, without deleting `.local`.
 

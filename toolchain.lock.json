@@ -112,6 +112,18 @@
     "bytes": 44751910,
     "destination": "rexglue-sdk-0.10.0",
     "probe": "rexglue-sdk-0.10.0/win-amd64/bin/rexglue.exe",
+    "version": "0.10.0",
+    "required": [
+      "rexglue-sdk-0.10.0/win-amd64/lib/cmake/rexglue/rexglueConfig.cmake",
+      "rexglue-sdk-0.10.0/win-amd64/include/rex/ppc.h",
+      "rexglue-sdk-0.10.0/win-amd64/include/rex/rex_app.h",
+      "rexglue-sdk-0.10.0/win-amd64/lib/rexruntimerd.lib",
+      "rexglue-sdk-0.10.0/win-amd64/lib/rexgpu-xenosrd.lib",
+      "rexglue-sdk-0.10.0/win-amd64/bin/rexruntime.dll",
+      "rexglue-sdk-0.10.0/win-amd64/bin/rexruntimerd.dll",
+      "rexglue-sdk-0.10.0/win-amd64/bin/rexgpu-xenosrd.dll",
+      "rexglue-sdk-0.10.0/win-amd64/bin/TracyClientrd.dll"
+    ],
     "kind": "zip"
   }
 ]

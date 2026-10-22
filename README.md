@@ -2,7 +2,7 @@
 
 **An unofficial native PC recompilation of Enchanted Arms for Xbox 360.** Build and play on Windows using your own supported disc image.
 
-[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.0) · [Known issues](docs/KNOWN_ISSUES.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
+[Download the Windows kit](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.4.1) · [Known issues](docs/KNOWN_ISSUES.md) · [Setup help](docs/SETUP_TROUBLESHOOTING.md) · [Build from source](docs/BUILDING.md) · [Contribute](CONTRIBUTING.md)
 
 [![Launcher checks](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml/badge.svg)](https://github.com/IAndrewJJ/EnchantedArmsRecomp/actions/workflows/launcher.yml)
 
@@ -10,14 +10,14 @@
 
 ## Start playing
 
-1. Download **EnchantedArmsPC-0.4.0-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
+1. Download **EnchantedArmsPC-0.4.1-windows-x64.zip** from the release's **Assets** section. Extract the entire ZIP into a writable local folder and keep its files together.
 2. Open **EnchantedArmsLauncher.exe**. Choose **Set up game**, select your Xbox 360 ISO under **Settings → Game**, then **Build game**.
 3. When setup finishes, click **Play Enchanted Arms**. The launcher always opens first; shortcuts never start the game automatically.
 4. Use **Settings → Graphics** for visual presets, **Display** for window/FPS options, or **Game → Create desktop shortcut** for an **EnchantedArmsPC** desktop icon.
 
-Requires **Windows 10/11 x64**, **.NET Framework 4.8** and a **Direct3D 12 GPU**. First setup downloads about **800 MB** of pinned build tools and needs roughly **20 GB free** in addition to the ISO. Compilation takes several minutes. Python and Visual Studio do not need to be installed separately.
+Requires **Windows 10/11 x64**, **.NET Framework 4.8**, the [Microsoft Visual C++ v14 x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) and a **Direct3D 12 GPU**. First setup downloads about **800 MB** of pinned build tools and needs roughly **20 GB free** in addition to the ISO. Compilation takes several minutes. Python and Visual Studio do not need to be installed separately.
 
-The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP and the CI launcher-only artifact do not include the renderer and bootstrap files needed for player setup.
+The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP and the CI launcher-only artifact do not include the renderer and bootstrap files needed for player setup. If setup fails, follow [setup help](docs/SETUP_TROUBLESHOOTING.md); retrying reuses verified tools and extracted files.
 
 ## Current status
 
@@ -72,7 +72,7 @@ Only the **USA/Europe Xbox 360 release**, title `555307E6`, media `41637F65`, XE
 
 Setup opens the ISO read-only and rejects unsupported executables before extraction. Files, translated code and compilation stay on the player's PC.
 
-To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.0 launcher uses native build 0.3.2; existing 0.3.2 players do not need to rebuild.** For earlier native builds, use **Settings → Game → Rebuild game**. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
+To update, close the game and launcher, keep a private backup of `.local/runtime/user`, and unpack the new kit over the existing project while preserving `.local` and `bin`. **The 0.4.1 launcher uses native build 0.3.2; existing 0.3.2 players do not need to rebuild.** For earlier native builds, use **Settings → Game → Rebuild game**. Keep the installation folder in place, or recreate the desktop shortcut after moving it.
 
 Local data lives under `.local`: `runtime/user` for saves, `runtime/cache` for shader caches, `runtime/captures` for F8 images, and `runtime/boot-*.log` plus `logs` for diagnostics. Rebuilding preserves saves and caches. Report/log/save-management buttons have been removed from the simplified interface.
 

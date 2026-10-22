@@ -27,7 +27,7 @@ For command-line setup:
 
 For an existing supported extraction and toolchain, `scripts/build.ps1` regenerates and builds native code. It stages the enhanced build in `bin/graphics-<native_version>`. Tools, extracted files, build outputs, settings, saves and caches remain local. `scripts/run.ps1` opens the launcher; Play starts the game.
 
-Tool URLs, sizes and digests are pinned in `toolchain.lock.json` and `launcher/python.lock.json`. They are downloaded into the project rather than installed system-wide. An existing supported SDK can be reused. Fresh-machine setup still needs broader testing; Windows access refusals are reported without changing security settings.
+Tool URLs, sizes and digests are pinned in `toolchain.lock.json` and `launcher/python.lock.json`. They are downloaded into the project rather than installed system-wide. An existing supported SDK can be reused after required-file and version checks. Setup retries temporary access/network failures, reuses verified partial downloads, and records persistent failures with the operation and exception chain. See [setup help](SETUP_TROUBLESHOOTING.md).
 
 ## Checks
 
@@ -35,6 +35,14 @@ Tool URLs, sizes and digests are pinned in `toolchain.lock.json` and `launcher/p
 python tools/test_setup.py -v
 python tools/test_release.py -v
 ```
+
+The separate network integration check requires Windows and a **new** directory. It downloads, verifies, extracts and runs the official SDK without an ISO or existing toolchain:
+
+```powershell
+python tools/check_toolchain.py --sdk-only --directory '.local/fresh SDK check'
+```
+
+Omit `--sdk-only` to install/check every pinned build tool. CI installs all pinned tools, runs the SDK version check, then checks reuse in a fresh Windows runner folder with spaces.
 
 Launcher `--self-test` additionally checks settings migration/round trips, culture-independent arguments, desktop-scoped instance identity, bounded logging, process-exit callbacks and compiled release metadata. Its windowless child fixture never launches a game.
 
@@ -46,7 +54,7 @@ Build the [spatial renderer](../renderer/README.md) and place its verified binar
 
 ```powershell
 python tools/package_release.py
-python tools/validate_package.py dist/EnchantedArmsPC-0.4.0-windows-x64.zip
+python tools/validate_package.py dist/EnchantedArmsPC-0.4.1-windows-x64.zip
 ```
 
 The package uses an explicit allowlist, stable ZIP metadata and a per-file hash ledger. Identical input files produce identical ZIPs; this does not imply that separate compiler invocations produce identical executables. The validator rejects duplicate/unlisted members, hash mismatches, private paths and unexpected executables. The packager derives the kit version from `release.json`.

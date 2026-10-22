@@ -22,6 +22,8 @@ namespace EnchantedArmsPC
         internal static System.Threading.EventWaitHandle PlayRequest;
         internal static System.Threading.EventWaitHandle ActivateRequest;
         internal static System.Threading.EventWaitHandle RequestAcknowledged;
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        static extern void SHChangeNotify(uint eventId, uint flags, string item, IntPtr other);
         static readonly object DiagnosticLock = new object();
         [DllImport("user32.dll")]
         static extern IntPtr GetProcessWindowStation();
@@ -89,8 +91,7 @@ namespace EnchantedArmsPC
         }
         internal static bool TimingUpdateRequired(Preferences p, string nativeDirectory)
         {
-            return ((p.FrameLimit != 0 && p.FrameLimit != 30) || p.CustomNativeControls ||
-                    p.FrameTimeGraph) &&
+            return (p.FrameLimit == 60 || p.CustomNativeControls || p.FrameTimeGraph) &&
                    !String.Equals(Path.GetFullPath(nativeDirectory),
                                   Path.GetFullPath(CurrentNativeDirectory),
                                   StringComparison.OrdinalIgnoreCase);
@@ -172,6 +173,8 @@ namespace EnchantedArmsPC
                 set("Description", "Open the EnchantedArmsPC launcher");
                 set("IconLocation", Path.Combine(Root, "EnchantedArmsLauncher.exe") + ",0");
                 type.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
+                SHChangeNotify(0x2000, 0x0005, Path.Combine(directory, "EnchantedArmsPC.lnk"),
+                               IntPtr.Zero);
             }
             finally
             {

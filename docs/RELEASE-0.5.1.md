@@ -1,4 +1,19 @@
-# 0.5.1 — Confirmed uninstall from the launcher
+# 0.5.1 — Confirmed uninstall and two stable FPS options
+
+**Settings → Display → Frame limit** now contains only **30 FPS · Stable** and
+**60 FPS · Stable**. New installations default to 30. Existing 60 FPS preferences
+stay at 60; old Original preferences become 30 and retired higher/unlimited caps
+become 60. The existing native timing corrections are unchanged. Player testing
+now includes about three hours of upscaled 60 FPS gameplay with few dips on first
+use of effects/abilities and no visual issues reported in that span. Full
+campaign testing continues.
+
+The launcher also embeds an original gold-gauntlet/cyan-crystal icon approved by
+the project owner. Its ICO contains ten sizes from 16 to 256 pixels for desktop
+shortcuts, Explorer and application windows. Existing shortcuts already point
+to the executable's icon; use **Settings → Game → Create desktop shortcut** to
+recreate/refresh one if Windows still shows a cached icon. The source PNG and
+generation prompt are included under `launcher/branding`.
 
 **Settings → Game → Uninstall EnchantedArmsPC…** permanently removes the current
 installation. The confirmation shows the exact folder and explains that saves,

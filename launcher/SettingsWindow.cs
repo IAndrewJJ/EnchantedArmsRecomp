@@ -20,11 +20,7 @@ namespace EnchantedArmsPC
         readonly ComboBox aa = Choice("Original", "FXAA", "FXAA strong", "Supersampling + FXAA");
         readonly ComboBox filtering = Choice("Original", "Off", "1×", "2×", "4×", "8×", "16×");
         readonly ComboBox detail = Choice("Original", "Crisp", "Strong");
-        readonly ComboBox fps =
-            Choice("Original · Recommended", "30 FPS", "60 FPS · Preview", "90 FPS · Experimental",
-                   "120 FPS · Experimental", "144 FPS · Experimental", "165 FPS · Experimental",
-                   "180 FPS · Experimental", "240 FPS · Experimental", "360 FPS · Experimental",
-                   "Unlimited · Experimental");
+        readonly ComboBox fps = Choice("30 FPS · Stable", "60 FPS · Stable");
         readonly ComboBox display = Choice("Windowed", "Borderless fullscreen");
         readonly ComboBox size = Choice("1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160");
         readonly ComboBox renderPath =
@@ -172,11 +168,9 @@ namespace EnchantedArmsPC
             Full(screen, tearing);
             Full(screen, dither);
             Full(screen, frameGraph);
-            var timing =
-                Theme.Label("60 FPS includes game-speed corrections. Full-playthrough testing " +
-                                "is ongoing; use Original if timing looks wrong. " +
-                                "Higher limits remain experimental.",
-                            480);
+            var timing = Theme.Label("30 FPS follows the original cadence. 60 FPS uses " +
+                                     "game-speed corrections for smoother motion.",
+                                     480);
             timing.ForeColor = Theme.Gold;
             Full(screen, timing);
             var advanced = Page("Rendering options");
@@ -259,9 +253,10 @@ namespace EnchantedArmsPC
             uninstall.Margin = new Padding(0, 24, 0, 4);
             uninstall.Enabled = !running;
             Full(gamePage, uninstall);
-            Full(gamePage, Theme.Label("Permanently removes this installation and its saves, " +
-                                       "settings, caches and tools. You will be asked to confirm.",
-                                       480));
+            Full(gamePage,
+                 Theme.Label("Permanently removes this installation and its saves, " +
+                                 "settings, caches and tools. You will be asked to confirm.",
+                             480));
             uninstall.Click += (s, e) =>
             {
                 try

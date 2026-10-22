@@ -1,6 +1,6 @@
-# Playtesting preview 0.5.0
+# Playtesting preview 0.5.1
 
-Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. Only the early game has been exercised. Mild stutter remains; a full campaign playthrough is still needed.
+Confirmed by the first tester: New Game, opening movies, rendered battle, character control, normal audio, the transition into exploration, character models, Y menus, save creation and save loading. The latest report covers about three hours of steady upscaled 60 FPS gameplay with few dips on first use of abilities/effects and no visual issues reported in that span. A full campaign playthrough is still needed; this does not establish a fix for the original missing-NPC reports.
 
 Reported defects are tracked in [known issues](KNOWN_ISSUES.md): EA-001 (The Diet Doctor, cafeteria), EA-002 (Smiling Salesgirl, festival), EA-003 (dark patches on Toya, Makoto and other NPCs) and EA-004 (experimental FPS can accelerate gameplay). No NPC fix is confirmed. The original early gameplay results predate the enhanced graphics build.
 
@@ -18,9 +18,9 @@ Reported defects are tracked in [known issues](KNOWN_ISSUES.md): EA-001 (The Die
 
 - Windows x64 and Direct3D 12 only; initial testing used an AMD Radeon RX 6700 XT. Other GPU vendors and controllers need coverage.
 - Only XEX SHA-256 `79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22` is supported. Other regional or patched executables need separate analysis.
-- Higher resolution uses existing renderer scaling. Source textures and pre-rendered movies keep their source detail; no texture replacement or AI upscaling is included.
+- Higher resolution uses renderer scaling. Source textures and pre-rendered movies keep their source detail; no enhanced texture artwork is bundled. Local DDS/XPR pack loading is available under Settings → Textures.
 - Spatial FSR/CAS pipeline initialization passed on the RX 6700 XT, with actual resolution, AF, FXAA and sharpening flags verified. That check does not establish correct rendering throughout the game. Test both missing NPC locations after restarting with Original and an enhanced preset.
-- Original remains the baseline. Version 0.4.2 / native 0.3.3 adds automatic engine/UV timing corrections and a 60 FPS Preview option. Opening-area movement, menu background and a runic wall have passed a player comparison; test battles, scripts and later transitions separately. Compare the same route against Original and report residual speedup or slowdown. Higher limits remain experimental, movies retain their source cadence, and the selected cap is not a promise of achieved FPS. Use a separate save slot for timing tests. See [implementation details](TIMING.md).
+- Use 30 FPS as the timing baseline. Launcher 0.5.1 offers only 30 FPS · Stable and 60 FPS · Stable. The existing engine/UV corrections remain active at 60; test battles, scripts and later transitions separately and report residual speedup or slowdown. Movies retain their source cadence, and the selected cap is not a promise of achieved FPS. Use a separate save slot for timing tests. See [implementation details](TIMING.md).
 - Texture detail favors sharper existing mipmaps on eligible filtered surfaces. It is not a higher-resolution texture replacement pack; Strong can introduce shimmer. Compare Original/Crisp/Strong in motion.
 - For dark/missing NPCs, start with Original at 1× and compare ROV alone, then Automatic with background compilation off, then readback separately as described in the [rendering comparison guide](RELEASE-0.3.2.md). Restart between changes. F8 saves guest output before presenter effects/overlays to `.local/runtime/captures`. Immediate readback may cause heavy stalls and is not a general performance setting.
 - Verified shader stutter fixes, content mods, achievements and later-game compatibility remain future work.

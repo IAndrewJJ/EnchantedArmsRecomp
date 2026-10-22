@@ -15,7 +15,9 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = ["README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "CONTRIBUTING.md", "CHANGELOG.md",
          ".gitignore", ".gitattributes", ".editorconfig", ".clang-format", "release.json", "CMakeLists.txt",
          "CMakePresets.json", "enchantedarmsrecomp_manifest.toml", "toolchain.lock.json",
-         "generated/rexglue.cmake", "renderer/README.md", "bootstrap/README.md", "docs/images/launcher.png"]
+         "generated/rexglue.cmake", "renderer/README.md", "bootstrap/README.md", "docs/images/launcher.png",
+         "launcher/branding/EnchantedArmsPC.png", "launcher/branding/EnchantedArmsPC.ico"]
+BINARY_ARTWORK = {"docs/images/launcher.png", "launcher/branding/EnchantedArmsPC.png", "launcher/branding/EnchantedArmsPC.ico"}
 DIRECTORIES = ["src", "config", "launcher", "scripts", "tools", "docs", "licenses", "data", ".github", "renderer/patches"]
 ALLOWED_SUFFIXES = {".md", ".txt", ".cpp", ".h", ".cs", ".manifest", ".ps1", ".py", ".toml", ".json", ".yml", ".yaml", ".cmake"}
 
@@ -68,7 +70,7 @@ def main():
         relative = Path("EnchantedArmsLauncher.exe") if path == launcher else path.relative_to(ROOT)
         if any(part in {".local", "audit", "bin", "default", "private", "assets", "__pycache__"} for part in relative.parts):
             raise ValueError("Private path selected: " + str(relative))
-        if path not in {launcher,python_archive,ROOT / "docs/images/launcher.png"} and path.suffix not in {".dll", ".lib"}:
+        if path not in {launcher,python_archive} and relative.as_posix() not in BINARY_ARTWORK and path.suffix not in {".dll", ".lib"}:
             contents = path.read_text(encoding="utf-8-sig")
             if ("C:" + chr(92) + "Users" + chr(92)) in contents or ("C:" + "/Users/") in contents:
                 raise ValueError("Personal absolute path in source: " + str(relative))

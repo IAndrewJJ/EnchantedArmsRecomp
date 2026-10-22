@@ -36,6 +36,7 @@ $manifest.Save($manifestPath)
     /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll `
     /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll `
     ('/win32manifest:' + $manifestPath) `
+    ('/win32icon:' + (Join-Path $projectDirectory 'launcher/branding/EnchantedArmsPC.ico')) `
     ('/out:' + $OutputPath) `
     $versionSource `
     (Get-ChildItem -LiteralPath (Join-Path $projectDirectory 'launcher') -Filter '*.cs' -File | ForEach-Object { $_.FullName })

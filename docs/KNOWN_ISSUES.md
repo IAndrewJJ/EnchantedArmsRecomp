@@ -39,6 +39,12 @@ The tester reports that parts of multiple NPC character models appear black wher
 
 ## EA-004 — Experimental FPS modes can accelerate gameplay
 
+Current launcher 0.5.1 offers only **30 FPS · Stable** and **60 FPS · Stable**.
+The player now reports about three hours of steady upscaled 60 FPS gameplay with
+few first-use ability/effect dips and no visual issues in that span. Higher caps
+have been removed from the launcher. Full campaign timing validation continues.
+The history below describes the original defect and earlier testing.
+
 Status: **60 FPS preview, partially validated in 0.4.2 / native 0.3.3**. Earlier builds only removed the console throttle and could accelerate gameplay, matching [upstream reports](https://github.com/xenia-canary/game-compatibility/issues/2). The new build corrects exploration/interface/menu steps and independent texture UV scrolling. Player testing in the opening area reports normal character movement, the menu background and runic-wall animation at 60 FPS, followed by an observation of no speedup or very little.
 
 This is not campaign-wide validation. Battles, scripted sequences, transitions and higher rates remain unverified. Original remains the default and fallback if timing looks wrong. Movies retain their source cadence. Existing players must rebuild their native game; a launcher-only update cannot fix the old executable. See [timing details](TIMING.md).

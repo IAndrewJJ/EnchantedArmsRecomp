@@ -56,12 +56,12 @@ namespace EnchantedArmsPC
             if (invalid.Scale != 4 || invalid.Sharpness != 0 || invalid.Anisotropy != 5 ||
                 invalid.Upscaler != "bilinear" || invalid.PostAA != "none" || invalid.Width != 1920)
                 return 7;
-            if (migrated.FrameLimit != 0 || migrated.TextureDetail != 0)
+            if (migrated.FrameLimit != 30 || migrated.TextureDetail != 0)
                 return 8;
             foreach (int limit in Preferences.FrameLimits)
             {
                 var selected = new Preferences { FrameLimit = limit, TextureDetail = 1 };
-                bool needsTiming = limit != 0 && limit != 30;
+                bool needsTiming = limit == 60;
                 if (Program.TimingUpdateRequired(selected, Program.CurrentNativeDirectory) ||
                     Program.TimingUpdateRequired(
                         selected, Path.Combine(Program.Root, "bin", "graphics-0.3.2")) !=
@@ -70,7 +70,7 @@ namespace EnchantedArmsPC
                 var arguments = selected.RendererArguments();
                 if (!arguments.Contains("--ea_fps_limit=" + limit) ||
                     !arguments.Contains("--ea_texture_lod_bias=-0.5") ||
-                    !arguments.Contains(limit == 0 ? "--vsync" : "--no-vsync") ||
+                    !arguments.Contains("--no-vsync") ||
                     !arguments.Contains("--video_mode_refresh_rate=60"))
                     return 9;
                 var saved = Program.Json.Deserialize<Preferences>(Program.Json.Serialize(selected));
@@ -80,8 +80,18 @@ namespace EnchantedArmsPC
             invalid.FrameLimit = 999;
             invalid.TextureDetail = 9;
             invalid.Normalize();
-            if (invalid.FrameLimit != 0 || invalid.TextureDetail != 2)
+            if (invalid.FrameLimit != 30 || invalid.TextureDetail != 2)
                 return 11;
+            if (!Preferences.FrameLimits.SequenceEqual(new[] { 30, 60 }))
+                return 30;
+            foreach (int previous in new[] { 0, -1, 30, 60, 90, 120, 144, 165, 180, 240, 360, 999 })
+            {
+                var legacy = new Preferences { FrameLimit = previous };
+                legacy.Normalize();
+                int expected = previous == 0 || previous == 30 || previous == 999 ? 30 : 60;
+                if (legacy.FrameLimit != expected)
+                    return 31;
+            }
             if (migrated.RenderPath != "auto" || migrated.ResolveReadback != "none" ||
                 !migrated.AsyncShaders)
                 return 12;

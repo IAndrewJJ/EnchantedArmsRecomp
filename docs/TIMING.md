@@ -13,12 +13,16 @@ not rescaled.
 
 ## Status
 
-Version 0.4.2 / native 0.3.3 enables these corrections automatically. The player
-reports normal character movement, menu background and runic-wall animation at
-60 FPS in the opening area. A later observation describes no speedup or very
-little. This is an opening-area comparison, not a claim of perfect campaign
-timing. Battles, scripted sequences, transitions and higher rates remain
-unverified. Original remains the default; 60 FPS is a preview option.
+The corrections introduced in 0.4.2 / native 0.3.3 remain enabled in native
+0.3.4. The player reports normal character movement, menu background and
+runic-wall animation, followed by about three hours of steady upscaled 60 FPS
+gameplay with few first-use effect dips and no visual issues reported in that
+span. Full campaign timing remains under test.
+
+Launcher 0.5.1 offers only **30 FPS · Stable** and **60 FPS · Stable**. Default
+preferences and old Original selections use 30; existing 60 FPS selections are
+preserved and retired higher/unlimited selections become 60. Higher developer
+caps remain outside the launcher and are not player release options.
 
 ## Integration
 

@@ -20,6 +20,12 @@ namespace EnchantedArmsPC
                                                 int size);
         internal static void Window(Form form)
         {
+            var icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            if (icon != null)
+            {
+                form.Icon = icon;
+                form.Disposed += (s, e) => icon.Dispose();
+            }
             form.Font = new Font("Segoe UI", 10);
             form.BackColor = Background;
             form.ForeColor = Text;

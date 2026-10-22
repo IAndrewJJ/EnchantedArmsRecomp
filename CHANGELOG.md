@@ -2,6 +2,9 @@
 
 ## 0.5.1 — Confirmed uninstall
 
+- Simplify launcher FPS choices to 30 FPS · Stable and 60 FPS · Stable. Default to 30; preserve 60 FPS preferences and migrate retired higher/unlimited caps to 60.
+- Embed the approved original gauntlet/crystal application icon, with ten Windows icon sizes. Launcher windows and generated desktop shortcuts use it automatically.
+
 - Add Settings → Game → Uninstall EnchantedArmsPC with an explicit folder/save-deletion popup and Cancel selected by default.
 - Remove the current installation and matching standard shortcuts after the launcher closes; clean up the temporary helper afterward.
 - Refuse protected/shared roots, changed directory identities and active game/launcher processes. Never traverse linked external folders or scan for external ISOs/other installations.

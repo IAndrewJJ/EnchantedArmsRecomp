@@ -16,9 +16,8 @@ namespace EnchantedArmsPC
         public int Jobs = 2;
         public int Schema = 5;
         public int TextureDetail = 0;
-        public int FrameLimit = 0;
-        public static readonly int[] FrameLimits = { 0,   30,  60,  90,  120, 144,
-                                                     165, 180, 240, 360, -1 };
+        public int FrameLimit = 30;
+        public static readonly int[] FrameLimits = { 30, 60 };
         public string Upscaler = "bilinear";
         public string PostAA = "none";
         public int Sharpness = 80;
@@ -39,7 +38,8 @@ namespace EnchantedArmsPC
             Jobs = Math.Max(1, Math.Min(8, Jobs));
             TextureDetail = Math.Max(0, Math.Min(2, TextureDetail));
             if (!FrameLimits.Contains(FrameLimit))
-                FrameLimit = 0;
+                FrameLimit =
+                    new[] { -1, 90, 120, 144, 165, 180, 240, 360 }.Contains(FrameLimit) ? 60 : 30;
             if (!new[] { "bilinear", "fsr", "cas" }.Contains(Upscaler))
                 Upscaler = "bilinear";
             if (!new[] { "none", "fxaa", "fxaa_extreme", "ssaa" }.Contains(PostAA))
@@ -79,7 +79,7 @@ namespace EnchantedArmsPC
                 PostAA = "none";
                 Dither = false;
                 TextureDetail = 0;
-                FrameLimit = 0;
+                FrameLimit = 30;
                 RenderPath = "auto";
                 ResolveReadback = "none";
                 AsyncShaders = true;
@@ -141,7 +141,7 @@ namespace EnchantedArmsPC
                 "--render_target_path_d3d12=" + (RenderPath == "auto" ? "" : RenderPath),
                 "--readback_resolve=" + ResolveReadback,
                 AsyncShaders ? "--async_shader_compilation" : "--no-async_shader_compilation",
-                FrameLimit == 0 ? "--vsync" : "--no-vsync",
+                "--no-vsync",
                 Fullscreen ? "--fullscreen" : "--no-fullscreen",
                 Dither ? "--present_dither" : "--no-present_dither",
                 KeepAspect ? "--present_letterbox" : "--no-present_letterbox",

@@ -25,9 +25,9 @@ The ready-to-run launcher is in the complete release ZIP. GitHub's source ZIP an
 
 - Some NPCs are invisible, and Toya, Makoto and other NPCs can have dark surface patches. These remain under investigation.
 - Mild stutter has been reported. Repeatable measurements and broader GPU/controller coverage are needed.
-- **60 FPS is a preview option with automatic game-speed corrections.** Opening-area character movement, menu background and a runic wall have passed a player comparison. Full campaign timing and higher limits remain unverified; Original stays the default. See [timing details](docs/TIMING.md).
+- The launcher offers **30 FPS · Stable** and **60 FPS · Stable**, with 30 as the default. The 60 FPS mode uses automatic game-speed corrections. A player reports about three hours of steady upscaled 60 FPS gameplay with few first-use effect dips and no visual issues in that span. Full campaign testing continues. See [timing details](docs/TIMING.md).
 
-See [known issues](docs/KNOWN_ISSUES.md), [playtesting guidance](docs/PLAYTESTING.md) and the [0.5.0 release notes](docs/RELEASE-0.5.0.md). No campaign-wide performance improvement is claimed.
+See [known issues](docs/KNOWN_ISSUES.md), [playtesting guidance](docs/PLAYTESTING.md) and the [0.5.1 release notes](docs/RELEASE-0.5.1.md). No campaign-wide performance improvement is claimed.
 
 ## Graphics
 

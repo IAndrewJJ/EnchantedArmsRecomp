@@ -185,7 +185,6 @@ namespace EnchantedArmsPC
                                                  Width = 2560,
                                                  Fullscreen = false,
                                                  KeepAspect = false,
-                                                 AllowTearing = false,
                                                  NativeMsaa = false,
                                                  Dither = true,
                                                  RenderPath = "rov",
@@ -199,30 +198,33 @@ namespace EnchantedArmsPC
                         return 18;
                 }
             }
-            // Renaming the display switch must preserve legacy preferences and invert
-            // the renderer's allow-tearing flag when the user enables V-Sync.
-            foreach (bool tearing in new[] { false, true })
-            {
-                var legacy = Program.Json.Deserialize<Preferences>(
-                    "{\"AllowTearing\":" + (tearing ? "true" : "false") + "}");
-                using (var dialog = new SettingsWindow(legacy, false, false, SettingsPage.Display))
+            // Legacy V-Sync Off settings must not re-enable host tearing. Both
+            // supported frame rates retain their independent guest timing flags.
+            foreach (int limit in Preferences.FrameLimits)
+                foreach (string saved in new[] { "{}", "{\"AllowTearing\":true}",
+                                                 "{\"AllowTearing\":false}" })
                 {
-                    var sync = dialog.Controls.Find("VSync", true).Single() as ComboBox;
-                    if (sync == null ||
-                        Convert.ToString(sync.SelectedItem) != (tearing ? "Off" : "On"))
-                        return 32;
-                    dialog.ReadValues();
-                    if (dialog.Settings.AllowTearing != tearing)
-                        return 33;
-                    sync.SelectedIndex = tearing ? 1 : 0;
-                    dialog.ReadValues();
-                    if (dialog.Settings.AllowTearing == tearing ||
-                        !dialog.Settings.RendererArguments().Contains(
-                            tearing ? "--no-d3d12_allow_variable_refresh_rate_and_tearing"
-                                    : "--d3d12_allow_variable_refresh_rate_and_tearing"))
-                        return 34;
+                    var legacy = Program.Json.Deserialize<Preferences>(saved);
+                    legacy.FrameLimit = limit;
+                    using (var dialog =
+                               new SettingsWindow(legacy, false, false, SettingsPage.Display))
+                    {
+                        if (dialog.Controls.Find("VSync", true).Length != 0)
+                            return 32;
+                        dialog.ReadValues();
+                        string serialized = Program.Json.Serialize(dialog.Settings);
+                        if (serialized.Contains("AllowTearing"))
+                            return 33;
+                        var synchronized = Program.Json.Deserialize<Preferences>(serialized);
+                        var arguments = synchronized.RendererArguments();
+                        if (!arguments.Contains(
+                                "--no-d3d12_allow_variable_refresh_rate_and_tearing") ||
+                            arguments.Contains("--d3d12_allow_variable_refresh_rate_and_tearing") ||
+                            !arguments.Contains("--ea_fps_limit=" + limit) ||
+                            !arguments.Contains("--no-vsync"))
+                            return 34;
+                    }
                 }
-            }
             if (!Enum.GetNames(typeof(SettingsPage))
                      .SequenceEqual(new[] { "Graphics", "Display", "Game", "Controls", "Textures",
                                             "Updates" }))

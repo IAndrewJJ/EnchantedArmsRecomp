@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.7 — V-Sync always enabled
+
+- Keep the previous V-Sync On behavior for all launches, including players whose
+  older settings had it disabled. Remove the V-Sync control from Display settings.
+- Preserve both 30 and 60 FPS modes, other settings and saves. Native build 0.3.6
+  is unchanged; updating from 0.5.6 does not require rebuilding the game.
+
 ## 0.5.6 — Tidier installation and save locations
 
 - Keep the recommended build beside the launcher, with a visible Saves folder.

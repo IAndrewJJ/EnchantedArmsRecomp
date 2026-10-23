@@ -26,7 +26,6 @@ namespace EnchantedArmsPC
         public bool Fullscreen = true;
         public bool Dither = false;
         public bool KeepAspect = true;
-        public bool AllowTearing = true;
         public bool NativeMsaa = true;
         public string RenderPath = "auto";
         public string ResolveReadback = "none";
@@ -77,27 +76,23 @@ namespace EnchantedArmsPC
         {
             Normalize();
             var args = new List<string> {
-                "--resolution_scale=" + Scale,
-                "--draw_resolution_scale_x=" + Scale,
-                "--draw_resolution_scale_y=" + Scale,
-                "--anisotropic_override=" + Anisotropy,
+                "--resolution_scale=" + Scale, "--draw_resolution_scale_x=" + Scale,
+                "--draw_resolution_scale_y=" + Scale, "--anisotropic_override=" + Anisotropy,
                 "--swap_post_effect=" + (PostAA == "ssaa" ? "fxaa" : PostAA),
-                "--present_effect=" + Upscaler,
-                "--window_width=" + Width,
-                "--window_height=" + Height,
-                "--ea_fps_limit=" + FrameLimit,
+                "--present_effect=" + Upscaler, "--window_width=" + Width,
+                "--window_height=" + Height, "--ea_fps_limit=" + FrameLimit,
                 "--ea_texture_lod_bias=" +
                     (-TextureDetail * 0.5).ToString("0.#", CultureInfo.InvariantCulture),
                 "--video_mode_refresh_rate=60",
                 "--render_target_path_d3d12=" + (RenderPath == "auto" ? "" : RenderPath),
                 "--readback_resolve=" + ResolveReadback,
                 AsyncShaders ? "--async_shader_compilation" : "--no-async_shader_compilation",
-                "--no-vsync",
-                Fullscreen ? "--fullscreen" : "--no-fullscreen",
+                "--no-vsync", Fullscreen ? "--fullscreen" : "--no-fullscreen",
                 Dither ? "--present_dither" : "--no-present_dither",
                 KeepAspect ? "--present_letterbox" : "--no-present_letterbox",
-                AllowTearing ? "--d3d12_allow_variable_refresh_rate_and_tearing"
-                             : "--no-d3d12_allow_variable_refresh_rate_and_tearing",
+                // The previous V-Sync On option disabled host tearing. Keep that
+                // presentation behavior fixed; guest timing stays on ea_fps_limit.
+                "--no-d3d12_allow_variable_refresh_rate_and_tearing",
                 NativeMsaa ? "--native_2x_msaa" : "--no-native_2x_msaa"
             };
             args.Add("--d3d12_pipeline_creation_threads=" +

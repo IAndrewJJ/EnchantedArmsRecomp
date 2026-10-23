@@ -1,6 +1,6 @@
 # Setup help
 
-Use the complete **EnchantedArmsPC-0.5.6-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.6). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+Use the complete **EnchantedArmsPC-0.5.7-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.7). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
 
 ## Keeping everything together
 

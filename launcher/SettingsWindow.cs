@@ -30,7 +30,6 @@ namespace EnchantedArmsPC
         readonly ComboBox fps = Choice("30 FPS · Stable", "60 FPS · Stable");
         readonly ComboBox display = Choice("Windowed", "Borderless fullscreen");
         readonly ComboBox size = Choice("1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160");
-        readonly ComboBox vsync = Choice("Off", "On");
         readonly TrackBar sharpness =
             new TrackBar { Minimum = 0, Maximum = 100, TickFrequency = 20,
                            Width = 270, Height = 38,   BackColor = Theme.Background };
@@ -209,8 +208,6 @@ namespace EnchantedArmsPC
             Row(screen, "Display mode", display);
             Row(screen, "Window size", size);
             Row(screen, "Frame rate", fps);
-            vsync.Name = "VSync";
-            Row(screen, "V-Sync", vsync);
             Full(screen, aspect);
             Full(screen, dither);
             Full(screen, frameGraph);
@@ -219,10 +216,7 @@ namespace EnchantedArmsPC
                                      530);
             timing.ForeColor = Theme.Gold;
             Full(screen, timing);
-            Full(screen, Theme.Label("V-Sync prevents screen tearing. Leave it off to allow " +
-                                         "variable refresh rate. Borderless fullscreen uses your " +
-                                         "desktop resolution.",
-                                     530));
+            Full(screen, Theme.Label("Borderless fullscreen uses your desktop resolution.", 530));
             var gamePage = Page("Your game");
             gamePage.Padding = new Padding(6, 0, 2, 0);
             pages[(int)SettingsPage.Game].Controls.Add(gamePage);
@@ -428,9 +422,6 @@ namespace EnchantedArmsPC
             sharpnessValue.Text = sharpness.Value + "%";
             dither.Checked = Settings.Dither;
             aspect.Checked = Settings.KeepAspect;
-            // Tearing is the renderer's host-presentation switch; guest frame pacing
-            // remains independent so display synchronization cannot change game speed.
-            vsync.SelectedIndex = Settings.AllowTearing ? 0 : 1;
             msaa.Checked = Settings.NativeMsaa;
             frameGraph.Checked = Settings.FrameTimeGraph;
             isoPath.Text = Settings.Iso;
@@ -455,7 +446,6 @@ namespace EnchantedArmsPC
             Settings.Sharpness = sharpness.Value;
             Settings.Dither = dither.Checked;
             Settings.KeepAspect = aspect.Checked;
-            Settings.AllowTearing = vsync.SelectedIndex == 0;
             Settings.NativeMsaa = msaa.Checked;
             Settings.FrameTimeGraph = frameGraph.Checked;
             Settings.TexturePack = texturePage.SelectedToken;

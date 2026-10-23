@@ -8,13 +8,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 if (-not $SdkRoot) {
-    $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-sdk-0.10.0/win-amd64'
+    $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-setup-0.10.0-1/win-amd64'
     if (-not $OriginalRenderer -and -not $CheckOnly) {
         $python = Join-Path $projectRoot '.local/python/python.exe'
         if (-not (Test-Path -LiteralPath $python)) { throw 'Run scripts/setup.ps1 to prepare portable Python first.' }
         & $python (Join-Path $projectRoot 'tools/prepare_spatial_sdk.py')
         if ($LASTEXITCODE -ne 0) { throw 'Enhanced renderer preparation failed.' }
-        $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-spatial-0.10.0/win-amd64'
+        $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-spatial-setup-0.10.0-1/win-amd64'
     }
 }
 $spatialRenderer = Test-Path -LiteralPath (Join-Path $SdkRoot 'renderer-capabilities.json')

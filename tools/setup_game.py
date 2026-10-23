@@ -27,6 +27,29 @@ class SetupError(ValueError):
     """An actionable setup failure, with the original exception retained in the log."""
 
 
+def windows_open_error(path):
+    """Recover Windows' read-open error lost by the C runtime's errno mapping.
+
+    This only diagnoses an error. It never reads a blocked file, changes security
+    settings, or replaces the normal verified download/extraction path.
+    """
+    if os.name != "nt":
+        return None
+    import ctypes
+    from ctypes import wintypes
+    api = ctypes.WinDLL("kernel32", use_last_error=True)
+    api.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                               wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    api.CreateFileW.restype = wintypes.HANDLE
+    api.CloseHandle.argtypes = [wintypes.HANDLE]
+    api.CloseHandle.restype = wintypes.BOOL
+    handle = api.CreateFileW(str(path), 0x80000000, 7, None, 3, 0x80, None)
+    if handle == ctypes.c_void_p(-1).value:
+        return ctypes.get_last_error()
+    api.CloseHandle(handle)
+    return None
+
+
 def file_operation(action, path, operation, attempts=4):
     # Windows can briefly deny access while a newly written download is being inspected
     # or another process holds it. Retry the same operation, never bypass an access rule.
@@ -34,15 +57,28 @@ def file_operation(action, path, operation, attempts=4):
         try:
             return operation()
         except OSError as error:
-            transient = (getattr(error, "winerror", None) in (5, 32, 33) or
+            winerror = getattr(error, "winerror", None)
+            if winerror is None and error.errno in (errno.EINVAL, errno.EACCES):
+                try:
+                    winerror = windows_open_error(path)
+                except OSError:
+                    pass  # Diagnostics must not hide the original failure.
+            if winerror in (225, 226):
+                raise SetupError(
+                    "Windows security software blocked a required build tool: " + str(path) +
+                    f" (winerror={winerror}). "
+                    "Check Windows Security > Virus & threat protection > Protection history "
+                    "for the detection name. Use the latest complete Windows kit, and report "
+                    "a remaining block with this setup log. Setup stopped without installing the blocked tool.") from error
+            transient = (winerror in (5, 32, 33) or
                          error.errno in (errno.EACCES, errno.EBUSY, errno.EINVAL))
             if transient and attempt < attempts - 1:
                 say(f"Retrying {action} ({attempt + 1}/{attempts - 1}): {Path(path).name}")
                 time.sleep(1 << attempt)
                 continue
             codes = f"errno={error.errno}"
-            if getattr(error, "winerror", None) is not None:
-                codes += f", winerror={error.winerror}"
+            if winerror is not None:
+                codes += f", winerror={winerror}"
             affected = f" Affected file: {error.filename}." if error.filename and str(error.filename) != str(path) else ""
             raise SetupError(f"Could not {action}: {path} ({codes})." + affected + " "
                              "Check that the folder is writable and close programs using this file, then retry Build game. "

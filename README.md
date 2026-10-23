@@ -8,7 +8,7 @@
 
 A fan-made PC version of the Xbox 360 RPG, built from your own copy of the game.
 
-**[Download for Windows](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.1)**
+**[Download for Windows](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.2)**
 
 ![EnchantedArmsPC launcher](docs/images/launcher.png)
 
@@ -22,7 +22,7 @@ A fan-made PC version of the Xbox 360 RPG, built from your own copy of the game.
 
 ## Get started
 
-1. Download **EnchantedArmsPC-0.5.1-windows-x64.zip** from the release page and extract it into its own folder.
+1. Download **EnchantedArmsPC-0.5.2-windows-x64.zip** from the release page and extract it into its own folder.
 2. Open **EnchantedArmsLauncher.exe**, select your game ISO, and choose **Build game**.
 3. Choose your settings and click **Play Enchanted Arms**.
 

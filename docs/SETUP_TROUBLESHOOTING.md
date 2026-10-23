@@ -1,6 +1,6 @@
 # Setup help
 
-Use the complete **EnchantedArmsPC-0.5.1-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.1). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+Use the complete **EnchantedArmsPC-0.5.2-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.2). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
 
 ## Requirements
 
@@ -27,6 +27,27 @@ The launcher checks this before extraction and reads your ISO without modifying 
 Setup checks the game revision first, prepares the build tools, then verifies/extracts your game and compiles it. It reuses verified downloads and extracted files. If a download completed but its final rename failed, the next attempt verifies and reuses that `.partial` file too. An incomplete or altered download is downloaded again. Checksums remain mandatory.
 
 ## `Invalid argument` downloading the ReXGlue SDK
+
+**Fixed download path in 0.5.2.** A fresh-install reproduction of the 0.5.1 error
+found that Windows security blocked the upstream SDK archive. Windows reported
+error 225; Python reduced it to `errno=22`, hiding the reason in the popup.
+The SDK has an [upstream report](https://github.com/rexglue/rexglue-sdk/issues/485)
+about the same release archive.
+
+Download the complete 0.5.2 kit and follow the update steps above, keeping `.local`
+and `bin`. Setup now uses a separate, checksum-pinned package built from the
+matching public source. It contains the optimized code generator and the runtime
+configuration used by this project, without the unused Release/Debug variants.
+The old blocked SDK folder is not reused. Your ISO and saves need not be deleted.
+Existing playable native 0.3.4 builds do not need a rebuild.
+
+If security software blocks a file in the new kit, setup stops and identifies
+the security block. Check **Windows Security → Virus & threat protection →
+Protection history** for the detection name and include that name with the setup
+log in a report. The installer does not change antivirus settings or install a
+blocked file. [Package provenance and build instructions](SETUP_SDK.md).
+
+The following notes cover older reports and other file-access failures:
 
 This error was reported with `rexglue-sdk-0.10.0-win-amd64.zip`. The old summary did not identify the failing file operation, so it is not sufficient to determine the underlying Windows cause. The ordinary path and doubled backslash in an escaped log do not, by themselves, mean the folder name is invalid.
 

@@ -58,6 +58,7 @@ def main():
     parser.add_argument("--rc"); parser.add_argument("--mt")
     parser.add_argument("--package-only",action="store_true")
     parser.add_argument("--offline-source",action="store_true",help="Use the accompanying renderer source archive, without Git downloads")
+    parser.add_argument("--setup-sdk",action="store_true",help="Also build the optimized code generator for tools/package_setup_sdk.py")
     args = parser.parse_args()
     if not args.package_only:
         if args.offline_source:
@@ -85,7 +86,8 @@ def main():
         if args.rc: command.append("-DCMAKE_RC_COMPILER:FILEPATH=" + args.rc.replace("\\","/"))
         if args.mt: command.append("-DCMAKE_MT:FILEPATH=" + args.mt.replace("\\","/"))
         run(command)
-        run(["cmake","--build",args.build,"--target","rexruntime","rexgpu-xenos","--parallel",str(args.jobs)])
+        targets = ["rexruntime", "rexgpu-xenos"] + (["rexglue", "SDL3_test"] if args.setup_sdk else [])
+        run(["cmake","--build",args.build,"--target",*targets,"--parallel",str(args.jobs)])
     package_runtime(args.source,args.output)
 
 if __name__ == "__main__": main()

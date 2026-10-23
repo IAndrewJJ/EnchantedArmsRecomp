@@ -2,7 +2,7 @@ param([string]$SdkRoot)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 if (-not $SdkRoot) {
-    $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-sdk-0.10.0/win-amd64'
+    $SdkRoot = Join-Path $projectRoot '.local/toolchain/rexglue-setup-0.10.0-1/win-amd64'
 }
 $recompiler = Join-Path $SdkRoot 'bin/rexglue.exe'
 $gameExecutable = Join-Path $projectRoot '.local/game/default.xex'

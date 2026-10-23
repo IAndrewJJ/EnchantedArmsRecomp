@@ -10,7 +10,9 @@ Runtime component notices are reproduced in `licenses/runtime/`; the source arch
 
 The [SDL GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB) mapping database is bundled under its zlib license (`licenses/SDL_GameControllerDB.txt`). `data/controllerdb-provenance.json` records the pinned upstream revision and SHA-256.
 
-The launcher downloads portable build dependencies directly from their publishers, with pinned digests in `toolchain.lock.json` and `launcher/python.lock.json`:
+The launcher downloads portable build dependencies with pinned digests in `toolchain.lock.json` and `launcher/python.lock.json`. ReXGlue setup tools are built from the corresponding public source and published by this project; other tools come directly from their publishers:
+
+- ReXGlue: the 0.5.2 setup package contains the optimized code generator and RelWithDebInfo SDK built from the same pinned source above. The dependency release includes that source archive; [packaging adjustments and rebuild instructions](docs/SETUP_SDK.md) are public. It omits the unused upstream Release/Debug runtime variants.
 
 - [Python](https://www.python.org/): the complete kit bundles the official 3.12.10 embedded archive, verified against `launcher/python.lock.json`. Its `LICENSE.txt` includes the PSF license and accompanying dependency notices; setup retains them locally.
 - [7-Zip](https://www.7-zip.org/): see the license and unRAR restrictions included in its extracted distribution. The bootstrap 7zr executable is public domain.

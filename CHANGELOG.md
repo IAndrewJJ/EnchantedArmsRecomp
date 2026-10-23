@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2
+
+- Fix the fresh-install SDK download path using a checksum-pinned package built
+  from the matching public source, with only the runtime configuration needed.
+- Identify Windows security blocks hidden by Python's `Invalid argument` error.
+- Add a compile/link/load check to fresh-toolchain validation. Existing native
+  0.3.4 games, settings and saves are unchanged.
+
 ## 0.5.1 — Confirmed uninstall
 
 - Simplify launcher FPS choices to 30 FPS · Stable and 60 FPS · Stable. Default to 30; preserve 60 FPS preferences and migrate retired higher/unlimited caps to 60.

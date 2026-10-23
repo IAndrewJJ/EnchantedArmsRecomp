@@ -18,8 +18,8 @@ def prepare():
     if set(manifest["files"]) != allowed: raise ValueError("Unexpected renderer package contents")
     for name, expected in manifest["files"].items():
         if hashlib.sha256((renderer / name).read_bytes()).hexdigest() != expected: raise ValueError("Renderer checksum mismatch: " + name)
-    original = PROJECT / ".local/toolchain/rexglue-sdk-0.10.0/win-amd64"
-    destination = PROJECT / ".local/toolchain/rexglue-spatial-0.10.0/win-amd64"
+    original = PROJECT / ".local/toolchain/rexglue-setup-0.10.0-1/win-amd64"
+    destination = PROJECT / ".local/toolchain/rexglue-spatial-setup-0.10.0-1/win-amd64"
     receipt = destination / "renderer-capabilities.json"
     if receipt.exists() and receipt.read_bytes() == marker.read_bytes(): return destination
     shutil.copytree(original,destination,dirs_exist_ok=True)

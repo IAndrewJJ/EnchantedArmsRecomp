@@ -206,6 +206,27 @@ class SetupTests(unittest.TestCase):
         self.assertEqual(sleep.call_count, 3)
         network.assert_not_called()
 
+    def test_security_block_hidden_by_invalid_argument_is_reported_without_retry(self):
+        target = self.root / "tool.zip"
+        target.write_bytes(b"verified")
+        with patch("setup_game.digest", side_effect=OSError(22, "Invalid argument")), \
+                patch("setup_game.windows_open_error", return_value=225), \
+                patch("time.sleep") as sleep, patch("urllib.request.urlopen") as network:
+            with self.assertRaisesRegex(setup_game.SetupError, "security software blocked.*winerror=225"):
+                setup_game.download(self.package(), self.root)
+        sleep.assert_not_called()
+        network.assert_not_called()
+        self.assertEqual(target.read_bytes(), b"verified")
+
+    def test_explicit_security_error_never_probes_or_retries(self):
+        error = OSError(22, "Security software removed this file")
+        error.winerror = 226
+        with patch("setup_game.windows_open_error") as probe, patch("time.sleep") as sleep:
+            with self.assertRaisesRegex(setup_game.SetupError, "security software blocked.*winerror=226"):
+                setup_game.file_operation("open file", self.root / "tool.zip", lambda: (_ for _ in ()).throw(error))
+        probe.assert_not_called()
+        sleep.assert_not_called()
+
     def test_incomplete_sdk_is_repaired_despite_existing_probe_and_receipt(self):
         archive = self.root / "fixture.zip"
         with zipfile.ZipFile(archive, "w") as source:

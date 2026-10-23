@@ -105,24 +105,25 @@
     "kind": "zip"
   },
   {
-    "name": "rexglue-sdk-0.10.0-win-amd64.zip",
-    "url": "https://github.com/rexglue/rexglue-sdk/releases/download/v0.10.0/rexglue-sdk-0.10.0-win-amd64.zip",
+    "name": "EnchantedArmsPC-ReXGlue-0.10.0-setup-1.zip",
+    "component": "rexglue",
+    "url": "https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/download/setup-sdk-0.10.0-1/EnchantedArmsPC-ReXGlue-0.10.0-setup-1.zip",
     "algorithm": "sha256",
-    "digest": "ad4485da853fbe932e9f5dbb643f9b5fe85dc73775ebbad4df6879fe6df0c11b",
-    "bytes": 44751910,
-    "destination": "rexglue-sdk-0.10.0",
-    "probe": "rexglue-sdk-0.10.0/win-amd64/bin/rexglue.exe",
+    "digest": "1c64a27f840bc849140efece3831056b81c4f099c454ea142047d7737f736352",
+    "bytes": 19213037,
+    "destination": "rexglue-setup-0.10.0-1",
+    "probe": "rexglue-setup-0.10.0-1/win-amd64/bin/rexglue.exe",
     "version": "0.10.0",
     "required": [
-      "rexglue-sdk-0.10.0/win-amd64/lib/cmake/rexglue/rexglueConfig.cmake",
-      "rexglue-sdk-0.10.0/win-amd64/include/rex/ppc.h",
-      "rexglue-sdk-0.10.0/win-amd64/include/rex/rex_app.h",
-      "rexglue-sdk-0.10.0/win-amd64/lib/rexruntimerd.lib",
-      "rexglue-sdk-0.10.0/win-amd64/lib/rexgpu-xenosrd.lib",
-      "rexglue-sdk-0.10.0/win-amd64/bin/rexruntime.dll",
-      "rexglue-sdk-0.10.0/win-amd64/bin/rexruntimerd.dll",
-      "rexglue-sdk-0.10.0/win-amd64/bin/rexgpu-xenosrd.dll",
-      "rexglue-sdk-0.10.0/win-amd64/bin/TracyClientrd.dll"
+      "rexglue-setup-0.10.0-1/win-amd64/package-provenance.json",
+      "rexglue-setup-0.10.0-1/win-amd64/lib/cmake/rexglue/rexglueConfig.cmake",
+      "rexglue-setup-0.10.0-1/win-amd64/include/rex/ppc.h",
+      "rexglue-setup-0.10.0-1/win-amd64/include/rex/rex_app.h",
+      "rexglue-setup-0.10.0-1/win-amd64/lib/rexruntimerd.lib",
+      "rexglue-setup-0.10.0-1/win-amd64/lib/rexgpu-xenosrd.lib",
+      "rexglue-setup-0.10.0-1/win-amd64/bin/rexruntimerd.dll",
+      "rexglue-setup-0.10.0-1/win-amd64/bin/rexgpu-xenosrd.dll",
+      "rexglue-setup-0.10.0-1/win-amd64/bin/TracyClientrd.dll"
     ],
     "kind": "zip"
   }

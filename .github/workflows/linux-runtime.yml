@@ -1,0 +1,42 @@
+name: Linux runtime
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/linux-appimage]
+    paths: [linux/build_sdk.sh, linux/package_toolchain.py, linux/patch_sdk.py, linux/probe/**, linux/make_host_fixture.py, src/**, .github/workflows/linux-runtime.yml]
+permissions:
+  contents: read
+jobs:
+  linux-runtime:
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    timeout-minutes: 60
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Bootstrap
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl wget gnupg git software-properties-common python3 python3-pip
+      - uses: actions/checkout@v4
+      - name: Install compiler and build dependencies
+        run: |
+          wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+          bash /tmp/llvm.sh 20
+          add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor -o /usr/share/keyrings/kitware.gpg
+          echo 'deb [signed-by=/usr/share/keyrings/kitware.gpg] https://apt.kitware.com/ubuntu/ jammy main' > /etc/apt/sources.list.d/kitware.list
+          apt-get update
+          apt-get install -y --no-install-recommends clang-20 lld-20 cmake ninja-build g++-13 autoconf unzip zip zlib1g-dev \
+            libgtk-3-dev libx11-xcb-dev libxss-dev libvulkan-dev mesa-vulkan-drivers xvfb xauth \
+            libwayland-dev libwayland-bin wayland-protocols libxkbcommon-dev libdecor-0-dev \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev
+      - name: Build native runtime and test portable tools, PNG and Vulkan
+        run: bash linux/build_sdk.sh "$RUNNER_TEMP/ea-linux"
+      - name: Package game-independent build tools
+        run: tar -C "$RUNNER_TEMP/ea-linux" -cJf linux-tools-x86_64.tar.xz tools
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EnchantedArmsPC-linux-tools
+          path: linux-tools-x86_64.tar.xz
+          retention-days: 14

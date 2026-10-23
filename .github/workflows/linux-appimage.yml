@@ -81,6 +81,7 @@ jobs:
           xvfb-run -a env QT_QPA_PLATFORM=xcb ./squashfs-root/AppRun --smoke-test --preview "$RUNNER_TEMP/launcher-x11.png"
           mv ./squashfs-root/usr/bin/EnchantedArmsLauncher/_internal/tools "$RUNNER_TEMP/portable tools"
           python3 "$GITHUB_WORKSPACE/linux/test_portable_tools.py" "$RUNNER_TEMP/portable tools" "$RUNNER_TEMP/portable build"
+          cp "$RUNNER_TEMP"/launcher-*.png "$GITHUB_WORKSPACE/dist/"
       - uses: actions/upload-artifact@v4
         with:
           name: EnchantedArmsPC-Linux-AppImage-preview
@@ -88,8 +89,6 @@ jobs:
             dist/EnchantedArmsPC-linux-0.1.0-x86_64.AppImage
             dist/SHA256SUMS.txt
             dist/linux-package-report.json
-            ${{ runner.temp }}/launcher-linux.png
-            ${{ runner.temp }}/launcher-appimage.png
-            ${{ runner.temp }}/launcher-x11.png
+            dist/launcher-*.png
           if-no-files-found: error
           retention-days: 14

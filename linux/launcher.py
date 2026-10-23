@@ -419,11 +419,18 @@ def gui(arguments):
         dialog = Settings(core.normalize({}))
         assert dialog.read()['FrameLimit'] == 30
         assert dialog.tabs.count() == 5
-        dialog.close()
         if arguments.preview:
             window.show()
             application.processEvents()
-            window.grab().save(arguments.preview)
+            assert window.grab().save(arguments.preview), 'Could not save launcher preview'
+            dialog.show()
+            for index in range(dialog.tabs.count()):
+                dialog.tabs.setCurrentIndex(index)
+                application.processEvents()
+                preview = Path(arguments.preview)
+                target = preview.with_name(preview.stem + '-' + dialog.tabs.tabText(index).lower() + '.png')
+                assert dialog.grab().save(str(target)), 'Could not save settings preview'
+        dialog.close()
         window.close()
         print('PASS: Linux launcher and all five settings pages constructed; no game launched.')
         return 0

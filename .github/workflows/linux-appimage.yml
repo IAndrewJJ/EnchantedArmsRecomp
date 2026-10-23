@@ -4,16 +4,24 @@ on:
     branches: [codex/linux-appimage]
     paths: [linux/**, src/**, tools/**, CMakeLists.txt, .github/workflows/linux-appimage.yml, .github/workflows/linux-runtime.yml]
   workflow_dispatch:
+    inputs:
+      tools_run_id:
+        description: 'Optional previous run with matching validated runtime tools (packaging development)'
+        type: string
+        default: ''
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: linux-appimage-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   runtime:
+    if: github.event_name != 'workflow_dispatch' || inputs.tools_run_id == ''
     uses: ./.github/workflows/linux-runtime.yml
   appimage:
     needs: runtime
+    if: ${{ !cancelled() && (needs.runtime.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tools_run_id != '')) }}
     runs-on: ubuntu-latest
     container: ubuntu:22.04
     timeout-minutes: 30
@@ -24,14 +32,33 @@ jobs:
       - name: Install packaging dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv binutils patchelf xz-utils xvfb xauth \
+          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv libpython3.10 binutils patchelf xz-utils xvfb xauth \
             libglib2.0-0 libegl1 libgl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
             libxcb-image0 libxcb-render-util0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
       - uses: actions/checkout@v4
+      - name: Verify reused runtime matches the current build recipe
+        if: inputs.tools_run_id != ''
+        uses: actions/github-script@v7
+        env:
+          TOOLS_RUN_ID: ${{ inputs.tools_run_id }}
+        with:
+          script: |
+            const runId = process.env.TOOLS_RUN_ID;
+            if (!/^\d+$/.test(runId)) throw new Error('Supply a numeric tools run ID');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: Number(runId)});
+            if (run.head_repository.full_name !== `${context.repo.owner}/${context.repo.repo}`) throw new Error('Tools must come from this repository');
+            if (run.head_sha !== context.sha) {
+              const {data: comparison} = await github.rest.repos.compareCommitsWithBasehead({...context.repo, basehead: `${run.head_sha}...${context.sha}`});
+              const recipes = new Set(['linux/build_sdk.sh', 'linux/patch_sdk.py', 'linux/package_toolchain.py', 'linux/package_runtime_source.py', 'linux/make_host_fixture.py', '.github/workflows/linux-runtime.yml', 'CMakeLists.txt']);
+              if (!comparison.files || comparison.files.length >= 300 || comparison.files.some(f => recipes.has(f.filename) || f.filename.startsWith('linux/probe/') || f.filename.startsWith('src/') || f.filename.startsWith('tools/graphics-probe/'))) throw new Error('Runtime inputs changed; run the complete Linux build instead');
+            }
+            core.info(`Reusing validated runtime tools from ${run.head_sha}`);
       - uses: actions/download-artifact@v4
         with:
           name: EnchantedArmsPC-linux-tools
           path: ${{ runner.temp }}/linux-tools
+          run-id: ${{ inputs.tools_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Unpack build tools and install Qt packager
         run: |
           tar -xJf "$RUNNER_TEMP/linux-tools/linux-tools-x86_64.tar.xz" -C "$RUNNER_TEMP/linux-tools"

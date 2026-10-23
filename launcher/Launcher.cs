@@ -253,15 +253,15 @@ namespace EnchantedArmsPC
                 (args.Length == 3 && args[0] == "--settings-preview"))
             {
                 int page = 0;
-                if (args.Length == 3 &&
-                    (!Int32.TryParse(args[1], out page) || page < 0 || page > 6))
+                if (args.Length == 3 && (!Int32.TryParse(args[1], out page) || page < 0 ||
+                                         page >= Enum.GetValues(typeof(SettingsPage)).Length))
                     return 2;
                 Application.EnableVisualStyles();
-                using (var dialog = new GraphicsDialog(
+                using (var dialog = new SettingsWindow(
                            new Preferences { Upscaler = "fsr", PostAA = "fxaa", Scale = 2,
                                              Anisotropy = 5, Dither = true, TextureDetail = 1,
                                              FrameLimit = 60 },
-                           false, false, page))
+                           false, false, (SettingsPage)page))
                 {
                     dialog.StartPosition = FormStartPosition.Manual;
                     dialog.Location = new Point(-20000, -20000);

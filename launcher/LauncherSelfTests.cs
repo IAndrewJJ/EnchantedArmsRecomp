@@ -111,10 +111,14 @@ namespace EnchantedArmsPC
                     if (saved.RenderPath != path || saved.ResolveReadback != readback ||
                         saved.AsyncShaders)
                         return 14;
-                    saved.ApplyPreset(1);
-                    if (saved.RenderPath != "auto" || saved.ResolveReadback != "none" ||
-                        !saved.AsyncShaders)
-                        return 15;
+                    using (var dialog = new SettingsWindow(saved))
+                    {
+                        dialog.ReadValues();
+                        if (dialog.Settings.RenderPath != path ||
+                            dialog.Settings.ResolveReadback != readback ||
+                            dialog.Settings.AsyncShaders)
+                            return 15;
+                    }
                 }
             invalid.RenderPath = "invalid";
             invalid.ResolveReadback = "invalid";
@@ -149,7 +153,7 @@ namespace EnchantedArmsPC
                 Preferences.ValidBinding("F8") || Preferences.ValidBinding("Ctrl+invalid"))
                 return 26;
             controls.Normalize();
-            using (var dialog = new GraphicsDialog(controls))
+            using (var dialog = new SettingsWindow(controls))
             {
                 dialog.ReadValues();
                 if (Program.Json.Serialize(controls) != Program.Json.Serialize(dialog.Settings))
@@ -184,13 +188,45 @@ namespace EnchantedArmsPC
                                                  ResolveReadback = "full",
                                                  AsyncShaders = false };
                 selected.Normalize();
-                using (var dialog = new GraphicsDialog(selected))
+                using (var dialog = new SettingsWindow(selected))
                 {
                     dialog.ReadValues();
                     if (Program.Json.Serialize(selected) != Program.Json.Serialize(dialog.Settings))
                         return 18;
                 }
             }
+            // Renaming the display switch must preserve legacy preferences and invert
+            // the renderer's allow-tearing flag when the user enables V-Sync.
+            foreach (bool tearing in new[] { false, true })
+            {
+                var legacy = Program.Json.Deserialize<Preferences>(
+                    "{\"AllowTearing\":" + (tearing ? "true" : "false") + "}");
+                using (var dialog = new SettingsWindow(legacy, false, false, SettingsPage.Display))
+                {
+                    var sync = dialog.Controls.Find("VSync", true).Single() as ComboBox;
+                    if (sync == null ||
+                        Convert.ToString(sync.SelectedItem) != (tearing ? "Off" : "On"))
+                        return 32;
+                    dialog.ReadValues();
+                    if (dialog.Settings.AllowTearing != tearing)
+                        return 33;
+                    sync.SelectedIndex = tearing ? 1 : 0;
+                    dialog.ReadValues();
+                    if (dialog.Settings.AllowTearing == tearing ||
+                        !dialog.Settings.RendererArguments().Contains(
+                            tearing ? "--no-d3d12_allow_variable_refresh_rate_and_tearing"
+                                    : "--d3d12_allow_variable_refresh_rate_and_tearing"))
+                        return 34;
+                }
+            }
+            if (!Enum.GetNames(typeof(SettingsPage))
+                     .SequenceEqual(new[] { "Graphics", "Display", "Game", "Controls", "Textures",
+                                            "Updates" }))
+                return 35;
+            foreach (SettingsPage page in Enum.GetValues(typeof(SettingsPage)))
+                using (var dialog =
+                           new SettingsWindow(new Preferences(), false, false,
+                                              page)) if (dialog.SelectedPage != page) return 36;
             return 0;
         }
         internal static int Run()

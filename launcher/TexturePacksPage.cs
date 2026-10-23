@@ -36,23 +36,23 @@ namespace EnchantedArmsPC
             AutoSize = true;
             Dock = DockStyle.Top;
             BackColor = Theme.Background;
-            var layout = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top,
-                                               FlowDirection = FlowDirection.TopDown,
-                                               WrapContents = false, Padding = new Padding(6) };
+            var layout =
+                new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top,
+                                      FlowDirection = FlowDirection.TopDown, WrapContents = false,
+                                      Padding = new Padding(6, 0, 2, 12) };
             Controls.Add(layout);
-            layout.Controls.Add(Theme.Label("Texture packs", 460));
+            layout.Controls.Add(Theme.Heading("Texture packs"));
             layout.Controls.Add(selection);
             layout.Controls.Add(install);
             layout.Controls.Add(status);
             layout.Controls.Add(Theme.Label(
-                "Packs use preconverted DDS textures or Xbox 360 XPR bundles. PNG/JPEG files " +
-                    "need conversion by the pack author. No enhanced textures are bundled. Your " +
-                    "disc " + "files and saves stay unchanged. Select Original to disable a pack.",
+                "Choose a compatible texture pack to change the game's appearance. Select " +
+                    "Original textures to return to the original look. No texture packs are " +
+                    "included.",
                 460));
             layout.Controls.Add(Theme.Label(
-                "Experimental: texture overlays require NTFS and the same drive as your " +
-                    "extracted game. The first launch prepares local file links; later launches " +
-                    "reuse them. Authoring details are in docs/TEXTURE_PACKS.md.",
+                "Texture packs are experimental and require an NTFS drive. Your original " +
+                    "game files and saves are kept. The first launch with a pack may take longer.",
                 460));
             install.Enabled = !running;
             install.Click += async (s, e) =>

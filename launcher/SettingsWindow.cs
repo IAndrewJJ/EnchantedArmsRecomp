@@ -1,20 +1,27 @@
 using System;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace EnchantedArmsPC
 {
-    sealed class GraphicsDialog : Form
+    internal enum SettingsPage
+    {
+        Graphics,
+        Display,
+        Game,
+        Controls,
+        Textures,
+        Updates
+    }
+
+    sealed class SettingsWindow : Form
     {
         public Preferences Settings;
         public bool BuildRequested;
         public bool UninstallRequested;
         public string UpdateStage;
         public bool RollbackRequested;
-        readonly ComboBox preset =
-            Choice("Custom", "Original", "Balanced", "Enhanced", "High", "Ultra");
         readonly ComboBox scale = Choice("1× · Native", "2×", "3×", "4×");
         readonly ComboBox scaler = Choice("Original scaling", "AMD FSR 1", "AMD FidelityFX CAS");
         readonly ComboBox aa = Choice("Original", "FXAA", "FXAA strong", "Supersampling + FXAA");
@@ -23,31 +30,25 @@ namespace EnchantedArmsPC
         readonly ComboBox fps = Choice("30 FPS · Stable", "60 FPS · Stable");
         readonly ComboBox display = Choice("Windowed", "Borderless fullscreen");
         readonly ComboBox size = Choice("1280 × 720", "1920 × 1080", "2560 × 1440", "3840 × 2160");
-        readonly ComboBox renderPath =
-            Choice("Automatic", "ROV · Accuracy comparison", "RTV · Performance comparison");
-        readonly ComboBox readback = Choice("Disabled", "Delayed · Every frame",
-                                            "Delayed · On demand", "Immediate · Slow diagnostic");
+        readonly ComboBox vsync = Choice("Off", "On");
         readonly TrackBar sharpness =
             new TrackBar { Minimum = 0, Maximum = 100, TickFrequency = 20,
                            Width = 270, Height = 38,   BackColor = Theme.Background };
         readonly Label sharpnessValue = Theme.Label("80%", 60);
         readonly CheckBox dither = Check("Reduce gradient banding");
         readonly CheckBox aspect = Check("Preserve aspect ratio");
-        readonly CheckBox tearing = Check("Allow variable refresh rate / tearing");
         readonly CheckBox msaa = Check("Keep the game's native antialiasing");
-        readonly CheckBox asyncShaders = Check("Compile shaders in the background");
         readonly CheckBox frameGraph = Check("Show frame-time graph with the F6 counter");
-        readonly NumericUpDown shaderWorkers =
-            new NumericUpDown { Minimum = 0, Maximum = 16, Width = 90, BackColor = Theme.Panel,
-                                ForeColor = Theme.Text };
         readonly TextBox isoPath =
             new TextBox { ReadOnly = true, Width = 505, BackColor = Theme.Panel,
                           ForeColor = Theme.Text, BorderStyle = BorderStyle.FixedSingle };
-        readonly Panel[] pages = new Panel[7];
-        readonly EtherButton[] navigation = new EtherButton[7];
+        readonly Panel[] pages = new Panel[Enum.GetValues(typeof(SettingsPage)).Length];
+        readonly EtherButton[] navigation =
+            new EtherButton[Enum.GetValues(typeof(SettingsPage)).Length];
         readonly ControlsPage controlsPage = new ControlsPage();
         readonly TexturePacksPage texturePage;
         bool loading;
+        internal SettingsPage SelectedPage { get; private set; }
         static ComboBox Choice(params string[] values)
         {
             return Theme.Choice(325, values);
@@ -62,12 +63,9 @@ namespace EnchantedArmsPC
             var p = new TableLayoutPanel { ColumnCount = 2, AutoSize = true, Dock = DockStyle.Top,
                                            Padding = new Padding(6, 0, 2, 12),
                                            BackColor = Theme.Background };
-            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 155));
+            p.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
             p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            var title = Theme.Label(heading, 500);
-            title.Font = new Font("Palatino Linotype", 20);
-            title.ForeColor = Theme.Text;
-            Full(p, title);
+            Full(p, Theme.Heading(heading));
             return p;
         }
         static void Full(TableLayoutPanel page, Control control)
@@ -79,60 +77,65 @@ namespace EnchantedArmsPC
         static void Row(TableLayoutPanel page, string caption, Control control)
         {
             int r = page.RowCount++;
-            var label = Theme.Label(caption, 150);
+            var label = Theme.Label(caption, 165);
             label.Margin = new Padding(0, 9, 8, 7);
+            control.AccessibleName = caption;
             page.Controls.Add(label, 0, r);
             page.Controls.Add(control, 1, r);
         }
-        public GraphicsDialog(Preferences current, bool ready = false, bool running = false,
-                              int initialTab = 0)
+        public SettingsWindow(Preferences current, bool ready = false, bool running = false,
+                              SettingsPage initialTab = SettingsPage.Graphics)
         {
             Settings = current.Copy();
             Settings.Normalize();
             texturePage = new TexturePacksPage(running);
             Theme.Window(this);
             Text = "EnchantedArmsPC · Settings";
-            ClientSize = new Size(790, 650);
+            ClientSize = new Size(830, 650);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(24),
                                                 ColumnCount = 2, RowCount = 3 };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 85));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
             Controls.Add(layout);
-            var intro = Theme.Label("SETTINGS\r\nChanges apply the next time you play.", 690);
-            intro.ForeColor = Theme.Accent;
-            intro.Font = new Font("Segoe UI", 11);
-            intro.Margin = new Padding(4, 10, 0, 0);
-            layout.Controls.Add(intro, 0, 0);
-            layout.SetColumnSpan(intro, 2);
+            var header = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false,
+                                               FlowDirection = FlowDirection.TopDown,
+                                               Padding = new Padding(4, 0, 0, 0) };
+            var title = Theme.Heading("Settings");
+            title.Margin = new Padding(0, 0, 0, 0);
+            header.Controls.Add(title);
+            var intro = Theme.Label("Changes apply the next time you play.", 700);
+            intro.Margin = new Padding(0, 4, 0, 0);
+            header.Controls.Add(intro);
+            layout.Controls.Add(header, 0, 0);
+            layout.SetColumnSpan(header, 2);
             var nav =
                 new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown,
                                       WrapContents = false };
             layout.Controls.Add(nav, 0, 1);
             var content = new Panel { Dock = DockStyle.Fill };
             layout.Controls.Add(content, 1, 1);
-            var names = new[] { "Graphics", "Display",  "Advanced", "Game",
-                                "Controls", "Textures", "Updates" };
+            var names = Enum.GetNames(typeof(SettingsPage));
             for (int i = 0; i < pages.Length; i++)
             {
                 int index = i;
-                var button = Theme.Button(names[i], 125);
+                var button = Theme.Button(names[i], 138);
                 navigation[i] = button;
                 nav.Controls.Add(button);
                 pages[i] = new Panel { Dock = DockStyle.Fill, AutoScroll = true, Visible = false };
                 content.Controls.Add(pages[i]);
-                button.Click += (s, e) => SelectPage(index);
+                button.Click += (s, e) => SelectPage((SettingsPage)index);
             }
             var quality = Page("Picture quality");
-            pages[4].Controls.Add(controlsPage);
-            pages[5].Controls.Add(texturePage);
+            pages[(int)SettingsPage.Controls].Controls.Add(controlsPage);
+            pages[(int)SettingsPage.Textures].Controls.Add(texturePage);
             var updates = new UpdatesPage(running);
-            pages[6].Controls.Add(updates);
+            pages[(int)SettingsPage.Updates].Controls.Add(updates);
             updates.InstallRequested += (stage, rollback) =>
             {
                 ReadValues();
@@ -141,8 +144,7 @@ namespace EnchantedArmsPC
                 DialogResult = DialogResult.OK;
                 Close();
             };
-            pages[0].Controls.Add(quality);
-            Row(quality, "Preset", preset);
+            pages[(int)SettingsPage.Graphics].Controls.Add(quality);
             Row(quality, "Render resolution", scale);
             Row(quality, "Upscaling", scaler);
             Row(quality, "Antialiasing", aa);
@@ -154,45 +156,31 @@ namespace EnchantedArmsPC
             Row(quality, "Sharpening", sharpRow);
             Full(quality, msaa);
             Full(quality,
-                 Theme.Label("Higher render resolutions need more GPU power. Texture detail " +
-                                 "sharpens existing textures; Strong may shimmer. Supersampling " +
-                                 "raises render resolution above the selected display size and " +
-                                 "applies FXAA; it needs substantially more GPU power.",
-                             480));
+                 Theme.Label("Higher resolutions and supersampling give a sharper picture, " +
+                                 "but need more graphics power.",
+                             530));
             var screen = Page("Your display");
-            pages[1].Controls.Add(screen);
+            pages[(int)SettingsPage.Display].Controls.Add(screen);
             Row(screen, "Display mode", display);
-            Row(screen, "Window resolution", size);
-            Row(screen, "Frame limit", fps);
+            Row(screen, "Window size", size);
+            Row(screen, "Frame rate", fps);
+            vsync.Name = "VSync";
+            Row(screen, "V-Sync", vsync);
             Full(screen, aspect);
-            Full(screen, tearing);
             Full(screen, dither);
             Full(screen, frameGraph);
-            var timing = Theme.Label("30 FPS follows the original cadence. 60 FPS uses " +
-                                     "game-speed corrections for smoother motion.",
-                                     480);
+            var timing = Theme.Label("Choose 30 FPS for the original presentation or 60 FPS " +
+                                         "for smoother motion.",
+                                     530);
             timing.ForeColor = Theme.Gold;
             Full(screen, timing);
-            var advanced = Page("Rendering options");
-            pages[2].Controls.Add(advanced);
-            Row(advanced, "Rendering method", renderPath);
-            Row(advanced, "Resolve readback", readback);
-            Full(advanced, asyncShaders);
-            Row(advanced, "Shader workers", shaderWorkers);
-            Full(advanced,
-                 Theme.Label(
-                     "0 uses the renderer's automatic worker count. A smaller count can reduce " +
-                         "CPU contention; a larger count may prepare new shaders faster. Known " +
-                         "shaders are prepared before gameplay and retained between launches.",
-                     480));
-            Full(advanced,
-                 Theme.Label("Use these options to compare rendering problems, one change " +
-                                 "at a time. ROV may cost performance. Immediate readback can " +
-                                 "cause heavy stalls. Background compilation reduces stalls " +
-                                 "but can briefly omit new effects. No NPC fix is confirmed.",
-                             480));
+            Full(screen, Theme.Label("V-Sync prevents screen tearing. Leave it off to allow " +
+                                         "variable refresh rate. Borderless fullscreen uses your " +
+                                         "desktop resolution.",
+                                     530));
             var gamePage = Page("Your game");
-            pages[3].Controls.Add(gamePage);
+            gamePage.Padding = new Padding(6, 0, 2, 0);
+            pages[(int)SettingsPage.Game].Controls.Add(gamePage);
             Full(gamePage, Theme.Label("Enchanted Arms · Xbox 360 disc image", 480));
             Full(gamePage, isoPath);
             var choose = Theme.Button("Choose ISO…", 150);
@@ -229,9 +217,11 @@ namespace EnchantedArmsPC
             if (running)
                 Full(gamePage,
                      Theme.Label("Close the game before rebuilding your installation.", 480));
+            var installationActions = new FlowLayoutPanel { AutoSize = true, WrapContents = false,
+                                                            Margin = new Padding(0, 18, 0, 0) };
+            Full(gamePage, installationActions);
             var shortcut = Theme.Button("Create desktop shortcut", 230);
-            shortcut.Margin = new Padding(0, 24, 0, 4);
-            Full(gamePage, shortcut);
+            installationActions.Controls.Add(shortcut);
             var shortcutStatus = Theme.Label("Open EnchantedArmsPC from your desktop.", 480);
             Full(gamePage, shortcutStatus);
             shortcut.Click += (s, e) =>
@@ -249,12 +239,11 @@ namespace EnchantedArmsPC
                         "Could not create the shortcut. Check desktop folder access.";
                 }
             };
-            var uninstall = Theme.Button("Uninstall EnchantedArmsPC…", 300);
-            uninstall.Margin = new Padding(0, 24, 0, 4);
+            var uninstall = Theme.Button("Uninstall EnchantedArmsPC…", 260);
             uninstall.Enabled = !running;
-            Full(gamePage, uninstall);
+            installationActions.Controls.Add(uninstall);
             Full(gamePage,
-                 Theme.Label("Permanently removes this installation and its saves, " +
+                 Theme.Label("Uninstalling permanently removes this installation and its saves, " +
                                  "settings, caches and tools. You will be asked to confirm.",
                              480));
             uninstall.Click += (s, e) =>
@@ -284,11 +273,10 @@ namespace EnchantedArmsPC
             layout.SetColumnSpan(footer, 2);
             var apply = Theme.Button("Apply", 105, true);
             var cancel = Theme.Button("Cancel", 105);
+            apply.Margin = cancel.Margin = new Padding(10, 0, 0, 0);
             cancel.DialogResult = DialogResult.Cancel;
-            var reset = Theme.Button("Original graphics", 155);
             footer.Controls.Add(apply);
             footer.Controls.Add(cancel);
-            footer.Controls.Add(reset);
             AcceptButton = apply;
             CancelButton = cancel;
             apply.Click += (s, e) =>
@@ -297,27 +285,13 @@ namespace EnchantedArmsPC
                 DialogResult = DialogResult.OK;
                 Close();
             };
-            reset.Click += (s, e) =>
-            {
-                ReadValues();
-                Settings.ApplyPreset(1);
-                LoadValues();
-            };
-            preset.SelectedIndexChanged += (s, e) =>
-            {
-                if (!loading && preset.SelectedIndex > 0)
-                {
-                    int selected = preset.SelectedIndex;
-                    ReadValues();
-                    Settings.ApplyPreset(selected);
-                    LoadValues();
-                    loading = true;
-                    preset.SelectedIndex = selected;
-                    loading = false;
-                }
-            };
             sharpness.ValueChanged += (s, e) => sharpnessValue.Text = sharpness.Value + "%";
-            scaler.SelectedIndexChanged += (s, e) => sharpness.Enabled = scaler.SelectedIndex > 0;
+            scaler.SelectedIndexChanged += (s, e) =>
+            {
+                sharpness.Enabled = scaler.SelectedIndex > 0;
+                sharpnessValue.Enabled = sharpness.Enabled;
+            };
+            display.SelectedIndexChanged += (s, e) => size.Enabled = display.SelectedIndex == 0;
             aa.SelectedIndexChanged += (s, e) =>
             {
                 if (!loading && aa.SelectedIndex == 3)
@@ -328,8 +302,12 @@ namespace EnchantedArmsPC
             LoadValues();
             SelectPage(initialTab);
         }
-        void SelectPage(int selected)
+        internal void SelectPage(SettingsPage page)
         {
+            int selected = (int)page;
+            if (selected < 0 || selected >= pages.Length)
+                throw new ArgumentOutOfRangeException("page");
+            SelectedPage = page;
             for (int i = 0; i < pages.Length; i++)
             {
                 pages[i].Visible = i == selected;
@@ -342,7 +320,6 @@ namespace EnchantedArmsPC
         void LoadValues()
         {
             loading = true;
-            preset.SelectedIndex = 0;
             scale.SelectedIndex = Settings.Scale - 1;
             scaler.SelectedIndex =
                 Array.IndexOf(new[] { "bilinear", "fsr", "cas" }, Settings.Upscaler);
@@ -357,15 +334,11 @@ namespace EnchantedArmsPC
             sharpnessValue.Text = sharpness.Value + "%";
             dither.Checked = Settings.Dither;
             aspect.Checked = Settings.KeepAspect;
-            tearing.Checked = Settings.AllowTearing;
+            // Tearing is the renderer's host-presentation switch; guest frame pacing
+            // remains independent so display synchronization cannot change game speed.
+            vsync.SelectedIndex = Settings.AllowTearing ? 0 : 1;
             msaa.Checked = Settings.NativeMsaa;
-            renderPath.SelectedIndex =
-                Array.IndexOf(new[] { "auto", "rov", "rtv" }, Settings.RenderPath);
-            readback.SelectedIndex =
-                Array.IndexOf(new[] { "none", "fast", "some", "full" }, Settings.ResolveReadback);
-            asyncShaders.Checked = Settings.AsyncShaders;
             frameGraph.Checked = Settings.FrameTimeGraph;
-            shaderWorkers.Value = Settings.ShaderWorkers;
             isoPath.Text = Settings.Iso;
             controlsPage.LoadValues(Settings);
             texturePage.LoadSelection(Settings.TexturePack);
@@ -384,14 +357,9 @@ namespace EnchantedArmsPC
             Settings.Sharpness = sharpness.Value;
             Settings.Dither = dither.Checked;
             Settings.KeepAspect = aspect.Checked;
-            Settings.AllowTearing = tearing.Checked;
+            Settings.AllowTearing = vsync.SelectedIndex == 0;
             Settings.NativeMsaa = msaa.Checked;
-            Settings.RenderPath = new[] { "auto", "rov", "rtv" }[renderPath.SelectedIndex];
-            Settings.ResolveReadback =
-                new[] { "none", "fast", "some", "full" }[readback.SelectedIndex];
-            Settings.AsyncShaders = asyncShaders.Checked;
             Settings.FrameTimeGraph = frameGraph.Checked;
-            Settings.ShaderWorkers = (int)shaderWorkers.Value;
             Settings.TexturePack = texturePage.SelectedToken;
             Settings.Iso = isoPath.Text;
             controlsPage.ReadValues(Settings);

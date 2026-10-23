@@ -18,7 +18,7 @@ The goal is a dependable native PC edition that players can build from their own
 1. Reproduce EA-001 and EA-002 from the same locations with Original and enhanced settings. Capture effective renderer flags and draw diagnostics before changing global behavior.
 2. Complete two-machine installation and playtesting, including controller behavior, save/reload, battle transitions, videos and later areas. Record clean-machine toolchain failures separately from game crashes.
 3. Measure stutter with repeatable routes and warm shader caches. Separate shader compilation, pipeline creation, guest timing and streaming costs before choosing an optimization. Keep game pacing intact until timing dependencies have been tested.
-4. Expand AMD/NVIDIA/Intel coverage and verify graphics presets across gameplay, effects, UI and cutscenes. Adjust defaults using measured performance and image quality.
+4. Expand AMD/NVIDIA/Intel coverage and verify graphics settings across gameplay, effects, UI and cutscenes. Adjust defaults using measured performance and image quality.
 5. Extend 60 FPS timing validation through battles, scripts, transitions and the full campaign; investigate residual fast or slow effects against Original. The timing corrections have only an opening-area comparison, and higher rates remain experimental. Temporal reconstruction, frame generation, widescreen changes and support for textures inside additional game containers require separate engineering and testing.
 
 Additional creatures, areas and other content mods are deferred until base-game compatibility is established.

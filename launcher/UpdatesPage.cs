@@ -14,17 +14,18 @@ namespace EnchantedArmsPC
             AutoSize = true;
             Dock = DockStyle.Top;
             BackColor = Theme.Background;
-            var layout = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top,
-                                               FlowDirection = FlowDirection.TopDown,
-                                               WrapContents = false, Padding = new Padding(6) };
+            var layout =
+                new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top,
+                                      FlowDirection = FlowDirection.TopDown, WrapContents = false,
+                                      Padding = new Padding(6, 0, 2, 12) };
             Controls.Add(layout);
+            layout.Controls.Add(Theme.Heading("Launcher updates"));
             layout.Controls.Add(Theme.Label("Installed version: " + ReleaseInfo.Version, 460));
-            var status = Theme.Label(
-                "Check for a newer public preview from the project’s GitHub releases.", 460);
+            var status = Theme.Label("Get the latest improvements for EnchantedArmsPC.", 460);
             layout.Controls.Add(status);
-            var check = Theme.Button("Check for updates", 210);
-            var install = Theme.Button("Install and restart", 210, true);
-            var rollback = Theme.Button("Roll back and restart", 230);
+            var check = Theme.Button("Check for updates", 250);
+            var install = Theme.Button("Install and restart", 250, true);
+            var rollback = Theme.Button("Restore previous version", 250);
             layout.Controls.Add(check);
             layout.Controls.Add(install);
             layout.Controls.Add(rollback);
@@ -55,8 +56,8 @@ namespace EnchantedArmsPC
                                                       "--root", Program.Root, "--version", latest);
                     staged = Convert.ToString(result["stage"]);
                     status.Text = "Version " + latest +
-                                  (" is verified and ready. Install restarts the launcher. A " +
-                                   "native rebuild may be required.");
+                                  " is ready. Installing restarts the launcher. You'll be " +
+                                  "prompted if your game also needs an update.";
                     install.Enabled = true;
                 }
                 catch (Exception error)
@@ -86,9 +87,8 @@ namespace EnchantedArmsPC
                     InstallRequested(null, true);
             };
             layout.Controls.Add(Theme.Label(
-                "Updates verify archive and file checksums, preserve your " +
-                    "saves/settings/cache, and back up replaced launcher files. Rollback " +
-                    "restores the previous kit. The game must be closed.",
+                "Your saves and settings are kept when updating. You can restore the previous " +
+                    "version if needed. Close the game before installing an update.",
                 460));
             string failure = Path.Combine(Program.Local, "updates", "last-error.json");
             if (File.Exists(failure))

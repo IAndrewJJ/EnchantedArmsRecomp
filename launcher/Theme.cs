@@ -52,6 +52,14 @@ namespace EnchantedArmsPC
                                MaximumSize = new Size(width, 0),
                                Margin = new Padding(0, 8, 0, 8) };
         }
+        internal static Label Heading(string text)
+        {
+            var heading = Label(text, 530);
+            heading.Font = new Font("Palatino Linotype", 20);
+            heading.ForeColor = Text;
+            heading.Margin = new Padding(0, 0, 0, 16);
+            return heading;
+        }
         internal static EtherButton Button(string text, int width, bool primary = false)
         {
             return new EtherButton { Text = text, Width = width, Height = 42, Primary = primary,
@@ -192,16 +200,24 @@ namespace EnchantedArmsPC
             base.OnLostFocus(e);
             Invalidate();
         }
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Invalidate();
+        }
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.Clear(Theme.Panel);
-            using (var border = new Pen(Focused ? Theme.Accent : Color.FromArgb(57, 84, 102)))
+            using (var border = new Pen(!Enabled  ? Color.FromArgb(35, 52, 68)
+                                        : Focused ? Theme.Accent
+                                                  : Color.FromArgb(57, 84, 102)))
                 e.Graphics.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
             TextRenderer.DrawText(e.Graphics, SelectedItem == null ? "" : SelectedItem.ToString(),
-                                  Font, new Rectangle(9, 0, Width - 37, Height), Theme.Text,
+                                  Font, new Rectangle(9, 0, Width - 37, Height),
+                                  Enabled ? Theme.Text : Theme.Muted,
                                   TextFormatFlags.Left | TextFormatFlags.VerticalCenter |
                                       TextFormatFlags.EndEllipsis);
-            using (var arrow = new Pen(Theme.Accent, 1.4f))
+            using (var arrow = new Pen(Enabled ? Theme.Accent : Theme.Muted, 1.4f))
             {
                 int x = Width - 20, y = Height / 2;
                 e.Graphics.DrawLines(arrow, new[] { new Point(x - 4, y - 2), new Point(x, y + 2),

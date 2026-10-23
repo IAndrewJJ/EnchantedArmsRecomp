@@ -183,11 +183,14 @@ namespace EnchantedArmsPC
             Dock = DockStyle.Top;
             BackColor = Theme.Background;
             var grid = new TableLayoutPanel { AutoSize = true, Dock = DockStyle.Top,
-                                              ColumnCount = 3, Padding = new Padding(5) };
+                                              ColumnCount = 3, Padding = new Padding(6, 0, 2, 12) };
             Controls.Add(grid);
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 175));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 160));
+            var heading = Theme.Heading("Your controls");
+            grid.Controls.Add(heading, 0, grid.RowCount++);
+            grid.SetColumnSpan(heading, 3);
             Action<string, Control, Control> row = (name, a, b) =>
             {
                 int n = grid.RowCount++;
@@ -196,12 +199,13 @@ namespace EnchantedArmsPC
                 if (b != null)
                     grid.Controls.Add(b, 2, n);
             };
-            row("Controls", Theme.Label("Keyboard", 165), Theme.Label("Controller source", 150));
+            row("Button", Theme.Label("Keyboard", 165), Theme.Label("Controller", 150));
             for (int i = 0; i < keys.Length; i++)
             {
                 int index = i;
-                keys[i] = new TextBox { Width = 165, BackColor = Theme.Panel,
-                                        ForeColor = Theme.Text, ReadOnly = true };
+                keys[i] =
+                    new TextBox { Width = 165, BackColor = Theme.Panel, ForeColor = Theme.Text,
+                                  ReadOnly = true, BorderStyle = BorderStyle.FixedSingle };
                 keys[i].PreviewKeyDown += (s, e) => e.IsInputKey = true;
                 keys[i].KeyDown += (s, e) =>
                 {

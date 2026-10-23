@@ -98,9 +98,9 @@ namespace EnchantedArmsPC
                 if (Ready() && !Program.NativeUpdateRequired(Program.NativeDirectory))
                     await LaunchGame();
                 else
-                    await OpenSettings(3);
+                    await OpenSettings(SettingsPage.Game);
             };
-            settings.Click += async (s, e) => await OpenSettings(0);
+            settings.Click += async (s, e) => await OpenSettings(SettingsPage.Graphics);
             cancel.Click += async (s, e) => await CancelSetup();
             // Exit events replace idle polling. This timer is only a fallback
             // if Windows denies an event subscription for an adopted process.
@@ -217,11 +217,11 @@ namespace EnchantedArmsPC
                 return false;
             }
         }
-        async Task OpenSettings(int tab)
+        async Task OpenSettings(SettingsPage tab)
         {
             if (busy)
                 return;
-            using (var dialog = new GraphicsDialog(preferences, Ready(), GameRunning(), tab))
+            using (var dialog = new SettingsWindow(preferences, Ready(), GameRunning(), tab))
             {
                 if (dialog.ShowDialog(this) != DialogResult.OK)
                     return;

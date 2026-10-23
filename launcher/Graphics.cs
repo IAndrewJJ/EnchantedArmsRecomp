@@ -67,61 +67,6 @@ namespace EnchantedArmsPC
             var json = new JavaScriptSerializer();
             return json.Deserialize<Preferences>(json.Serialize(this));
         }
-        public void ApplyPreset(int index)
-        {
-            NativeMsaa = true;
-            KeepAspect = true;
-            if (index == 1)
-            {
-                Scale = 1;
-                Anisotropy = -1;
-                Upscaler = "bilinear";
-                PostAA = "none";
-                Dither = false;
-                TextureDetail = 0;
-                FrameLimit = 30;
-                RenderPath = "auto";
-                ResolveReadback = "none";
-                AsyncShaders = true;
-            }
-            if (index == 2)
-            {
-                Scale = 1;
-                Anisotropy = 4;
-                Upscaler = "fsr";
-                PostAA = "fxaa";
-                Sharpness = 80;
-                Dither = true;
-            }
-            if (index == 3)
-            {
-                Scale = 2;
-                Anisotropy = 4;
-                Upscaler = "fsr";
-                PostAA = "fxaa";
-                Sharpness = 80;
-                Dither = true;
-            }
-            if (index == 4)
-            {
-                Scale = 3;
-                Anisotropy = 5;
-                Upscaler = "cas";
-                PostAA = "fxaa";
-                Sharpness = 40;
-                Dither = true;
-            }
-            if (index == 5)
-            {
-                Scale = 4;
-                Anisotropy = 5;
-                Upscaler = "cas";
-                PostAA = "fxaa_extreme";
-                Sharpness = 35;
-                Dither = true;
-            }
-            Normalize();
-        }
         public string[] RendererArguments()
         {
             Normalize();

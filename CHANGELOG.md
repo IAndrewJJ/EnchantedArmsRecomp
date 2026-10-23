@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.4 — Simpler launcher settings
+
+- Remove graphics presets and the Advanced tab. Keep individual picture controls
+  and existing saved preferences.
+- Label display synchronization as V-Sync with clear On and Off choices.
+- Refine spacing, headings and navigation; simplify texture and update descriptions.
+  Dim window-size controls when using borderless fullscreen.
+- Keep native build 0.3.5, saves and game settings. No game rebuild is required
+  when updating from 0.5.3.
+
 ## 0.5.3 — Opening battle fix
 
 - Fix the Game Over / Retry loop after Ice Giga Zone in the opening Queen of

@@ -14,7 +14,7 @@ Arms** before opening the game.
 - Keyboard/controller settings, F6 FPS counter, F8 screenshots and a desktop shortcut.
 - Bundled build tools; the AppImage contains no game files or translated game code.
 
-Requires x86-64 Linux, glibc 2.35 or newer, working Vulkan drivers, and about 20 GB
+Requires x86-64-v2 / SSE4.2 Linux, glibc 2.35 or newer, working Vulkan drivers, and about 20 GB
 of free space beyond the ISO. Ubuntu 22.04 or newer meets the glibc requirement.
 
 **This is an experimental Linux preview.** Native compilation, graphics pipeline

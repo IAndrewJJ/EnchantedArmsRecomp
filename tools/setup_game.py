@@ -17,7 +17,7 @@ import zipfile
 
 # The embeddable Python distribution isolates imports from the script directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from inspect_disc import Disc, inspect_xex
+from inspect_disc import Disc, inspect_xex, stream_digest
 
 PROJECT = Path(__file__).resolve().parents[1]
 XEX_SHA256 = "79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22"
@@ -92,7 +92,7 @@ def say(message):
 
 def digest(path, algorithm="sha256"):
     with Path(path).open("rb") as stream:
-        return hashlib.file_digest(stream, algorithm).hexdigest()
+        return stream_digest(stream, algorithm).hexdigest()
 
 
 def checked_member(destination, name):

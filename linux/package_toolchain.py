@@ -62,6 +62,8 @@ def main(root):
     for item in Path('/usr/share/doc').iterdir():
         if (item / 'copyright').is_file():
             copy(item / 'copyright', notices / (item.name + '.copyright'))
+    (notices/'ubuntu-build-packages.tsv').write_text(subprocess.check_output(
+        ['dpkg-query', '-W', '-f=${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\n'], text=True))
     (root / 'bundle.json').write_text(json.dumps({'sdk_commit': 'f5337cdc947ff6d4c4196737e2c807a48f2a1fc2',
         'compiler': 'clang-20', 'glibc_minimum': '2.35', 'spatial_fsr': True, 'cas': True,
         'texture_detail': True}, indent=2) + '\n')

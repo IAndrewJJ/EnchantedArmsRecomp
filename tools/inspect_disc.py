@@ -15,6 +15,16 @@ SECTOR = 2048
 MAGIC = b"MICROSOFT*XBOX*MEDIA"
 
 
+def stream_digest(stream, algorithm="sha256"):
+    """Hash a stream on both the Windows and Ubuntu 22.04 Python runtimes."""
+    if hasattr(hashlib, "file_digest"):
+        return hashlib.file_digest(stream, algorithm)
+    digest = hashlib.new(algorithm)
+    for block in iter(lambda: stream.read(1024 * 1024), b""):
+        digest.update(block)
+    return digest
+
+
 class Disc:
     def __init__(self, path):
         self.path = Path(path).resolve(strict=True)
@@ -110,7 +120,7 @@ class Disc:
                 digest.update(block)
                 remaining -= len(block)
             with target.open("rb") as check:
-                readback = hashlib.file_digest(check, "sha256").hexdigest()
+                readback = stream_digest(check).hexdigest()
             if readback != digest.hexdigest():
                 raise ValueError(f"Existing file differs from ISO; refusing to overwrite: {target}")
             return {"path": str(target), "bytes": entry["bytes"], "sha256": readback,
@@ -131,7 +141,7 @@ class Disc:
         if temporary.stat().st_size != entry["bytes"]:
             raise ValueError("Extracted size mismatch")
         with temporary.open("rb") as check:
-            readback = hashlib.file_digest(check, "sha256").hexdigest()
+            readback = stream_digest(check).hexdigest()
         if readback != digest.hexdigest():
             raise ValueError("Extracted SHA-256 mismatch")
         # Windows rename refuses an existing destination. Never overwrite game data.
@@ -193,7 +203,7 @@ def main():
               "entries": entries, "extracted": [], "xex": {}}
     if args.hash_iso:
         disc.stream.seek(0)
-        report["iso_sha256"] = hashlib.file_digest(disc.stream, "sha256").hexdigest()
+        report["iso_sha256"] = stream_digest(disc.stream).hexdigest()
     for entry in files:
         if entry["path"].lower().endswith(".xex"):
             data = disc.read(entry["iso_offset"], min(entry["bytes"], 2 * 1024 * 1024))

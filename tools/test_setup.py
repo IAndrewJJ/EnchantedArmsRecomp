@@ -12,11 +12,24 @@ from unittest.mock import patch
 import zipfile
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from inspect_disc import Disc, MAGIC, SECTOR
+from inspect_disc import Disc, MAGIC, SECTOR, stream_digest
 import setup_game
 
 
 class SetupTests(unittest.TestCase):
+    def test_python_310_stream_hash_fallback(self):
+        import inspect_disc
+        available = hasattr(hashlib, 'file_digest')
+        original = getattr(hashlib, 'file_digest', None)
+        try:
+            if available:
+                del inspect_disc.hashlib.file_digest
+            self.assertEqual(stream_digest(io.BytesIO(b'portable hashing')).hexdigest(),
+                             hashlib.sha256(b'portable hashing').hexdigest())
+        finally:
+            if available:
+                inspect_disc.hashlib.file_digest = original
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)

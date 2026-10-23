@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import hashlib
+import importlib.metadata
 import json
 import os
 import shutil
@@ -70,6 +71,21 @@ def main(tools, work, output):
     # the frozen executable, so every included component remains inspectable.
     shutil.copytree(ROOT/'linux', frozen/'_internal/launcher-source',
                     ignore=shutil.ignore_patterns('__pycache__'), dirs_exist_ok=True)
+    # Wheels carry component licenses outside the imported Python modules.
+    # Keep that metadata with the frozen application, including Qt notices.
+    notices = frozen/'_internal/package-notices'
+    for name in ('PySide6-Essentials', 'shiboken6', 'pyinstaller'):
+        distribution = importlib.metadata.distribution(name)
+        folder = notices/name
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder/'METADATA').write_text(distribution.read_text('METADATA') or '', encoding='utf-8')
+        for entry in distribution.files or []:
+            if any('license' in part.lower() or 'copyright' in part.lower() for part in entry.parts):
+                original = Path(distribution.locate_file(entry))
+                if original.is_file():
+                    target = folder/entry
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(original, target)
     for path in frozen.rglob('*'):
         if path.suffix.lower() in {'.iso','.xex','.xexp','.dmp'} or 'generated/default' in path.as_posix():
             raise ValueError('Private game data in AppImage: ' + str(path))

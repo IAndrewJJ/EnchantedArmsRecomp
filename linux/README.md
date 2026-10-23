@@ -14,7 +14,7 @@ The launcher opens first and waits for Play. The AppImage includes the compiler
 and game-independent runtime; the game is compiled on the player's own computer.
 It does not contain the ISO, extracted game files, or translated game code.
 
-Use an x86-64 Linux desktop with glibc 2.35 or newer, a Vulkan-capable GPU and
+Use an x86-64 Linux desktop (x86-64-v2 / SSE4.2) with glibc 2.35 or newer, a Vulkan-capable GPU and
 working Vulkan drivers. Ubuntu 22.04 or newer meets the glibc requirement.
 Allow about **20 GB of free space beyond the ISO** for extraction, build tools,
 and compilation. First setup takes several minutes and uses two build jobs by default.
@@ -66,7 +66,7 @@ AppImage preserves the separately stored game and saves.
 
 ## Build the AppImage
 
-The reproducible build steps are in `.github/workflows/linux-runtime.yml` and
+The build steps are in `.github/workflows/linux-runtime.yml` and
 `.github/workflows/linux-appimage.yml`. They use Ubuntu 22.04, Clang 20, the pinned
 ReXGlue 0.10.0 source, and `linux/requirements.txt`.
 

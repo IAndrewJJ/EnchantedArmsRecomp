@@ -20,6 +20,12 @@ A fan-made PC version of the Xbox 360 RPG, built from your own copy of the game.
 - **A simple launcher.** Adjust your settings, check for updates, and press Play when you’re ready.
 - **Handy extras.** Take screenshots, show an FPS counter, and create a desktop shortcut.
 
+<p align="center">
+  <a href="docs/images/london-city.png"><img src="docs/images/london-city.png" width="100%" alt="Enchanted Arms exploration in London City"></a><br>
+  <a href="docs/images/load-menu.png"><img src="docs/images/load-menu.png" width="49%" alt="Enchanted Arms load menu"></a>
+  <a href="docs/images/character-menu.png"><img src="docs/images/character-menu.png" width="49%" alt="Enchanted Arms character menu"></a>
+</p>
+
 ## Get started
 
 1. Download **EnchantedArmsPC-0.5.5-windows-x64.zip** from the release page and extract it into its own folder.

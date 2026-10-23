@@ -1,0 +1,60 @@
+name: Linux AppImage
+on:
+  push:
+    branches: [codex/linux-appimage]
+    paths: [linux/**, src/**, CMakeLists.txt, .github/workflows/linux-appimage.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    uses: ./.github/workflows/linux-runtime.yml
+  appimage:
+    needs: runtime
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    timeout-minutes: 30
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - name: Install packaging dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv binutils patchelf \
+            libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
+            libxcb-image0 libxcb-render-util0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: EnchantedArmsPC-linux-tools
+          path: ${{ runner.temp }}/linux-tools
+      - name: Unpack build tools and install Qt packager
+        run: |
+          tar -xJf "$RUNNER_TEMP/linux-tools/linux-tools-x86_64.tar.xz" -C "$RUNNER_TEMP/linux-tools"
+          python3 -m pip install --disable-pip-version-check -r linux/requirements.txt
+      - name: Test settings, saves and launcher lifecycle
+        run: |
+          python3 linux/test_core.py -v
+          python3 linux/launcher.py --smoke-test --preview "$RUNNER_TEMP/launcher-linux.png"
+      - name: Build AppImage
+        run: |
+          python3 linux/package_appimage.py --tools "$RUNNER_TEMP/linux-tools/tools" \
+            --work "$RUNNER_TEMP/appimage-build" --output dist/EnchantedArmsPC-linux-0.1.0-x86_64.AppImage
+      - name: Test actual AppImage without FUSE or game data
+        run: |
+          mkdir -p "$RUNNER_TEMP/appimage-test"
+          cd "$RUNNER_TEMP/appimage-test"
+          "$GITHUB_WORKSPACE/dist/EnchantedArmsPC-linux-0.1.0-x86_64.AppImage" --appimage-extract > /dev/null
+          ./squashfs-root/AppRun --smoke-test --preview "$RUNNER_TEMP/launcher-appimage.png"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EnchantedArmsPC-Linux-AppImage-preview
+          path: |
+            dist/EnchantedArmsPC-linux-0.1.0-x86_64.AppImage
+            dist/SHA256SUMS.txt
+            dist/linux-package-report.json
+            ${{ runner.temp }}/launcher-linux.png
+            ${{ runner.temp }}/launcher-appimage.png
+          if-no-files-found: error
+          retention-days: 14

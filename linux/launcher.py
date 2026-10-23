@@ -326,8 +326,7 @@ def gui(arguments):
                 self.refresh()
 
         def start_build(self):
-            root = core.build_root(self.settings)
-            root.mkdir(parents=True, exist_ok=True)
+            root = core.reserve_build_root(core.build_root(self.settings))
             logs = root / '.local/logs'
             logs.mkdir(parents=True, exist_ok=True)
             self.log_path = logs / time.strftime('setup-linux-%Y%m%dT%H%M%SZ.log', time.gmtime())
@@ -338,7 +337,7 @@ def gui(arguments):
             self.worker.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
             self.worker.readyReadStandardOutput.connect(self.read_output)
             self.worker.finished.connect(self.build_finished)
-            self.worker.errorOccurred.connect(lambda error: self.status.setText('Setup could not start') if error == QProcess.ProcessError.FailedToStart else None)
+            self.worker.errorOccurred.connect(self.worker_error)
             self.failure = None
             self.output = ''
             self.cancelled = False
@@ -351,6 +350,11 @@ def gui(arguments):
             if not getattr(sys, 'frozen', False):
                 args.insert(0, str(Path(__file__).resolve()))
             self.worker.start(sys.executable, args)
+
+        def worker_error(self, error):
+            if error == QProcess.ProcessError.FailedToStart and self.worker is not None:
+                self.failure = 'The setup worker could not start: ' + self.worker.errorString()
+                self.build_finished(-1, QProcess.ExitStatus.CrashExit)
 
         def read_output(self):
             data = bytes(self.worker.readAllStandardOutput()).decode('utf-8', errors='replace')

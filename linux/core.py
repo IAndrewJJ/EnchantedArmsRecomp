@@ -67,7 +67,7 @@ def normalize(raw):
     keys = raw.get('Keys', DEFAULT_KEYS)
     settings['Keys'] = [str(k) for k in keys] if isinstance(keys, list) and len(keys) == 24 else list(DEFAULT_KEYS)
     pads = raw.get('PadButtons', list(range(14)))
-    settings['PadButtons'] = pads if isinstance(pads, list) and sorted(pads) == list(range(14)) else list(range(14))
+    settings['PadButtons'] = pads if isinstance(pads, list) and all(type(p) is int for p in pads) and sorted(pads) == list(range(14)) else list(range(14))
     settings['Height'] = dict(zip((1280,1920,2560,3840), (720,1080,1440,2160)))[settings['Width']]
     if settings['PostAA'] == 'ssaa':
         settings['Scale'] = max(settings['Scale'], min(4, settings['Width'] // 1280 + 1))
@@ -96,7 +96,10 @@ def save_root(settings):
     return Path(settings['SaveLocation']).expanduser().absolute() if settings['SaveLocation'] else build_root(settings) / 'Saves'
 
 def protected(path):
-    path = Path(path).expanduser().absolute()
+    path = Path(path).expanduser()
+    if not path.is_absolute():
+        raise ValueError('Choose a full folder path.')
+    path = path.absolute()
     shared = {Path(path.anchor), Path.home(), Path.home() / 'Desktop', Path.home() / 'Documents',
               Path.home() / 'Downloads', Path('/usr'), Path('/etc'), Path('/var'), Path('/tmp'), Path('/home')}
     if path in shared or '\n' in str(path) or '\r' in str(path):
@@ -115,6 +118,9 @@ def validate_build(path):
         raise ValueError('Choose a writable game folder outside the AppImage.')
     if path.exists() and any(path.iterdir()):
         manifest = path / 'enchantedarmsrecomp_manifest.toml'
+        owner = path / '.local/linux-build-owner.json'
+        if owner.is_file() and not owner.is_symlink() and json.loads(owner.read_text()).get('project') == 'EnchantedArmsPC-linux':
+            return path
         if not manifest.is_file() or 'name = "enchantedarmsrecomp"' not in manifest.read_text():
             children = [p for p in path.iterdir() if p.is_dir() and
                         (p / 'enchantedarmsrecomp_manifest.toml').is_file()]
@@ -122,6 +128,14 @@ def validate_build(path):
                 return validate_build(children[0])
             raise ValueError('Choose an empty folder or an existing EnchantedArmsPC project folder.')
     return path
+
+def reserve_build_root(path):
+    root = validate_build(path)
+    root.mkdir(parents=True, exist_ok=True)
+    if (root / '.local').is_symlink():
+        raise ValueError('Choose a game folder without linked tool folders.')
+    atomic_json(root / '.local/linux-build-owner.json', {'project': 'EnchantedArmsPC-linux'})
+    return root
 
 def validate_save(root, destination):
     destination = protected(destination)
@@ -173,6 +187,8 @@ def copy_saves(source, destination):
         target = destination / path.relative_to(source)
         if target.exists() and (not target.is_file() or sha(path) != sha(target)):
             raise ValueError('That folder contains different saved progress. Choose an empty folder or keep your current save location.')
+        if any(parent.is_file() for parent in target.parents if parent != destination):
+            raise ValueError('A file is blocking the chosen save folder. Choose another folder.')
     destination.mkdir(parents=True, exist_ok=True)
     for path in source_files:
         target = destination / path.relative_to(source)
@@ -301,6 +317,8 @@ def build(settings):
         entries = validate_disc(disc)
         root.mkdir(parents=True, exist_ok=True)
         local = root / '.local'
+        if local.is_symlink():
+            raise ValueError('Choose a game folder without linked tool folders.')
         local.mkdir(exist_ok=True)
         with (local / 'linux-setup.lock').open('a+b') as lock:
             try:
@@ -314,13 +332,25 @@ def build(settings):
                 if sha(source) != expected:
                     raise ValueError('The AppImage source bundle is damaged. Download it again.')
                 target = root / name
+                if target.is_symlink() or any(parent.is_symlink() for parent in target.parents if parent != root):
+                    raise ValueError('A linked project file is blocking setup: ' + name)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
             destination = local / 'linux-tools'
-            if not (destination / 'bundle.json').is_file():
+            if destination.is_symlink() or (local / 'game').is_symlink():
+                raise ValueError('Choose a game folder without linked tools or game data.')
+            tools_complete = local / 'linux-tools.complete.json'
+            if not tools_complete.is_file():
                 print('STAGE: Preparing the bundled Linux build tools', flush=True)
                 shutil.copytree(resources() / 'tools', destination, dirs_exist_ok=True, symlinks=True)
             tools, environment = tool_environment(root)
+            for relative in ('bin/ea-clang++', 'bin/clang', 'bin/cmake', 'bin/ninja', 'sdk/bin/rexglue'):
+                if not (tools / relative).is_file():
+                    raise ValueError('The bundled Linux build tools are incomplete. Retry setup.')
+            if not tools_complete.is_file():
+                run([tools/'sdk/bin/rexglue', '--version'], root, environment)
+                run([tools/'bin/ea-clang++', '--version'], root, environment)
+                atomic_json(tools_complete, {'version': VERSION})
             extract_game(disc, entries, local)
             print('STAGE: Generating native code from your game', flush=True)
             run([tools/'sdk/bin/rexglue', 'codegen', root/'enchantedarmsrecomp_manifest.toml'], root, environment)

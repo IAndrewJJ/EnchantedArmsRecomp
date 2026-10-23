@@ -10,7 +10,7 @@ target.mkdir(parents=True, exist_ok=True)
 shutil.copytree(root / 'src', target / 'src', dirs_exist_ok=True)
 header = target / 'generated/default/enchantedarmsrecomp_init.h'
 header.parent.mkdir(parents=True, exist_ok=True)
-imports = sorted(set(re.findall(r'\b__imp_sub_[0-9A-Fa-f]+\b', '\n'.join(p.read_text() for p in (root / 'src').glob('*') if p.suffix in {'.cpp', '.h'}))))
+imports = sorted(set(re.findall(r'\b__imp__sub_[0-9A-Fa-f]+\b', '\n'.join(p.read_text() for p in (root / 'src').glob('*') if p.suffix in {'.cpp', '.h'}))))
 text = '#pragma once\n#include <rex/ppc.h>\n#include <rex/rex_app.h>\n'
 text += '#define REX_IMAGE_BASE 0x82000000u\n#define REX_IMAGE_SIZE 4096u\n'
 text += 'inline const rex::PPCImageInfo PPCImageConfig{};\n'

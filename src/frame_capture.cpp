@@ -1,5 +1,6 @@
 #include "frame_capture.h"
 
+#include <algorithm>
 #include <chrono>
 #include <limits>
 #if defined(_WIN32)

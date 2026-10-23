@@ -1,5 +1,6 @@
 name: Linux runtime
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches: [codex/linux-appimage]

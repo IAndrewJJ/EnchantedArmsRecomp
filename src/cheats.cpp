@@ -36,6 +36,33 @@ ea::cheats::Options Options() {
           REXCVAR_GET(ea_cheat_experience_multiplier)};
 }
 ea::GuestMemory Memory() { return ea::GuestMemory(rex::system::kernel_state()->memory()); }
+
+void TraceBattle(ea::GuestMemory& memory, const ea::cheats::Options& options) {
+  if (!options.hp && !options.ep) return;
+  uint32_t config, encounter, system, units, count;
+  if (!memory.Read32(ea::opening_battle::kSideConfiguration, config) ||
+      !ea::opening_battle::Field(memory, config, 120, encounter) ||
+      !ea::opening_battle::Field(memory, config, 168, system) ||
+      !ea::cheats::PlayerGroup(memory, units, count))
+    return;
+  static thread_local uint64_t previous = ~uint64_t(0);
+  static thread_local unsigned records = 0;
+  const uint64_t current = (uint64_t(encounter) << 32) | system;
+  if (current == previous || records >= 16) return;
+  uint32_t unit, hp, hp_max, ep, ep_max;
+  if (!memory.Read32(units, unit) || !ea::opening_battle::Field(memory, unit, 368, hp) ||
+      !ea::opening_battle::Field(memory, unit, 372, hp_max) ||
+      !ea::opening_battle::Field(memory, unit, 376, ep) ||
+      !ea::opening_battle::Field(memory, unit, 380, ep_max) || !hp_max || !ep_max)
+    return;
+  REXLOG_INFO(
+      "EA cheat battle: encounter={}, system={}, party_count={}, HP={}/{}, EP={}/{}, "
+      "story_pause={}",
+      encounter, system, count, hp, hp_max, ep, ep_max,
+      ea::opening_battle::IsOpeningEncounter(memory));
+  previous = current;
+  ++records;
+}
 }  // namespace
 namespace ea {
 void RefreshCheats() {
@@ -43,6 +70,7 @@ void RefreshCheats() {
   if (!options.Passive()) return;
   auto memory = Memory();
   cheats::Refresh(memory, options);
+  TraceBattle(memory, options);
   static thread_local bool logged = false;
   uint32_t owner, data, count, money, points, level;
   if (!logged && cheats::Owner(memory, owner) && cheats::Roster(memory, owner, data, count) &&
@@ -51,7 +79,7 @@ void RefreshCheats() {
       opening_battle::Field(memory, data, cheats::kSpOffset, points)) {
     REXLOG_INFO(
         "EA cheats: HP={}, EP={}, infinite_TB={}, infinite_SP={}, money_multiplier={}, "
-        "experience_multiplier={}, recruited={}, TB={}, first_SP={}",
+        "experience_multiplier={}, character_records={}, TB={}, first_SP={}",
         options.hp, options.ep, options.money, options.sp, options.money_multiplier,
         options.experience_multiplier, count, money, points);
     logged = true;
@@ -65,7 +93,12 @@ cheats::Attack PrepareCheatAttack(uint32_t stats, uint32_t result, bool predicti
 void FinishCheatAttack(const cheats::Attack& attack) {
   if (!attack.stats) return;
   auto memory = Memory();
-  cheats::FinishAttack(memory, attack);
+  if (cheats::FinishAttack(memory, attack)) {
+    static thread_local unsigned records = 0;
+    if (records++ < 16)
+      REXLOG_INFO("EA cheat HP: resolved damage repaired, HP={}->{}", attack.before,
+                  attack.maximum);
+  }
 }
 }  // namespace ea
 
@@ -108,14 +141,22 @@ REX_HOOK_RAW(sub_82196D10) {
 REX_HOOK_RAW(sub_82193238) {
   if (REXCVAR_GET(ea_cheat_hp) && ctx.r4.s32 < 0) {
     auto memory = Memory();
-    if (ea::cheats::PlayerStats(memory, ctx.r3.u32)) ctx.r4.s64 = 0;
+    if (ea::cheats::PlayerStats(memory, ctx.r3.u32)) {
+      static thread_local unsigned records = 0;
+      if (records++ < 16) REXLOG_INFO("EA cheat HP: blocked signed damage {}", ctx.r4.s32);
+      ctx.r4.s64 = 0;
+    }
   }
   __imp__sub_82193238(ctx, base);
 }
 REX_HOOK_RAW(sub_821935B0) {
   if (REXCVAR_GET(ea_cheat_ep) && ctx.r4.s32 > 0) {
     auto memory = Memory();
-    if (ea::cheats::PlayerStats(memory, ctx.r3.u32)) ctx.r4.s64 = 0;
+    if (ea::cheats::PlayerStats(memory, ctx.r3.u32)) {
+      static thread_local unsigned records = 0;
+      if (records++ < 16) REXLOG_INFO("EA cheat EP: blocked cost {}", ctx.r4.s32);
+      ctx.r4.s64 = 0;
+    }
   }
   __imp__sub_821935B0(ctx, base);
 }
@@ -129,6 +170,10 @@ REX_HOOK_RAW(sub_82193610) {
   __imp__sub_82193610(ctx, base);
   if (protect) {
     auto memory = Memory();
-    if (ea::cheats::Refill(memory, stats, 56)) ctx.r3.s64 = 0;
+    if (ea::cheats::Refill(memory, stats, 56)) {
+      static thread_local unsigned records = 0;
+      if (records++ < 16) REXLOG_INFO("EA cheat EP: skill cost restored");
+      ctx.r3.s64 = 0;
+    }
   }
 }

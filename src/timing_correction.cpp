@@ -1,4 +1,5 @@
 #include "timing_correction.h"
+#include "cheats.h"
 
 #include <rex/cvar.h>
 #include <rex/hook.h>
@@ -117,6 +118,7 @@ void EATextureScrollStep(PPCVRegister& velocity, PPCRegister& model) {
 
 REX_HOOK_RAW(sub_820EE028) {
   ea::FrameStepScope scope(step_depth);
+  if (scope.outer()) ea::RefreshCheats();
   __imp__sub_820EE028(ctx, base);
 }
 
@@ -124,6 +126,7 @@ REX_HOOK_RAW(sub_820EE028) {
 // above instead loads its own constant and needs an instruction hook.
 REX_HOOK_RAW(sub_82185E08) {
   ea::FrameStepScope scope(step_depth);
+  if (scope.outer()) ea::RefreshCheats();
   const double input = ctx.f1.f64;
   CorrectFloatArgument(ctx.f1.f64, scope.outer());
   TraceStep(Boundary::World, input, ctx.f1.f64, ctx.lr);
@@ -133,6 +136,7 @@ REX_HOOK_RAW(sub_82185E08) {
 // Generic scene manager updates also run outside a world update (menus/events).
 REX_HOOK_RAW(sub_821378D0) {
   ea::FrameStepScope scope(step_depth);
+  if (scope.outer()) ea::RefreshCheats();
   const double input = ctx.f1.f64;
   CorrectFloatArgument(ctx.f1.f64, scope.outer());
   TraceStep(Boundary::Manager, input, ctx.f1.f64, ctx.lr);

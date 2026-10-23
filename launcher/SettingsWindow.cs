@@ -12,6 +12,7 @@ namespace EnchantedArmsPC
         Game,
         Controls,
         Textures,
+        Cheats,
         Updates
     }
 
@@ -59,6 +60,7 @@ namespace EnchantedArmsPC
         readonly EtherButton[] navigation =
             new EtherButton[Enum.GetValues(typeof(SettingsPage)).Length];
         readonly ControlsPage controlsPage = new ControlsPage();
+        readonly CheatsPage cheatsPage = new CheatsPage();
         readonly TexturePacksPage texturePage;
         bool loading;
         internal SettingsPage SelectedPage { get; private set; }
@@ -177,6 +179,7 @@ namespace EnchantedArmsPC
             var quality = Page("Picture quality");
             pages[(int)SettingsPage.Controls].Controls.Add(controlsPage);
             pages[(int)SettingsPage.Textures].Controls.Add(texturePage);
+            pages[(int)SettingsPage.Cheats].Controls.Add(cheatsPage);
             var updates = new UpdatesPage(running);
             pages[(int)SettingsPage.Updates].Controls.Add(updates);
             updates.InstallRequested += (stage, rollback) =>
@@ -430,6 +433,7 @@ namespace EnchantedArmsPC
             savePath.Text =
                 defaultSaveLocation ? Path.Combine(buildPath.Text, "Saves") : Settings.SaveLocation;
             controlsPage.LoadValues(Settings);
+            cheatsPage.LoadValues(Settings);
             texturePage.LoadSelection(Settings.TexturePack);
             loading = false;
         }
@@ -454,6 +458,7 @@ namespace EnchantedArmsPC
                 InstallLocation.Same(buildPath.Text, Program.Root) ? "" : buildPath.Text.Trim();
             Settings.SaveLocation = defaultSaveLocation ? "" : savePath.Text;
             controlsPage.ReadValues(Settings);
+            cheatsPage.ReadValues(Settings);
             Settings.Normalize();
         }
         bool ReadAndValidateLocation(bool building = false)

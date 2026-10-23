@@ -102,6 +102,9 @@ namespace EnchantedArmsPC
                 string diagnostics = CurrentNativeDirectory;
                 if (File.Exists(Path.Combine(diagnostics, "enchantedarmsrecomp.exe")))
                     return diagnostics;
+                string saves = Path.Combine(Root, "bin", "graphics-0.3.6");
+                if (File.Exists(Path.Combine(saves, "enchantedarmsrecomp.exe")))
+                    return saves;
                 string opening = Path.Combine(Root, "bin", "graphics-0.3.5");
                 if (File.Exists(Path.Combine(opening, "enchantedarmsrecomp.exe")))
                     return opening;
@@ -155,6 +158,7 @@ namespace EnchantedArmsPC
                            "--mnk_mode" }
                 .Concat(p.RendererArguments())
                 .Concat(p.ControlArguments(current))
+                .Concat(p.CheatArguments(current))
                 .Concat(current ? new[] { p.FrameTimeGraph ? "--ea_frame_graph"
                                                            : "--no-ea_frame_graph" }
                                 : new string[0])

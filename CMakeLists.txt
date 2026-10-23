@@ -49,6 +49,7 @@ set(ENCHANTEDARMSRECOMP_SOURCES
 )
 
 if(WIN32)
+    list(APPEND ENCHANTEDARMSRECOMP_SOURCES src/cheats.cpp)
     add_executable(enchantedarmsrecomp WIN32 ${ENCHANTEDARMSRECOMP_SOURCES})
 else()
     add_executable(enchantedarmsrecomp ${ENCHANTEDARMSRECOMP_SOURCES})

@@ -5,48 +5,11 @@
 
 #include <atomic>
 
+#include "cheats.h"
 #include "generated/default/enchantedarmsrecomp_init.h"
+#include "guest_memory.h"
 
-namespace {
-class GuestMemory {
- public:
-  explicit GuestMemory(rex::memory::Memory* memory) : memory_(memory) {}
-
-  bool Read32(uint32_t address, uint32_t& value) {
-    if (!Accessible(address, 4, false)) return false;
-    const auto* bytes = memory_->TranslateVirtual(address);
-    value = (uint32_t(bytes[0]) << 24) | (uint32_t(bytes[1]) << 16) | (uint32_t(bytes[2]) << 8) |
-            uint32_t(bytes[3]);
-    return true;
-  }
-  bool Read16(uint32_t address, uint16_t& value) {
-    if (!Accessible(address, 2, false)) return false;
-    const auto* bytes = memory_->TranslateVirtual(address);
-    value = (uint16_t(bytes[0]) << 8) | uint16_t(bytes[1]);
-    return true;
-  }
-  bool Writable(uint32_t address, uint32_t size) { return Accessible(address, size, true); }
-  void Write32(uint32_t address, uint32_t value) {
-    auto* bytes = memory_->TranslateVirtual(address);
-    bytes[0] = uint8_t(value >> 24);
-    bytes[1] = uint8_t(value >> 16);
-    bytes[2] = uint8_t(value >> 8);
-    bytes[3] = uint8_t(value);
-  }
-
- private:
-  bool Accessible(uint32_t address, uint32_t size, bool write) {
-    if (!memory_ || !address || !size || uint64_t(address) + size > 0x100000000ULL) return false;
-    auto* heap = memory_->LookupHeap(address);
-    if (!heap || heap != memory_->LookupHeap(address + size - 1)) return false;
-    const auto access = heap->QueryRangeAccess(address, address + size - 1);
-    const auto required =
-        write ? rex::memory::PageAccess::kReadWrite : rex::memory::PageAccess::kReadOnly;
-    return (int(access) & int(required)) == int(required);
-  }
-  rex::memory::Memory* memory_;
-};
-}  // namespace
+using ea::GuestMemory;
 
 // Resolve the original attack first, including special lethal effects. Repair
 // only its first-Queen player result before the caller handles defeat. This
@@ -86,7 +49,9 @@ REX_HOOK_RAW(sub_82199188) {
       }
     }
   }
+  const auto cheat = ea::PrepareCheatAttack(ctx.r5.u32, ctx.r6.u32, ctx.r7.s32 == 1);
   __imp__sub_82199188(ctx, base);
+  ea::FinishCheatAttack(cheat);
   if (protection && ea::opening_battle::Finish(memory, *protection)) {
     static std::atomic<uint32_t> logged{0};
     if (logged.fetch_add(1, std::memory_order_relaxed) < 24) {

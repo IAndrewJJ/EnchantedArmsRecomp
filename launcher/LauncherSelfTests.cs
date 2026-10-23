@@ -63,6 +63,8 @@ namespace EnchantedArmsPC
                 var selected = new Preferences { FrameLimit = limit, TextureDetail = 1 };
                 if (Program.NativeUpdateRequired(Program.CurrentNativeDirectory) ||
                     !Program.NativeUpdateRequired(
+                        Path.Combine(Program.Root, "bin", "graphics-0.3.6")) ||
+                    !Program.NativeUpdateRequired(
                         Path.Combine(Program.Root, "bin", "graphics-0.3.5")) ||
                     !Program.NativeUpdateRequired(
                         Path.Combine(Program.Root, "bin", "graphics-0.3.4")) ||
@@ -227,7 +229,7 @@ namespace EnchantedArmsPC
                 }
             if (!Enum.GetNames(typeof(SettingsPage))
                      .SequenceEqual(new[] { "Graphics", "Display", "Game", "Controls", "Textures",
-                                            "Updates" }))
+                                            "Cheats", "Updates" }))
                 return 35;
             using (var dialog =
                        new SettingsWindow(new Preferences(), false, true, SettingsPage.Game))
@@ -317,6 +319,7 @@ namespace EnchantedArmsPC
             if (uninstall != 0)
                 return uninstall;
             SaveStorageSelfTests.Run();
+            CheatsSelfTests.Run();
             return 0;
         }
     }

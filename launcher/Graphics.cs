@@ -65,6 +65,7 @@ namespace EnchantedArmsPC
                 ResolveReadback = "none";
             NormalizeControls();
             NormalizeExperience();
+            NormalizeCheats();
             Schema = 5;
         }
         public Preferences Copy()

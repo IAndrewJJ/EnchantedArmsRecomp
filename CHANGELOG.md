@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.8 — Optional Windows cheats
+
+- Add Settings → Cheats with infinite HP, EP, TB and SP, plus 2×/5×/10× money
+  and experience rewards. Everything defaults to off; turning cheats off does
+  not remove resources or levels already saved.
+- Limit combat cheats to the player party and pause them during the scripted
+  opening Ice Queen encounter. Retain the existing progression fix.
+- Use native build 0.3.7. Existing Windows players rebuild through Update Game;
+  saves and graphics settings are preserved. The Linux preview is unchanged.
+
 ## 0.5.7 — V-Sync always enabled
 
 - Keep the previous V-Sync On behavior for all launches, including players whose

@@ -4,6 +4,9 @@ project=$(cd -- "$(dirname -- "$0")/.." && pwd)
 work=${1:?Supply an empty build workspace}
 mkdir -p "$work"
 work=$(cd -- "$work" && pwd)
+export XDG_RUNTIME_DIR="$work/xdg-runtime"
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
 source="$work/rexglue-sdk"
 prefix="$work/tools/sdk"
 if [[ ! -d "$source/.git" ]]; then

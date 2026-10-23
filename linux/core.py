@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -50,7 +51,7 @@ def normalize(raw):
         ('Width', (1280,1920,2560,3840)), ('Anisotropy', (-1,0,1,2,3,4,5)),
         ('TextureDetail', (0,1,2)), ('Upscaler', ('bilinear','fsr','cas')),
         ('PostAA', ('none','fxaa','fxaa_extreme','ssaa'))]:
-        if settings[name] not in choices:
+        if settings[name] not in choices or (type(DEFAULTS[name]) is int and type(settings[name]) is not int):
             settings[name] = DEFAULTS[name]
     for name, minimum, maximum in [('Sharpness',0,100), ('Jobs',1,8), ('MouseSensitivity',1,1000),
         ('LeftDeadzone',0,40), ('RightDeadzone',0,40), ('CameraResponse',25,200)]:
@@ -212,6 +213,18 @@ def save_settings(settings, previous=None):
     root = validate_build(build_root(settings))
     settings['BuildLocation'] = str(root)
     destination = validate_save(root, save_root(settings))
+    named = set(('Backtick Minus Plus Comma Period Semicolon Slash Backslash LBracket RBracket Quote '
+        'Escape Return Space Tab Backspace Delete Insert Home End PageUp PageDown Left Right Up Down '
+        'NumpadEnter NumpadPlus NumpadMinus NumpadStar NumpadSlash PrintScreen Pause CapsLock NumLock '
+        'ScrollLock LMB RMB MMB').lower().split())
+    for name, binding in zip(CONTROL_NAMES, settings['Keys']):
+        for chord in binding.split(',') if binding else []:
+            parts = chord.strip().split('+')
+            key = parts[-1].lower()
+            valid = key in named or bool(re.fullmatch(r'[a-z0-9]|f(?:[1-9]|1[0-9]|2[0-4])', key))
+            if (not valid or len(binding) > 100 or key in {'f2','f6','f8'} or
+                any(p.lower() not in {'ctrl','alt','shift'} for p in parts[:-1])):
+                raise ValueError('Check the binding for ' + name + '. F2, F6 and F8 are reserved for launcher features.')
     if previous:
         old = save_root(previous)
         if old.exists() and old != destination:
@@ -242,6 +255,8 @@ def ready(settings):
     try:
         receipt = json.loads((root / '.local/installation-linux.json').read_text())
         return (receipt['build'] == NATIVE and native_path(settings).is_file() and
+                (native_path(settings).parent/'librexruntime.so').is_file() and
+                (native_path(settings).parent/'librexgpu-xenos.so').is_file() and
                 (root / '.local/game/default.xex').is_file())
     except (OSError, ValueError, KeyError):
         return False

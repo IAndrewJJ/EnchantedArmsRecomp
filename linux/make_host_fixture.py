@@ -14,6 +14,14 @@ imports = sorted(set(re.findall(r'\b__imp__sub_[0-9A-Fa-f]+\b', '\n'.join(p.read
 text = '#pragma once\n#include <rex/ppc.h>\n#include <rex/rex_app.h>\n'
 text += '#define REX_IMAGE_BASE 0x82000000u\n#define REX_IMAGE_SIZE 4096u\n'
 text += 'inline const rex::PPCImageInfo PPCImageConfig{};\n'
+text += '''// Synthetic image memory access uses the SDK's public big-endian ABI.
+#define REX_LOAD_U8(x) (*(volatile uint8_t*)(base + uint32_t(x)))
+#define REX_LOAD_U16(x) __builtin_bswap16(*(volatile uint16_t*)(base + uint32_t(x)))
+#define REX_LOAD_U32(x) __builtin_bswap32(*(volatile uint32_t*)(base + uint32_t(x)))
+#define REX_STORE_U8(x,y) (*(volatile uint8_t*)(base + uint32_t(x)) = (y))
+#define REX_STORE_U16(x,y) (*(volatile uint16_t*)(base + uint32_t(x)) = __builtin_bswap16(y))
+#define REX_CALL_INDIRECT_FUNC(x) rex::runtime::ResolveIndirectFunction(uint32_t(x))(ctx,base)
+'''
 text += '\n'.join('extern "C" REX_FUNC(' + name + ');' for name in imports)
 header.write_text(text + '\n')
 (target / 'imports.cpp').write_text('#include "generated/default/enchantedarmsrecomp_init.h"\n' +

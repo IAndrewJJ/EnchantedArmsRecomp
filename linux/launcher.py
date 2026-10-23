@@ -159,7 +159,7 @@ def gui(arguments):
             button = QPushButton('Choose ISO…' if iso else 'Choose folder…')
             button.setEnabled(enabled)
             def choose():
-                value = (QFileDialog.getOpenFileName(self, 'Choose Enchanted Arms', str(Path.home()), 'Xbox 360 ISO (*.iso)')[0]
+                value = (QFileDialog.getOpenFileName(self, 'Choose Enchanted Arms', str(Path.home()), 'Xbox 360 ISO (*.iso *.ISO)')[0]
                          if iso else QFileDialog.getExistingDirectory(self, 'Choose ' + name.lower(), edit.text()))
                 if value:
                     if name == 'Save location':
@@ -321,12 +321,21 @@ def gui(arguments):
 
         def check_game(self):
             if self.game is not None and self.game.poll() is not None:
+                code = self.game.returncode
                 self.game = None
                 self.timer.stop()
                 self.refresh()
+                if code:
+                    QMessageBox.information(self, 'Game closed unexpectedly',
+                        'The game closed with code ' + str(code) + '.\n\nThe newest boot log is in ' +
+                        str(core.build_root(self.settings)/'.local/runtime'))
 
         def start_build(self):
-            root = core.reserve_build_root(core.build_root(self.settings))
+            try:
+                root = core.reserve_build_root(core.build_root(self.settings))
+            except Exception as error:
+                QMessageBox.information(self, 'Build folder unavailable', str(error))
+                return
             logs = root / '.local/logs'
             logs.mkdir(parents=True, exist_ok=True)
             self.log_path = logs / time.strftime('setup-linux-%Y%m%dT%H%M%SZ.log', time.gmtime())

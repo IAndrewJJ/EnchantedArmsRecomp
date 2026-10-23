@@ -24,7 +24,7 @@ jobs:
       - name: Install packaging dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv binutils patchelf \
+          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv binutils patchelf xz-utils \
             libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
             libxcb-image0 libxcb-render-util0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
       - uses: actions/checkout@v4
@@ -36,6 +36,11 @@ jobs:
         run: |
           tar -xJf "$RUNNER_TEMP/linux-tools/linux-tools-x86_64.tar.xz" -C "$RUNNER_TEMP/linux-tools"
           python3 -m pip install --disable-pip-version-check -r linux/requirements.txt
+      - name: Build host integration using only relocated bundled tools
+        run: |
+          mv "$RUNNER_TEMP/linux-tools/tools" "$RUNNER_TEMP/linux-tools/portable tools"
+          python3 linux/test_portable_tools.py "$RUNNER_TEMP/linux-tools/portable tools" "$RUNNER_TEMP/portable build"
+          mv "$RUNNER_TEMP/linux-tools/portable tools" "$RUNNER_TEMP/linux-tools/tools"
       - name: Test settings, saves and launcher lifecycle
         run: |
           python3 linux/test_core.py -v

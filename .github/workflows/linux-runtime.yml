@@ -15,7 +15,7 @@ jobs:
       - name: Bootstrap
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates curl wget gnupg git software-properties-common python3 python3-pip
+          apt-get install -y --no-install-recommends ca-certificates curl wget gnupg git software-properties-common python3 python3-pip xz-utils
       - uses: actions/checkout@v4
       - name: Install compiler and build dependencies
         run: |
@@ -46,8 +46,7 @@ jobs:
       - name: Package game-independent build tools
         run: |
           XZ_OPT=-T2 tar -C "$RUNNER_TEMP/ea-linux" -cJf linux-tools-x86_64.tar.xz tools
-          XZ_OPT=-T2 tar -C "$RUNNER_TEMP/ea-linux" --exclude='*/.git' --exclude='rexglue-sdk/out' \
-            -cJf ReXGlueSpatial-linux-0.1.0-source.tar.xz rexglue-sdk
+          python3 linux/package_runtime_source.py "$RUNNER_TEMP/ea-linux/rexglue-sdk" ReXGlueSpatial-linux-0.1.0-source.tar.xz
       - uses: actions/upload-artifact@v4
         with:
           name: EnchantedArmsPC-linux-tools

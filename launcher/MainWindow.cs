@@ -62,6 +62,19 @@ namespace EnchantedArmsPC
                     }
                     candidate.Dispose();
                 }
+            if (!preview && !GameRunning() && Ready())
+            {
+                try
+                {
+                    SaveStorage.Prepare(Program.Root, preferences);
+                }
+                catch (Exception error)
+                {
+                    Program.Diagnostic("Could not prepare saves: " + error);
+                    failed = true;
+                    lastFailure = "Check your save location in Settings → Game.";
+                }
+            }
             status.ForeColor = Theme.Accent;
             status.Font = new Font("Segoe UI", 11);
             status.AutoSize = false;
@@ -248,6 +261,17 @@ namespace EnchantedArmsPC
                         MessageBox.Show(this, error.Message, "Uninstall could not start",
                                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
+                    return;
+                }
+                try
+                {
+                    if (!GameRunning() && (Ready() || SaveStorage.Exists(Program.Root)))
+                        SaveStorage.Prepare(Program.Root, dialog.Settings);
+                }
+                catch (Exception error)
+                {
+                    MessageBox.Show(this, error.Message, "Save location could not change",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 preferences = dialog.Settings;
@@ -595,6 +619,7 @@ namespace EnchantedArmsPC
                 }
                 if (closeWhenStopped)
                     return;
+                SaveStorage.Prepare(Program.Root, preferences);
                 string runtime = Path.Combine(Program.Local, "runtime");
                 Directory.CreateDirectory(runtime);
                 string logPath = Path.Combine(

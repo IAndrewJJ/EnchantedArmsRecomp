@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.6 — Tidier installation and save locations
+
+- Keep the recommended build beside the launcher, with a visible Saves folder.
+  Add a Save location picker plus links to restore the default locations.
+- Accept existing project folders and resolve an extracted download's outer
+  wrapper to the project inside. Preserve unrelated files, destination saves
+  and settings when preparing or retrying a build.
+- Move legacy saves automatically; copy progress safely when choosing another
+  save folder, retaining originals and rejecting conflicting progress.
+- Keep screenshots independent of save locations in native build 0.3.6. Existing
+  players rebuild from their ISO after the launcher update; gameplay fixes remain.
+- Exclude visible saves from source control, update payloads and release kits.
+
 ## 0.5.5 — Choose your build folder
 
 - Add a Build location field and folder picker directly below Choose ISO.

@@ -63,6 +63,8 @@ namespace EnchantedArmsPC
                 var selected = new Preferences { FrameLimit = limit, TextureDetail = 1 };
                 if (Program.NativeUpdateRequired(Program.CurrentNativeDirectory) ||
                     !Program.NativeUpdateRequired(
+                        Path.Combine(Program.Root, "bin", "graphics-0.3.5")) ||
+                    !Program.NativeUpdateRequired(
                         Path.Combine(Program.Root, "bin", "graphics-0.3.4")) ||
                     !Program.NativeUpdateRequired(
                         Path.Combine(Program.Root, "bin", "graphics-0.3.2")))
@@ -232,11 +234,14 @@ namespace EnchantedArmsPC
                 if (location == null || location.Enabled ||
                     !InstallLocation.Same(location.Text, Program.Root))
                     return 37;
+                var saveLocation = dialog.Controls.Find("SaveLocation", true).Single() as TextBox;
+                if (saveLocation == null || saveLocation.Enabled ||
+                    !InstallLocation.Same(saveLocation.Text, Path.Combine(Program.Root, "Saves")))
+                    return 39;
             }
             foreach (string unsafeLocation in new[] { "", "relative/path",
                                                       Path.GetPathRoot(Program.Root),
-                                                      Path.Combine(Program.Root, "nested"),
-                                                      Path.GetDirectoryName(Program.Root) })
+                                                      Path.Combine(Program.Root, "nested") })
             {
                 bool rejected = false;
                 try
@@ -309,6 +314,7 @@ namespace EnchantedArmsPC
             int uninstall = UninstallSelfTests.Run();
             if (uninstall != 0)
                 return uninstall;
+            SaveStorageSelfTests.Run();
             return 0;
         }
     }

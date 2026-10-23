@@ -8,6 +8,7 @@
 /.local/
 /audit/
 /dist/
+/Saves/
 /bootstrap/*.zip
 /renderer/*.dll
 /renderer/*.lib

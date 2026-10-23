@@ -50,7 +50,7 @@ class ReleaseTests(unittest.TestCase):
     def test_private_and_unsafe_members_rejected_even_if_hashed(self):
         for name in ("../escape.txt", "C:/secret.txt", ".local/launcher.json", "bin/game.exe",
                      "generated/default/game.cpp", "game.xex", "game.iso", "game.dmp",
-                     "enchantedarmsrecomp.exe", "other.dll", "docs/CON.txt", "docs/trailing. "):
+                     "enchantedarmsrecomp.exe", "other.dll", "Saves/progress.bin", "sAvEs/progress.bin", "docs/CON.txt", "docs/trailing. "):
             with self.subTest(name=name):
                 stream = io.BytesIO()
                 self.make_archive(stream, {name: b"fixture"})

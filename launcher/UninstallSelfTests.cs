@@ -50,7 +50,7 @@ namespace EnchantedArmsPC
                               "[project]\nname = \"enchantedarmsrecomp\"");
             return root;
         }
-        static void Junction(string link, string target)
+        internal static void Junction(string link, string target)
         {
             Directory.CreateDirectory(link);
             byte[] substitute = Encoding.Unicode.GetBytes(@"\??\" + target),

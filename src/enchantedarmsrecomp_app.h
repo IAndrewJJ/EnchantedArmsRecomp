@@ -41,8 +41,8 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
           auto* presenter = runtime()->graphics_system()->presenter();
           std::filesystem::path saved;
           std::string error;
-          if (presenter && ea::CaptureFrame(*presenter, user_data_root().parent_path() / "captures",
-                                            saved, error)) {
+          if (presenter &&
+              ea::CaptureFrame(*presenter, cache_root().parent_path() / "captures", saved, error)) {
             REXLOG_INFO("EA screenshot saved: {} (guest output before presenter scaling/overlays)",
                         saved.string());
           } else {
@@ -173,7 +173,13 @@ class EnchantedarmsrecompApp : public rex::ReXApp {
       paths.game_data_root = game;
     }
     if (rex::cvar::GetFlagByName("user_data_root").empty()) {
-      paths.user_data_root = local / "user";
+      // Direct developer launches can still find saves from older installations.
+      // The launcher migrates those saves and supplies the selected folder explicitly.
+      const auto saves = project / "Saves";
+      paths.user_data_root =
+          !std::filesystem::exists(saves) && std::filesystem::is_directory(local / "user")
+              ? local / "user"
+              : saves;
     }
     if (rex::cvar::GetFlagByName("cache_root").empty()) {
       paths.cache_root = local / "cache";

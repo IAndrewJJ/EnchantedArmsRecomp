@@ -19,6 +19,7 @@ class UpdateTests(unittest.TestCase):
         (self.root/'README.md').write_bytes(b'old readme')
         (self.root/'.local/runtime/user').mkdir(parents=True)
         (self.root/'.local/runtime/user/save').write_bytes(b'my save')
+        (self.root/'Saves').mkdir();(self.root/'Saves/visible-save').write_bytes(b'visible progress')
         (self.root/'bin').mkdir();(self.root/'bin/game.exe').write_bytes(b'private game')
         self.stage=self.root/'.local/updates/staged-test';self.stage.mkdir(parents=True)
         self.archive=self.stage/'kit.zip'
@@ -36,6 +37,7 @@ class UpdateTests(unittest.TestCase):
         (self.stage/'verified.json').write_text(json.dumps({'version':'9.0.0','sha256':hashlib.sha256(self.archive.read_bytes()).hexdigest()}))
     def protected(self):
         self.assertEqual((self.root/'.local/runtime/user/save').read_bytes(),b'my save')
+        self.assertEqual((self.root/'Saves/visible-save').read_bytes(),b'visible progress')
         self.assertEqual((self.root/'bin/game.exe').read_bytes(),b'private game')
     def test_install_and_rollback_preserve_game_and_saves(self):
         result=update.install(self.root,self.stage)
@@ -55,7 +57,7 @@ class UpdateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'changed'):update.install(self.root,self.stage)
         self.assertEqual((self.root/'README.md').read_bytes(),b'old readme')
     def test_private_paths_rejected_in_rollback_journal(self):
-        for name in ['.local/runtime/user/save','../escape','bin/game.exe','generated/default/game.cpp','other.exe','C:/escape']:
+        for name in ['.local/runtime/user/save','Saves/progress','sAvEs/progress','../escape','bin/game.exe','generated/default/game.cpp','other.exe','C:/escape']:
             with self.subTest(name=name),self.assertRaises(ValueError):update.safe_target(self.root,name)
     def test_changed_backup_is_rejected(self):
         result=update.install(self.root,self.stage)

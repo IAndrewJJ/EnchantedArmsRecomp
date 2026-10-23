@@ -50,6 +50,9 @@ if (-not (Test-Path -LiteralPath $python)) {
 }
 if ($BuildLocation) {
     $destination = [IO.Path]::GetFullPath($BuildLocation).TrimEnd('\', '/')
+    $resolved = & $python -u (Join-Path $projectDirectory 'tools/install_location.py') --source $projectDirectory --destination $destination --resolve-only
+    if ($LASTEXITCODE -ne 0) { throw ($resolved -join [Environment]::NewLine) }
+    $destination = [string]$resolved
     if (-not [String]::Equals($destination, $projectDirectory, [StringComparison]::OrdinalIgnoreCase)) {
         & $python -u (Join-Path $projectDirectory 'tools/install_location.py') --source $projectDirectory --destination $destination
         if ($LASTEXITCODE -ne 0) { throw 'The build folder could not be prepared.' }

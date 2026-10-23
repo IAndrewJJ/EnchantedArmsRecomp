@@ -18,7 +18,7 @@ replacement hashes, headers, formats and ZIP paths. It stores the verified archi
 in `.local/texture-packs`. On Play, it creates a separate game directory under
 `.local/texture-overlays`: unchanged files are NTFS hard links and replacements
 are independent files. The ISO and extracted originals are not overwritten.
-Saves and shader caches use the same private runtime locations as before.
+Texture packs do not change your selected save location or shader cache. Saves default to `Saves` inside the game folder; choose another location in **Settings → Game**.
 
 The extracted game and overlay must be on the same NTFS volume. If Windows cannot
 create the links, launch stops with a message; select Original to continue.

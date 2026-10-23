@@ -1,6 +1,14 @@
 # Setup help
 
-Use the complete **EnchantedArmsPC-0.5.3-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.3). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+Use the complete **EnchantedArmsPC-0.5.6-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.6). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+
+## Keeping everything together
+
+Leave **Build location** and **Save location** at their defaults in **Settings → Game**. Setup builds beside the launcher and saves go in **Saves** inside that folder. **Use launcher folder** and **Use default** restore these choices. Selecting the download's outer extraction folder also works when it contains a single project folder. An existing EnchantedArmsPC project folder is accepted; unrelated nonempty folders are protected.
+
+If you already built elsewhere, that completed build folder contains its own launcher. Open it there and create the desktop shortcut from that launcher. The original download is no longer needed; keep your ISO and personal files before removing it yourself. Updates do not automatically delete an original download or installation.
+
+To store saves elsewhere, close the game and use **Save location → Choose folder…**, then **Apply**. Existing progress is copied and the old folder remains as a backup. Different saves are never overwritten: if a conflict is reported, choose an empty save folder. Keep external save drives connected while playing. Older hidden saves are moved into **Saves** automatically when the updated launcher opens.
 
 ## Requirements
 
@@ -21,7 +29,7 @@ The launcher checks this before extraction and reads your ISO without modifying 
 ## Updating after a failed setup
 
 1. Close the launcher and game. Extract the new kit, then copy the contents of its `EnchantedArmsRecomp` folder over your existing project folder. Replace the project files when prompted. Avoid nesting a second project folder inside the first.
-2. Keep your existing `.local` and `bin` folders. Do not delete the installation to retry: `.local` contains extracted files, tools, settings and any saves.
+2. Keep your existing `Saves`, `.local` and `bin` folders, and any separately chosen save folder. Do not delete the installation to retry: `.local` contains extracted files, tools, settings and saves from older versions.
 3. Open **EnchantedArmsLauncher.exe**, select your supported ISO under **Settings → Game**, and click **Build game** (or **Rebuild game**).
 
 Setup checks the game revision first, prepares the build tools, then verifies/extracts your game and compiles it. It reuses verified downloads and extracted files. If a download completed but its final rename failed, the next attempt verifies and reuses that `.partial` file too. An incomplete or altered download is downloaded again. Checksums remain mandatory.

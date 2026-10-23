@@ -48,6 +48,14 @@ namespace EnchantedArmsPC
                                                    BorderStyle = BorderStyle.FixedSingle,
                                                    AccessibleName = "Build location",
                                                    Name = "BuildLocation" };
+        readonly TextBox savePath = new TextBox { ReadOnly = true,
+                                                  Width = 335,
+                                                  BackColor = Theme.Panel,
+                                                  ForeColor = Theme.Text,
+                                                  BorderStyle = BorderStyle.FixedSingle,
+                                                  AccessibleName = "Save location",
+                                                  Name = "SaveLocation" };
+        bool defaultSaveLocation;
         readonly Panel[] pages = new Panel[Enum.GetValues(typeof(SettingsPage)).Length];
         readonly EtherButton[] navigation =
             new EtherButton[Enum.GetValues(typeof(SettingsPage)).Length];
@@ -98,6 +106,26 @@ namespace EnchantedArmsPC
             row.Controls.Add(path);
             row.Controls.Add(browse);
             return row;
+        }
+        static Control LocationHeading(string text, string resetText, Action reset, bool enabled)
+        {
+            var row = new FlowLayoutPanel { AutoSize = true, WrapContents = false,
+                                            Margin = new Padding(0) };
+            row.Controls.Add(Theme.Label(text, 335));
+            var link = new LinkLabel { Text = resetText,
+                                       AutoSize = true,
+                                       LinkColor = Theme.Accent,
+                                       ActiveLinkColor = Theme.Gold,
+                                       Margin = new Padding(10, 3, 0, 0),
+                                       Enabled = enabled };
+            link.LinkClicked += (s, e) => reset();
+            row.Controls.Add(link);
+            return row;
+        }
+        void UpdateDefaultSaveLocation()
+        {
+            if (defaultSaveLocation && !String.IsNullOrWhiteSpace(buildPath.Text))
+                savePath.Text = Path.Combine(buildPath.Text.Trim(), "Saves");
         }
         public SettingsWindow(Preferences current, bool ready = false, bool running = false,
                               SettingsPage initialTab = SettingsPage.Graphics)
@@ -211,25 +239,55 @@ namespace EnchantedArmsPC
                         isoPath.Text = dialog.FileName;
                 }
             };
-            Full(gamePage, Theme.Label("Build location", 480));
+            Full(gamePage, LocationHeading("Build location", "Use launcher folder",
+                                           () => buildPath.Text = Program.Root, !running));
             var chooseFolder = Theme.Button("Choose folder…", 160);
             chooseFolder.Enabled = buildPath.Enabled = !running;
             Full(gamePage, PathRow(buildPath, chooseFolder));
             chooseFolder.Click += (s, e) =>
             {
-                using (var dialog =
-                           new FolderBrowserDialog {
-                               Description = "Choose an empty folder for EnchantedArmsPC.",
-                               ShowNewFolderButton = true,
-                               SelectedPath =
-                                   Directory.Exists(buildPath.Text) ? buildPath.Text : Program.Root
-                           }) if (dialog.ShowDialog(this) == DialogResult.OK) buildPath.Text =
+                using (
+                    var dialog =
+                        new FolderBrowserDialog {
+                            Description =
+                                "Use this launcher's folder to keep everything together, or " +
+                                "choose an existing EnchantedArmsPC project or empty game folder.",
+                            ShowNewFolderButton = true,
+                            SelectedPath =
+                                Directory.Exists(buildPath.Text) ? buildPath.Text : Program.Root
+                        }) if (dialog.ShowDialog(this) == DialogResult.OK) buildPath.Text =
                     dialog.SelectedPath;
             };
+            buildPath.TextChanged += (s, e) => UpdateDefaultSaveLocation();
+            Full(gamePage, LocationHeading("Save location", "Use default",
+                                           () =>
+                                           {
+                                               defaultSaveLocation = true;
+                                               UpdateDefaultSaveLocation();
+                                           },
+                                           !running));
+            var chooseSaves = Theme.Button("Choose folder…", 160);
+            chooseSaves.Enabled = savePath.Enabled = !running;
+            Full(gamePage, PathRow(savePath, chooseSaves));
+            chooseSaves.Click += (s, e) =>
+            {
+                using (var dialog = new FolderBrowserDialog {
+                    Description =
+                        "Choose a folder for your Enchanted Arms saves. Existing progress will " +
+                        "be copied here without overwriting different saves.",
+                    ShowNewFolderButton = true,
+                    SelectedPath = Directory.Exists(savePath.Text) ? savePath.Text : Program.Root
+                }) if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    defaultSaveLocation = InstallLocation.Same(
+                        dialog.SelectedPath, Path.Combine(buildPath.Text, "Saves"));
+                    savePath.Text = dialog.SelectedPath;
+                }
+            };
             Full(gamePage,
-                 Theme.Label("Your game, saves and launcher stay together in this folder. " +
-                                 "First setup downloads about 800 MB of tools and needs " +
-                                 "roughly 20 GB free. Your ISO stays where it is.",
+                 Theme.Label("Keep the locations shown for one tidy game folder. " +
+                                 "Changing the save location copies your progress safely. " +
+                                 "Your ISO stays where it is.",
                              480));
             var build = Theme.Button(ready ? "Rebuild game" : "Build game", 170, true);
             build.Enabled = !running;
@@ -277,9 +335,10 @@ namespace EnchantedArmsPC
             uninstall.Enabled = !running;
             installationActions.Controls.Add(uninstall);
             Full(gamePage,
-                 Theme.Label("Uninstalling permanently removes this installation and its saves, " +
-                                 "settings, caches and tools. You will be asked to confirm.",
-                             480));
+                 Theme.Label(
+                     "Uninstalling removes this game folder and the saves stored inside it. " +
+                         "Saves in a separate location are kept. You will be asked to confirm.",
+                     480));
             uninstall.Click += (s, e) =>
             {
                 try
@@ -375,7 +434,10 @@ namespace EnchantedArmsPC
             msaa.Checked = Settings.NativeMsaa;
             frameGraph.Checked = Settings.FrameTimeGraph;
             isoPath.Text = Settings.Iso;
+            defaultSaveLocation = String.IsNullOrWhiteSpace(Settings.SaveLocation);
             buildPath.Text = InstallLocation.Selected(Settings);
+            savePath.Text =
+                defaultSaveLocation ? Path.Combine(buildPath.Text, "Saves") : Settings.SaveLocation;
             controlsPage.LoadValues(Settings);
             texturePage.LoadSelection(Settings.TexturePack);
             loading = false;
@@ -400,6 +462,7 @@ namespace EnchantedArmsPC
             Settings.Iso = isoPath.Text;
             Settings.BuildLocation =
                 InstallLocation.Same(buildPath.Text, Program.Root) ? "" : buildPath.Text.Trim();
+            Settings.SaveLocation = defaultSaveLocation ? "" : savePath.Text;
             controlsPage.ReadValues(Settings);
             Settings.Normalize();
         }
@@ -408,6 +471,7 @@ namespace EnchantedArmsPC
             try
             {
                 buildPath.Text = InstallLocation.Validate(buildPath.Text, building);
+                SaveStorage.Validate(buildPath.Text, savePath.Text);
                 ReadValues();
                 return true;
             }

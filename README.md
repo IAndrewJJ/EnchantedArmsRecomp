@@ -8,7 +8,7 @@
 
 A fan-made PC version of the Xbox 360 RPG, built from your own copy of the game.
 
-**[Download for Windows](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.5)**
+**[Download for Windows](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.6)**
 
 ![EnchantedArmsPC launcher](docs/images/launcher.png)
 
@@ -28,13 +28,15 @@ A fan-made PC version of the Xbox 360 RPG, built from your own copy of the game.
 
 ## Get started
 
-1. Download **EnchantedArmsPC-0.5.5-windows-x64.zip** from the release page and extract it into its own folder.
-2. Open **EnchantedArmsLauncher.exe**, select your game ISO and build folder, then choose **Build game**.
+1. Download **EnchantedArmsPC-0.5.6-windows-x64.zip** from the release page and extract it into its own folder.
+2. Open **EnchantedArmsLauncher.exe**, select your game ISO, then choose **Build game**. The default locations keep the launcher, game and saves together.
 3. Choose your settings and click **Play Enchanted Arms**.
 
 You’ll need Windows 10 or 11, your own supported USA/Europe Xbox 360 ISO, and around 20 GB of free space beyond the ISO. First setup needs an internet connection and takes several minutes. See [setup help and requirements](docs/SETUP_TROUBLESHOOTING.md) if you need a hand.
 
 Updating? Use **Settings → Updates**. If the launcher offers **Update Game**, rebuild from your ISO to apply the game fixes. Your saves and settings are kept.
+
+Your saves are in **Saves** inside the game folder. Prefer another location? Choose it under **Settings → Game → Save location** with the game closed. Your existing progress is copied safely.
 
 ## Still being tested
 

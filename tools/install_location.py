@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import uuid
@@ -58,12 +59,6 @@ def source_id(source):
 
 def validate_destination(source, destination):
     source, destination = canonical(source), canonical(destination)
-    if not str(destination).isascii():
-        raise ValueError("The current build tools need a folder path without accented or non-Latin characters. Choose a folder such as C:\\Games\\EnchantedArmsPC.")
-    if source == destination:
-        return source, destination
-    if related(source, destination):
-        raise ValueError("Choose a separate folder outside the current launcher folder.")
     protected = {Path(destination.anchor), Path.home(), Path.home() / "Desktop",
                  Path.home() / "Documents", Path.home() / "Downloads"}
     for name in ("SystemRoot", "ProgramFiles", "ProgramFiles(x86)", "APPDATA", "LOCALAPPDATA", "TEMP"):
@@ -71,10 +66,24 @@ def validate_destination(source, destination):
             protected.add(Path(os.environ[name]))
     if destination in protected:
         raise ValueError("Choose a dedicated EnchantedArmsPC folder, rather than a shared system or personal folder.")
+    if destination == source.parent and project_folder(source):
+        destination = source
+    elif not project_folder(destination) and destination.is_dir():
+        projects = [child for child in destination.iterdir() if child.is_dir() and project_folder(child)]
+        if len(projects) > 1:
+            raise ValueError("This folder contains several copies. Choose the EnchantedArmsPC folder you want to use.")
+        if projects:
+            destination = projects[0]
+    if not str(destination).isascii():
+        raise ValueError("The current build tools need a folder path without accented or non-Latin characters. Choose a folder such as C:\\Games\\EnchantedArmsPC.")
+    if source == destination:
+        return source, destination
+    if related(source, destination):
+        raise ValueError("Choose a separate folder outside the current launcher folder.")
     if destination.exists():
         if not destination.is_dir():
             raise ValueError("The build location must be a folder.")
-        if any(destination.iterdir()):
+        if any(destination.iterdir()) and not (project_folder(destination) and not (destination / OWNER).exists()):
             try:
                 canonical(destination / OWNER)
                 canonical(source / IDENTITY)
@@ -83,8 +92,20 @@ def validate_destination(source, destination):
                 if owner["project"] != PROJECT or owner["source_id"] != own_id:
                     raise ValueError("different installation")
             except (OSError, ValueError, KeyError, TypeError) as error:
-                raise ValueError("Choose an empty folder, or the build folder previously created by this launcher.") from error
+                raise ValueError("Choose this launcher's folder, an existing EnchantedArmsPC project, or an empty game folder.") from error
     return source, destination
+
+
+def project_folder(path):
+    try:
+        for name in ("release.json", "enchantedarmsrecomp_manifest.toml", "scripts/setup.ps1"):
+            canonical(path / name)
+        release = json.loads((path / "release.json").read_text(encoding="utf-8-sig"))
+        return (bool(re.fullmatch(r"\d+\.\d+\.\d+", release["version"])) and
+                (path / "scripts/setup.ps1").is_file() and
+                'name = "enchantedarmsrecomp"' in (path / "enchantedarmsrecomp_manifest.toml").read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
 
 
 def kit_files(source):
@@ -121,17 +142,44 @@ def copy_file(source, target, preserve=False):
     temporary.replace(target)
 
 
-def import_private(source, destination):
+def copy_private_tree(source, destination):
+    if not source.exists():
+        return
+    canonical(source)
+    for path in sorted(source.rglob("*")):
+        canonical(path)
+        if path.is_file():
+            copy_file(path, destination / path.relative_to(source), preserve=True)
+
+
+def import_private(source, destination, settings):
     # Saves and packs are copied, never moved or overwritten. Shader/build caches
     # contain machine- and path-specific state and are regenerated at the new location.
-    for relative in (Path(".local/runtime/user"), Path(".local/texture-packs")):
-        root = source / relative
-        if not root.exists():
-            continue
-        for path in sorted(root.rglob("*")):
-            canonical(path)
-            if path.is_file():
-                copy_file(path, destination / path.relative_to(source), preserve=True)
+    copy_private_tree(source / ".local/texture-packs", destination / ".local/texture-packs")
+    # An existing installation's own save selection and progress take priority.
+    # In particular, do not seed Saves from the source over an older target's
+    # legacy save tree, which the updated launcher will migrate on startup.
+    if (destination / ".local/launcher.json").exists() or any(
+        root.exists() and any(root.iterdir())
+        for root in (destination / "Saves", destination / ".local/runtime/user")
+    ):
+        return
+    custom = settings.get("SaveLocation", "")
+    if custom:
+        # An explicitly selected external save folder stays where the player put
+        # it. A custom folder inside the source follows the portable installation.
+        save_root = canonical(Path(custom))
+        if save_root.is_relative_to(source):
+            relative = save_root.relative_to(source)
+            if not relative.parts or relative.parts[0] in {".local", "bin", ".git"}:
+                raise ValueError("Choose a dedicated save folder outside program files.")
+            copy_private_tree(save_root, destination / relative)
+            settings["SaveLocation"] = str(destination / relative)
+    else:
+        save_root = source / "Saves"
+        if not save_root.exists():
+            save_root = source / ".local/runtime/user"
+        copy_private_tree(save_root, destination / "Saves")
 
 
 def prepare(source, destination):
@@ -148,16 +196,16 @@ def prepare(source, destination):
     for path in files:
         copy_file(path, destination / path.relative_to(source))
     preferences = source / ".local/launcher.json"
-    if preferences.exists():
-        settings = json.loads(preferences.read_text(encoding="utf-8-sig"))
+    settings = (json.loads(preferences.read_text(encoding="utf-8-sig")) if preferences.exists() else {})
+    if not owner.get("user_imported"):
+        import_private(source, destination, settings)
+        owner["user_imported"] = True
+    if not (destination / ".local/launcher.json").exists():
         # The destination is now a complete portable installation. Deriving its
         # own location from the EXE keeps it portable if the folder is moved later.
         settings["BuildLocation"] = ""
         atomic_json(destination / ".local/launcher.json", settings)
-    if not owner.get("user_imported"):
-        import_private(source, destination)
-        owner["user_imported"] = True
-        atomic_json(owner_path, owner)
+    atomic_json(owner_path, owner)
     return destination
 
 
@@ -165,8 +213,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--destination", type=Path, required=True)
+    parser.add_argument("--resolve-only", action="store_true")
     args = parser.parse_args()
     try:
+        if args.resolve_only:
+            print(validate_destination(args.source, args.destination)[1], flush=True)
+            return 0
         print("STAGE: Preparing your build folder", flush=True)
         destination = prepare(args.source, args.destination)
         print("Build folder: " + str(destination), flush=True)

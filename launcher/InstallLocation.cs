@@ -31,7 +31,7 @@ namespace EnchantedArmsPC
                                  Path.GetFullPath(b).TrimEnd('\\', '/'),
                                  StringComparison.OrdinalIgnoreCase);
         }
-        static void RegularPath(string path)
+        internal static void RegularPath(string path)
         {
             for (string part = path; !String.IsNullOrEmpty(part);
                  part = Path.GetDirectoryName(part))
@@ -39,6 +39,51 @@ namespace EnchantedArmsPC
                     (File.GetAttributes(part) & FileAttributes.ReparsePoint) != 0)
                     throw new InvalidOperationException(
                         "Choose a regular folder without linked or redirected parent folders.");
+        }
+        internal static bool ProjectFolder(string path)
+        {
+            try
+            {
+                RegularPath(path);
+                foreach (string name in new[] { "release.json", "enchantedarmsrecomp_manifest.toml",
+                                                "scripts/setup.ps1" })
+                    RegularPath(Path.Combine(path, name));
+                var release = Read(Path.Combine(path, "release.json"));
+                return System.Text.RegularExpressions.Regex.IsMatch(
+                           Convert.ToString(release["version"]), @"^\d+\.\d+\.\d+$") &&
+                       File.Exists(Path.Combine(path, "scripts/setup.ps1")) &&
+                       File.ReadAllText(Path.Combine(path, "enchantedarmsrecomp_manifest.toml"))
+                           .Contains("name = \"enchantedarmsrecomp\"");
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        internal static string Resolve(string path, string source)
+        {
+            string target = Uninstall.NormalizeRoot(path);
+            RegularPath(target);
+            // Windows' Extract All and GitHub source ZIPs add an outer folder.
+            // Selecting that wrapper should use the project already inside it.
+            if (Same(target, Path.GetDirectoryName(source)) && ProjectFolder(source))
+                return source;
+            if (!ProjectFolder(target) && Directory.Exists(target))
+            {
+                string found = null;
+                foreach (string child in Directory.GetDirectories(target))
+                    if (ProjectFolder(child))
+                    {
+                        if (found != null)
+                            throw new InvalidOperationException(
+                                "This folder contains several copies. Choose the EnchantedArmsPC " +
+                                "folder you want to use.");
+                        found = child;
+                    }
+                if (found != null)
+                    target = found;
+            }
+            return target;
         }
         internal static bool Owned(string source, string destination)
         {
@@ -63,7 +108,7 @@ namespace EnchantedArmsPC
         {
             if (String.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path.Trim()))
                 throw new InvalidOperationException("Choose a full folder path for your game.");
-            string target = Uninstall.NormalizeRoot(path.Trim());
+            string target = Resolve(path.Trim(), Program.Root);
             if (building && System.Text.Encoding.UTF8.GetByteCount(target) != target.Length)
                 throw new InvalidOperationException(
                     "The current build tools need a folder path " +
@@ -79,9 +124,12 @@ namespace EnchantedArmsPC
             if (File.Exists(target))
                 throw new InvalidOperationException("The build location must be a folder.");
             if (Directory.Exists(target) && Directory.GetFileSystemEntries(target).Length != 0 &&
-                !Owned(Program.Root, target))
-                throw new InvalidOperationException("Choose an empty folder, or the build folder " +
-                                                    "previously created by this launcher.");
+                !Owned(Program.Root, target) &&
+                (File.Exists(Path.Combine(target, ".local", "build-location-owner.json")) ||
+                 !ProjectFolder(target)))
+                throw new InvalidOperationException(
+                    "Choose this launcher’s folder, an existing " +
+                    "EnchantedArmsPC project, or an empty game folder.");
             return target;
         }
         static bool Complete(string target, bool current)

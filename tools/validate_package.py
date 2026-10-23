@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 import zipfile
 
 PREFIX = "EnchantedArmsRecomp/"
-PRIVATE_PARTS = {".local", ".git", "bin", "private", "assets", "audit", "__pycache__"}
+PRIVATE_PARTS = {".local", ".git", "bin", "private", "assets", "audit", "saves", "__pycache__"}
 RENDERER_FILES = {"rexruntimerd.dll", "rexruntimerd.lib", "rexgpu-xenosrd.dll", "rexgpu-xenosrd.lib", "TracyClientrd.dll"}
 
 

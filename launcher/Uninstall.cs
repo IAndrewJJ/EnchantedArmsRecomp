@@ -151,6 +151,28 @@ namespace EnchantedArmsPC
                     "The shared temporary folder cannot be uninstalled.");
             return path;
         }
+        // Read-only resolution for importing saves from older developer builds
+        // that kept their runtime behind a junction. Deletion never uses this.
+        internal static string ResolveDirectory(string path)
+        {
+            using (var handle = CreateFileW(Extended(path), 0x80, 7, IntPtr.Zero, 3, 0x02000000,
+                                            IntPtr.Zero))
+            {
+                if (handle.IsInvalid)
+                    throw new Win32Exception(Marshal.GetLastWin32Error(),
+                                             "Cannot read old save folder");
+                var resolved = new StringBuilder(32768);
+                uint length =
+                    GetFinalPathNameByHandleW(handle, resolved, (uint)resolved.Capacity, 0);
+                if (length == 0 || length >= resolved.Capacity)
+                    throw new Win32Exception(Marshal.GetLastWin32Error(),
+                                             "Cannot locate old saves");
+                string final = resolved.ToString();
+                return final.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)
+                           ? @"\\" + final.Substring(8)
+                           : final.Substring(4);
+            }
+        }
         static string Snapshot(string path, out string final, out uint attributes)
         {
             using (var handle = CreateFileW(Extended(path), 0x80, 7, IntPtr.Zero, 3, 0x02200000,

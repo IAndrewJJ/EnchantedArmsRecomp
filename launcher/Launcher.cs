@@ -102,6 +102,9 @@ namespace EnchantedArmsPC
                 string diagnostics = CurrentNativeDirectory;
                 if (File.Exists(Path.Combine(diagnostics, "enchantedarmsrecomp.exe")))
                     return diagnostics;
+                string opening = Path.Combine(Root, "bin", "graphics-0.3.5");
+                if (File.Exists(Path.Combine(opening, "enchantedarmsrecomp.exe")))
+                    return opening;
                 string campaign = Path.Combine(Root, "bin", "graphics-0.3.4");
                 if (File.Exists(Path.Combine(campaign, "enchantedarmsrecomp.exe")))
                     return campaign;
@@ -142,7 +145,7 @@ namespace EnchantedArmsPC
                                          Path.GetFullPath(CurrentNativeDirectory),
                                          StringComparison.OrdinalIgnoreCase);
             return new[] { "--game_data_root=" + (gameRoot ?? Path.Combine(Local, "game")),
-                           "--user_data_root=" + Path.Combine(Local, "runtime", "user"),
+                           "--user_data_root=" + SaveStorage.Selected(Root, p),
                            "--cache_root=" + Path.Combine(Local, "runtime", "cache"),
                            "--log_file=" + log,
                            "--log_level=info",

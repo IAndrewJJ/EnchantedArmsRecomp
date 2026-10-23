@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: linux-appimage-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   runtime:
     uses: ./.github/workflows/linux-runtime.yml

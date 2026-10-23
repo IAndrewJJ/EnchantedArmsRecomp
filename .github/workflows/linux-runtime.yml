@@ -2,9 +2,6 @@ name: Linux runtime
 on:
   workflow_call:
   workflow_dispatch:
-  push:
-    branches: [codex/linux-appimage]
-    paths: [linux/build_sdk.sh, linux/package_toolchain.py, linux/patch_sdk.py, linux/probe/**, linux/make_host_fixture.py, src/**, .github/workflows/linux-runtime.yml]
 permissions:
   contents: read
 jobs:
@@ -47,9 +44,17 @@ jobs:
       - name: Test portable tools, PNG and Vulkan
         run: bash linux/build_sdk.sh "$RUNNER_TEMP/ea-linux"
       - name: Package game-independent build tools
-        run: tar -C "$RUNNER_TEMP/ea-linux" -cJf linux-tools-x86_64.tar.xz tools
+        run: |
+          XZ_OPT=-T2 tar -C "$RUNNER_TEMP/ea-linux" -cJf linux-tools-x86_64.tar.xz tools
+          XZ_OPT=-T2 tar -C "$RUNNER_TEMP/ea-linux" --exclude='*/.git' --exclude='rexglue-sdk/out' \
+            -cJf ReXGlueSpatial-linux-0.1.0-source.tar.xz rexglue-sdk
       - uses: actions/upload-artifact@v4
         with:
           name: EnchantedArmsPC-linux-tools
           path: linux-tools-x86_64.tar.xz
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EnchantedArmsPC-linux-runtime-source
+          path: ReXGlueSpatial-linux-0.1.0-source.tar.xz
           retention-days: 14

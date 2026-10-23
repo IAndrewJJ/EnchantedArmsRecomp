@@ -25,6 +25,9 @@ cmake -S "$source" -B "$work/sdk-build" -G Ninja \
   -DREXGLUE_USE_D3D12=OFF -DREXGLUE_USE_VULKAN=ON \
   -DREXGLUE_ENABLE_FIDELITYFX=OFF -DREXGLUE_BUILD_TESTS=OFF
 cmake --build "$work/sdk-build" --target install --parallel 2
+# The SDK's Vulkan public headers include RenderDoc's API header; upstream's
+# Linux install rule currently omits that header.
+cp "$source/thirdparty/renderdoc/renderdoc_app.h" "$prefix/include/renderdoc_app.h"
 if [[ ${EA_SDK_ONLY:-0} == 1 ]]; then exit 0; fi
 python3 "$project/linux/package_toolchain.py" "$work/tools"
 cmake -S "$project/linux/probe" -B "$work/probe-build" -G Ninja \

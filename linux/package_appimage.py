@@ -62,10 +62,14 @@ def main(tools, work, output):
         '--workpath', str(work/'pyinstaller'), '--specpath', str(work),
         '--paths', str(ROOT/'linux'), '--paths', str(ROOT/'tools'),
         '--hidden-import', 'fcntl', '--hidden-import', 'setup_game', '--hidden-import', 'inspect_disc',
-        '--add-data', str(project)+':project', '--add-data', str(tools)+':tools',
+        '--add-data', str(project)+':project',
         '--add-data', str(icon)+':.', str(ROOT/'linux/launcher.py')]
     subprocess.run(command, check=True)
     frozen = work/'frozen/EnchantedArmsLauncher'
+    # Keep the compiler/sysroot outside PyInstaller's ELF dependency analysis.
+    # Promoting its compile-only glibc libraries to launcher dependencies would
+    # interfere with the user's system loader on newer distributions.
+    shutil.copytree(tools, frozen/'_internal/tools', dirs_exist_ok=True, symlinks=True)
     shutil.copy2(icon, frozen/'_internal/icon.png')
     # Keep a copy of the original Python launcher and its build recipe alongside
     # the frozen executable, so every included component remains inspectable.

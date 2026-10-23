@@ -32,9 +32,9 @@ jobs:
       - name: Install packaging dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv libpython3.10 binutils patchelf xz-utils xvfb xauth \
+          apt-get install -y --no-install-recommends ca-certificates git python3 python3-pip python3-venv libpython3.10 binutils patchelf xz-utils xvfb xauth file desktop-file-utils \
             libglib2.0-0 libegl1 libgl1 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 \
-            libxcb-image0 libxcb-render-util0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
+            libxcb-image0 libxcb-render-util0 libxcb-shape0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
       - uses: actions/checkout@v4
       - name: Verify reused runtime matches the current build recipe
         if: inputs.tools_run_id != ''

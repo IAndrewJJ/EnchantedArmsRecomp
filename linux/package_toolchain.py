@@ -11,6 +11,8 @@ CORE = {'libc.so.6', 'libm.so.6', 'libdl.so.2', 'libpthread.so.0', 'librt.so.1',
 
 def copy(source, target):
     source, target = Path(source), Path(target)
+    if source.resolve() == target.resolve():
+        return
     target.parent.mkdir(parents=True, exist_ok=True)
     if source.is_dir():
         shutil.copytree(source, target, dirs_exist_ok=True, symlinks=False)
@@ -22,7 +24,8 @@ def main(root):
     copy('/usr/lib/llvm-20/bin/clang', root / 'bin/clang')
     copy('/usr/lib/llvm-20/bin/lld', root / 'bin/ld.lld')
     for alias, original in [('clang++', 'clang'), ('lld', 'ld.lld')]:
-        (root / 'bin' / alias).symlink_to(original)
+        if not (root / 'bin' / alias).exists():
+            (root / 'bin' / alias).symlink_to(original)
     copy('/usr/lib/llvm-20/lib/clang', root / 'lib/clang')
     copy(shutil.which('cmake'), root / 'bin/cmake')
     cmake_share = next(Path('/usr/share').glob('cmake-[0-9]*'))
@@ -32,13 +35,19 @@ def main(root):
     copy('/usr/lib/gcc/x86_64-linux-gnu/13', root / 'sysroot/usr/lib/gcc/x86_64-linux-gnu/13')
     # Linker scripts, startup objects and development libraries are part of the
     # compile-only sysroot. The running game uses the system's glibc and drivers.
-    for base in ('/usr/lib/x86_64-linux-gnu', '/lib/x86_64-linux-gnu'):
+    if not (root / 'sysroot/lib').exists():
+        (root / 'sysroot/lib').symlink_to('usr/lib')
+    for base in ('/usr/lib/x86_64-linux-gnu',):
         folder = Path(base)
         for item in folder.iterdir():
             if item.is_file() and (item.suffix in {'.a', '.o', '.so'} or '.so.' in item.name):
                 if item.name.startswith(('libLLVM', 'libclang', 'libvulkan_', 'libnvidia', 'libGLX', 'libGLdispatch')):
                     continue
                 copy(item, root / 'sysroot' / str(item).lstrip('/'))
+    wrapper = root / 'bin/ea-clang++'
+    wrapper.write_text('#!/bin/sh\nbase=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)\n'
+        'exec "$base/bin/clang++" "--sysroot=$base/sysroot" "--gcc-toolchain=$base/sysroot/usr" "$@"\n')
+    wrapper.chmod(0o755)
     # Copy runtime dependencies by their SONAME. Do not bundle host GPU drivers
     # or glibc into the runtime library search path.
     binaries = list((root / 'bin').iterdir()) + list((root / 'sdk/bin').glob('*')) + list((root / 'sdk/lib').glob('*.so*'))
@@ -58,8 +67,7 @@ def main(root):
     environment = dict(os.environ, LD_LIBRARY_PATH=str(root / 'lib') + ':' + str(root / 'sdk/lib'))
     test = root / 'compiler-test.cpp'
     test.write_text('#include <format>\n#include <iostream>\nint main(){std::cout << std::format("{}",42);}\n')
-    subprocess.run([str(root / 'bin/clang++'), '--sysroot=' + str(root / 'sysroot'),
-        '--gcc-toolchain=' + str(root / 'sysroot/usr'), '-fuse-ld=lld', '-std=c++23',
+    subprocess.run([str(wrapper), '-fuse-ld=lld', '-std=c++23',
         str(test), '-o', str(root / 'compiler-test')], env=environment, check=True)
     assert subprocess.check_output([str(root / 'compiler-test')], env=environment) == b'42'
     test.unlink()

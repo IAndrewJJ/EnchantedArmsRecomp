@@ -37,6 +37,7 @@ def main(root):
     # compile-only sysroot. The running game uses the system's glibc and drivers.
     if not (root / 'sysroot/lib').exists():
         (root / 'sysroot/lib').symlink_to('usr/lib')
+    copy('/lib64/ld-linux-x86-64.so.2', root / 'sysroot/lib64/ld-linux-x86-64.so.2')
     for base in ('/usr/lib/x86_64-linux-gnu',):
         folder = Path(base)
         for item in folder.iterdir():

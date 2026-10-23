@@ -61,11 +61,11 @@ namespace EnchantedArmsPC
             foreach (int limit in Preferences.FrameLimits)
             {
                 var selected = new Preferences { FrameLimit = limit, TextureDetail = 1 };
-                bool needsTiming = limit == 60;
-                if (Program.TimingUpdateRequired(selected, Program.CurrentNativeDirectory) ||
-                    Program.TimingUpdateRequired(
-                        selected, Path.Combine(Program.Root, "bin", "graphics-0.3.2")) !=
-                        needsTiming)
+                if (Program.NativeUpdateRequired(Program.CurrentNativeDirectory) ||
+                    !Program.NativeUpdateRequired(
+                        Path.Combine(Program.Root, "bin", "graphics-0.3.4")) ||
+                    !Program.NativeUpdateRequired(
+                        Path.Combine(Program.Root, "bin", "graphics-0.3.2")))
                     return 23;
                 var arguments = selected.RendererArguments();
                 if (!arguments.Contains("--ea_fps_limit=" + limit) ||

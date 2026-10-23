@@ -89,10 +89,10 @@ namespace EnchantedArmsPC
                 return Path.Combine(Root, "bin", "graphics-" + ReleaseInfo.NativeVersion);
             }
         }
-        internal static bool TimingUpdateRequired(Preferences p, string nativeDirectory)
+        internal static bool NativeUpdateRequired(string nativeDirectory)
         {
-            return (p.FrameLimit == 60 || p.CustomNativeControls || p.FrameTimeGraph) &&
-                   !String.Equals(Path.GetFullPath(nativeDirectory),
+            // Campaign fixes are required at both supported frame rates.
+            return !String.Equals(Path.GetFullPath(nativeDirectory),
                                   Path.GetFullPath(CurrentNativeDirectory),
                                   StringComparison.OrdinalIgnoreCase);
         }
@@ -102,6 +102,9 @@ namespace EnchantedArmsPC
                 string diagnostics = CurrentNativeDirectory;
                 if (File.Exists(Path.Combine(diagnostics, "enchantedarmsrecomp.exe")))
                     return diagnostics;
+                string campaign = Path.Combine(Root, "bin", "graphics-0.3.4");
+                if (File.Exists(Path.Combine(campaign, "enchantedarmsrecomp.exe")))
+                    return campaign;
                 string timing = Path.Combine(Root, "bin", "graphics-0.3.3");
                 if (File.Exists(Path.Combine(timing, "enchantedarmsrecomp.exe")))
                     return timing;

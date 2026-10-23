@@ -18,6 +18,8 @@ jobs:
           "$RUNNER_TEMP/ea_timing_probe"
           c++ -std=c++17 tools/graphics-probe/input.cpp -o "$RUNNER_TEMP/ea_input_probe"
           "$RUNNER_TEMP/ea_input_probe"
+          c++ -std=c++17 tools/graphics-probe/opening_battle.cpp -o "$RUNNER_TEMP/ea_opening_battle_probe"
+          "$RUNNER_TEMP/ea_opening_battle_probe"
   validate-and-package:
     runs-on: windows-latest
     timeout-minutes: 20

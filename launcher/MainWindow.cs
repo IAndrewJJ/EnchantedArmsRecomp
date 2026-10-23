@@ -95,7 +95,7 @@ namespace EnchantedArmsPC
             layout();
             play.Click += async (s, e) =>
             {
-                if (Ready() && !Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
+                if (Ready() && !Program.NativeUpdateRequired(Program.NativeDirectory))
                     await LaunchGame();
                 else
                     await OpenSettings(3);
@@ -373,7 +373,7 @@ namespace EnchantedArmsPC
             play.Text = busy      ? "PREPARING YOUR GAME"
                         : running ? "GAME RUNNING"
                         : Ready()
-                            ? (Program.TimingUpdateRequired(preferences, Program.NativeDirectory)
+                            ? (Program.NativeUpdateRequired(Program.NativeDirectory)
                                    ? "UPDATE GAME"
                                    : "PLAY ENCHANTED ARMS")
                             : "SET UP GAME";
@@ -381,8 +381,8 @@ namespace EnchantedArmsPC
                           : running ? "Your journey is in progress"
                           : failed ? (lastFailure ?? "Unable to start. Open Settings to try again.")
                           : Ready()
-                              ? (Program.TimingUpdateRequired(preferences, Program.NativeDirectory)
-                                     ? "Rebuild your game to use these settings"
+                              ? (Program.NativeUpdateRequired(Program.NativeDirectory)
+                                     ? "Rebuild your game to apply the latest fixes"
                                      : "Ready to play")
                               : "Choose your game disc to begin";
             summary.Text = busy ? "First setup may take a while."
@@ -531,10 +531,10 @@ namespace EnchantedArmsPC
                 return;
             try
             {
-                if (Program.TimingUpdateRequired(preferences, Program.NativeDirectory))
+                if (Program.NativeUpdateRequired(Program.NativeDirectory))
                     throw new InvalidOperationException(
-                        "These settings need the updated game build. Open Settings → Game and " +
-                        "rebuild from your ISO.");
+                        "A game update is needed. Open Settings → Game and rebuild from your ISO " +
+                        "to apply the latest fixes. Your saves will be kept.");
                 if (preferences.Upscaler != "bilinear" &&
                     !File.Exists(
                         Path.Combine(Program.NativeDirectory, "renderer-capabilities.json")))

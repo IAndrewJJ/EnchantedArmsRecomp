@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.3 — Opening battle fix
+
+- Fix the Game Over / Retry loop after Ice Giga Zone in the opening Queen of
+  Ice fight. Keep Atsuma, Toya and Makoto at 1 HP after otherwise lethal attacks
+  in that encounter, allowing the original story sequence to continue.
+- Require the updated native build at both 30 and 60 FPS. Existing saves and
+  settings are kept when rebuilding from the ISO.
+- Confirm opening-story progression at 60 FPS in a player test, with runtime
+  logs verifying 1 HP for all three characters. Add regression checks for
+  encounter scope, party membership and damage accounting. Later fights retain
+  their normal rules; full campaign validation continues.
+
 ## 0.5.2
 
 - Fix the fresh-install SDK download path using a checksum-pinned package built

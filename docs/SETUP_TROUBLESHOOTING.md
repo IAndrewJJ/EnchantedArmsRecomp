@@ -1,6 +1,6 @@
 # Setup help
 
-Use the complete **EnchantedArmsPC-0.5.2-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.2). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
+Use the complete **EnchantedArmsPC-0.5.3-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.3). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
 
 ## Requirements
 
@@ -34,7 +34,7 @@ error 225; Python reduced it to `errno=22`, hiding the reason in the popup.
 The SDK has an [upstream report](https://github.com/rexglue/rexglue-sdk/issues/485)
 about the same release archive.
 
-Download the complete 0.5.2 kit and follow the update steps above, keeping `.local`
+Download the complete 0.5.3 kit and follow the update steps above, keeping `.local`
 and `bin`. Setup now uses a separate, checksum-pinned package built from the
 matching public source. It contains the optimized code generator and the runtime
 configuration used by this project, without the unused Release/Debug variants.

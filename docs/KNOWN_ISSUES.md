@@ -52,3 +52,28 @@ This is not campaign-wide validation. Battles, scripted sequences, transitions a
 ## EA-005 — Launcher process runs without a visible window
 
 Status: reproduced and fixed in 0.3.2. The launcher started on a build/sandbox Windows desktop. Session-scoped instance events forwarded later interactive launches to that hidden instance, which acknowledged them without displaying a window on the user's desktop. Version 0.3.2 includes the window station and desktop in instance identity. The updated launcher was opened and visually verified on the interactive desktop with Play enabled; a second launch restored that same window and left the game launch record unchanged. The game still starts only from Play. Versions 0.3.1 and older should be updated if affected.
+
+## EA-006 — Retry loop at the first Queen of Ice encounter
+
+Status: **fixed in launcher 0.5.3 / native 0.3.5**. Player confirmation on
+October 23, 2026: the opening fight advanced the story after Ice Giga Zone.
+The runtime log records Atsuma, Toya and Makoto (units 15, 25 and 35) surviving
+at 1 HP, including repeated lethal hits. The health bars appeared depleted to
+the player; the recorded combat HP was 1. This playtest used 60 FPS; a separate
+30 FPS campaign retest has not been recorded.
+
+Previously, fresh runs on two PCs could lose the whole party and reach Game
+Over / Retry instead of the next story sequence. The fix keeps the fixed
+three-character player roster at 1 HP after lethal attacks only in the opening
+prologue encounter (7054, system 101). It adjusts the defeat flag and actual
+damage result before death handling, preserving the original scripted ending.
+The later sealed-ward Queen encounter (7051 / 109), empowered-Atsuma follow-up
+(7052 / 110) and other battles retain their original behavior.
+
+Encounter identity comes from the active combat configuration, because the
+queued event request is cleared when combat begins. Party membership is checked
+against the live player roster rather than ordinary-party character IDs.
+Regression checks cover that cleared-request state, repeated hits, HP/damage
+accounting, enemies and temporary stat copies, later encounters, prediction
+mode and invalid/read-only memory. The fix applies independently of frame rate;
+full campaign validation continues.

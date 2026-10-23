@@ -3,6 +3,10 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from local_paths import filesystem_path
 
 PROJECT = Path(__file__).resolve().parents[1]
 
@@ -22,9 +26,11 @@ def prepare():
     destination = PROJECT / ".local/toolchain/rexglue-spatial-setup-0.10.0-1/win-amd64"
     receipt = destination / "renderer-capabilities.json"
     if receipt.exists() and receipt.read_bytes() == marker.read_bytes(): return destination
-    shutil.copytree(original,destination,dirs_exist_ok=True)
+    shutil.copytree(filesystem_path(original),filesystem_path(destination),dirs_exist_ok=True)
     for name in allowed:
-        shutil.copy2(renderer / name,destination / ("bin" if name.endswith(".dll") else "lib") / name)
+        target = filesystem_path(destination / ("bin" if name.endswith(".dll") else "lib") / name)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(filesystem_path(renderer / name), target)
     shutil.copy2(marker,receipt)
     return destination
 

@@ -9,6 +9,7 @@ namespace EnchantedArmsPC
     public sealed partial class Preferences
     {
         public string Iso = "";
+        public string BuildLocation = "";
         public int Scale = 1;
         public int Anisotropy = -1;
         public int Width = 1920;
@@ -54,6 +55,8 @@ namespace EnchantedArmsPC
                 Scale = Math.Max(Scale, Math.Min(4, Width / 1280 + 1));
             if (Iso == null)
                 Iso = "";
+            if (BuildLocation == null)
+                BuildLocation = "";
             if (!new[] { "auto", "rov", "rtv" }.Contains(RenderPath))
                 RenderPath = "auto";
             if (!new[] { "none", "fast", "some", "full" }.Contains(ResolveReadback))

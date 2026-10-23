@@ -35,6 +35,7 @@ jobs:
           python tools/test_updates.py -v
           python tools/test_texture_packs.py -v
           python tools/test_session.py -v
+          python tools/test_install_location.py -v
       - name: Install and verify all pinned tools in a fresh folder
         run: python tools/check_toolchain.py --directory "${{ runner.temp }}/Full toolchain fresh install"
       - name: Compile launcher

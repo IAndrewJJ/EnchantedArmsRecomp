@@ -1,9 +1,13 @@
 param(
     [Parameter(Mandatory=$true)][string]$Iso,
     [ValidateRange(1,8)][int]$Jobs = 2,
+    [string]$BuildLocation,
     [switch]$ValidateOnly
 )
 $ErrorActionPreference = 'Stop'
+# Use this PowerShell's modules even when started from a launcher or PowerShell 7
+# environment with a different inherited module search path.
+$env:PSModulePath = (Join-Path $PSHOME 'Modules') + [IO.Path]::PathSeparator + $env:PSModulePath
 $projectDirectory = Split-Path $PSScriptRoot -Parent
 $localDirectory = Join-Path $projectDirectory '.local'
 $pythonDirectory = Join-Path $localDirectory 'python'
@@ -43,6 +47,17 @@ if (-not (Test-Path -LiteralPath $python)) {
             [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
         }
     } finally { $zip.Dispose() }
+}
+if ($BuildLocation) {
+    $destination = [IO.Path]::GetFullPath($BuildLocation).TrimEnd('\', '/')
+    if (-not [String]::Equals($destination, $projectDirectory, [StringComparison]::OrdinalIgnoreCase)) {
+        & $python -u (Join-Path $projectDirectory 'tools/install_location.py') --source $projectDirectory --destination $destination
+        if ($LASTEXITCODE -ne 0) { throw 'The build folder could not be prepared.' }
+        $destinationArguments = @{ Iso = $Iso; Jobs = $Jobs }
+        if ($ValidateOnly) { $destinationArguments.ValidateOnly = $true }
+        & (Join-Path $destination 'scripts/setup.ps1') @destinationArguments
+        return
+    }
 }
 $arguments = @('-u', (Join-Path $projectDirectory 'tools/setup_game.py'), '--iso', $Iso, '--jobs', [string]$Jobs)
 if ($ValidateOnly) { $arguments += '--validate-only' }

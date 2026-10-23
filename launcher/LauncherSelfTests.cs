@@ -170,6 +170,8 @@ namespace EnchantedArmsPC
             foreach (int limit in Preferences.FrameLimits)
             {
                 var selected = new Preferences { Iso = "test.iso",
+                                                 BuildLocation = Path.Combine(Path.GetTempPath(),
+                                                                              "Enchanted Arms ü"),
                                                  Jobs = 5,
                                                  Scale = 3,
                                                  Anisotropy = 5,
@@ -223,6 +225,31 @@ namespace EnchantedArmsPC
                      .SequenceEqual(new[] { "Graphics", "Display", "Game", "Controls", "Textures",
                                             "Updates" }))
                 return 35;
+            using (var dialog =
+                       new SettingsWindow(new Preferences(), false, true, SettingsPage.Game))
+            {
+                var location = dialog.Controls.Find("BuildLocation", true).Single() as TextBox;
+                if (location == null || location.Enabled ||
+                    !InstallLocation.Same(location.Text, Program.Root))
+                    return 37;
+            }
+            foreach (string unsafeLocation in new[] { "", "relative/path",
+                                                      Path.GetPathRoot(Program.Root),
+                                                      Path.Combine(Program.Root, "nested"),
+                                                      Path.GetDirectoryName(Program.Root) })
+            {
+                bool rejected = false;
+                try
+                {
+                    InstallLocation.Validate(unsafeLocation);
+                }
+                catch (Exception)
+                {
+                    rejected = true;
+                }
+                if (!rejected)
+                    return 38;
+            }
             foreach (SettingsPage page in Enum.GetValues(typeof(SettingsPage)))
                 using (var dialog =
                            new SettingsWindow(new Preferences(), false, false,

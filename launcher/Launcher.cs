@@ -157,8 +157,9 @@ namespace EnchantedArmsPC
                                 : new string[0])
                 .ToArray();
         }
-        internal static void Shortcut(string directory)
+        internal static void Shortcut(string directory, string installation = null)
         {
+            string root = installation ?? Root;
             Directory.CreateDirectory(directory);
             Type shellType = Type.GetTypeFromProgID("WScript.Shell");
             object shell = Activator.CreateInstance(shellType);
@@ -170,11 +171,11 @@ namespace EnchantedArmsPC
                 Type type = shortcut.GetType();
                 Action<string, object> set = (name, value) => type.InvokeMember(
                     name, BindingFlags.SetProperty, null, shortcut, new object[] { value });
-                set("TargetPath", Path.Combine(Root, "EnchantedArmsLauncher.exe"));
+                set("TargetPath", Path.Combine(root, "EnchantedArmsLauncher.exe"));
                 set("Arguments", "");
-                set("WorkingDirectory", Root);
+                set("WorkingDirectory", root);
                 set("Description", "Open the EnchantedArmsPC launcher");
-                set("IconLocation", Path.Combine(Root, "EnchantedArmsLauncher.exe") + ",0");
+                set("IconLocation", Path.Combine(root, "EnchantedArmsLauncher.exe") + ",0");
                 type.InvokeMember("Save", BindingFlags.InvokeMethod, null, shortcut, null);
                 SHChangeNotify(0x2000, 0x0005, Path.Combine(directory, "EnchantedArmsPC.lnk"),
                                IntPtr.Zero);
@@ -286,6 +287,8 @@ namespace EnchantedArmsPC
                 return LauncherSelfTests.Run();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            if (InstallLocation.TryRedirect())
+                return 0;
             Application.ThreadException += (s, e) =>
             {
                 Diagnostic("UI exception: " + e.Exception);

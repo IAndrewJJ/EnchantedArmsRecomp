@@ -40,8 +40,14 @@ namespace EnchantedArmsPC
         readonly CheckBox msaa = Check("Keep the game's native antialiasing");
         readonly CheckBox frameGraph = Check("Show frame-time graph with the F6 counter");
         readonly TextBox isoPath =
-            new TextBox { ReadOnly = true, Width = 505, BackColor = Theme.Panel,
+            new TextBox { ReadOnly = true, Width = 335, BackColor = Theme.Panel,
                           ForeColor = Theme.Text, BorderStyle = BorderStyle.FixedSingle };
+        readonly TextBox buildPath = new TextBox { Width = 335,
+                                                   BackColor = Theme.Panel,
+                                                   ForeColor = Theme.Text,
+                                                   BorderStyle = BorderStyle.FixedSingle,
+                                                   AccessibleName = "Build location",
+                                                   Name = "BuildLocation" };
         readonly Panel[] pages = new Panel[Enum.GetValues(typeof(SettingsPage)).Length];
         readonly EtherButton[] navigation =
             new EtherButton[Enum.GetValues(typeof(SettingsPage)).Length];
@@ -82,6 +88,16 @@ namespace EnchantedArmsPC
             control.AccessibleName = caption;
             page.Controls.Add(label, 0, r);
             page.Controls.Add(control, 1, r);
+        }
+        static FlowLayoutPanel PathRow(TextBox path, Button browse)
+        {
+            var row =
+                new FlowLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                                      WrapContents = false, Margin = new Padding(0) };
+            path.Margin = new Padding(0, 12, 10, 0);
+            row.Controls.Add(path);
+            row.Controls.Add(browse);
+            return row;
         }
         public SettingsWindow(Preferences current, bool ready = false, bool running = false,
                               SettingsPage initialTab = SettingsPage.Graphics)
@@ -138,7 +154,8 @@ namespace EnchantedArmsPC
             pages[(int)SettingsPage.Updates].Controls.Add(updates);
             updates.InstallRequested += (stage, rollback) =>
             {
-                ReadValues();
+                if (!ReadAndValidateLocation())
+                    return;
                 UpdateStage = stage;
                 RollbackRequested = rollback;
                 DialogResult = DialogResult.OK;
@@ -182,9 +199,8 @@ namespace EnchantedArmsPC
             gamePage.Padding = new Padding(6, 0, 2, 0);
             pages[(int)SettingsPage.Game].Controls.Add(gamePage);
             Full(gamePage, Theme.Label("Enchanted Arms · Xbox 360 disc image", 480));
-            Full(gamePage, isoPath);
             var choose = Theme.Button("Choose ISO…", 150);
-            Full(gamePage, choose);
+            Full(gamePage, PathRow(isoPath, choose));
             choose.Click += (s, e) =>
             {
                 using (var dialog =
@@ -195,9 +211,26 @@ namespace EnchantedArmsPC
                         isoPath.Text = dialog.FileName;
                 }
             };
-            Full(gamePage, Theme.Label("First setup downloads about 800 MB of tools and needs " +
-                                           "roughly 20 GB free. Your ISO stays on your PC.",
-                                       480));
+            Full(gamePage, Theme.Label("Build location", 480));
+            var chooseFolder = Theme.Button("Choose folder…", 160);
+            chooseFolder.Enabled = buildPath.Enabled = !running;
+            Full(gamePage, PathRow(buildPath, chooseFolder));
+            chooseFolder.Click += (s, e) =>
+            {
+                using (var dialog =
+                           new FolderBrowserDialog {
+                               Description = "Choose an empty folder for EnchantedArmsPC.",
+                               ShowNewFolderButton = true,
+                               SelectedPath =
+                                   Directory.Exists(buildPath.Text) ? buildPath.Text : Program.Root
+                           }) if (dialog.ShowDialog(this) == DialogResult.OK) buildPath.Text =
+                    dialog.SelectedPath;
+            };
+            Full(gamePage,
+                 Theme.Label("Your game, saves and launcher stay together in this folder. " +
+                                 "First setup downloads about 800 MB of tools and needs " +
+                                 "roughly 20 GB free. Your ISO stays where it is.",
+                             480));
             var build = Theme.Button(ready ? "Rebuild game" : "Build game", 170, true);
             build.Enabled = !running;
             Full(gamePage, build);
@@ -209,7 +242,8 @@ namespace EnchantedArmsPC
                                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                ReadValues();
+                if (!ReadAndValidateLocation(true))
+                    return;
                 BuildRequested = true;
                 DialogResult = DialogResult.OK;
                 Close();
@@ -281,7 +315,8 @@ namespace EnchantedArmsPC
             CancelButton = cancel;
             apply.Click += (s, e) =>
             {
-                ReadValues();
+                if (!ReadAndValidateLocation())
+                    return;
                 DialogResult = DialogResult.OK;
                 Close();
             };
@@ -340,6 +375,7 @@ namespace EnchantedArmsPC
             msaa.Checked = Settings.NativeMsaa;
             frameGraph.Checked = Settings.FrameTimeGraph;
             isoPath.Text = Settings.Iso;
+            buildPath.Text = InstallLocation.Selected(Settings);
             controlsPage.LoadValues(Settings);
             texturePage.LoadSelection(Settings.TexturePack);
             loading = false;
@@ -362,8 +398,27 @@ namespace EnchantedArmsPC
             Settings.FrameTimeGraph = frameGraph.Checked;
             Settings.TexturePack = texturePage.SelectedToken;
             Settings.Iso = isoPath.Text;
+            Settings.BuildLocation =
+                InstallLocation.Same(buildPath.Text, Program.Root) ? "" : buildPath.Text.Trim();
             controlsPage.ReadValues(Settings);
             Settings.Normalize();
+        }
+        bool ReadAndValidateLocation(bool building = false)
+        {
+            try
+            {
+                buildPath.Text = InstallLocation.Validate(buildPath.Text, building);
+                ReadValues();
+                return true;
+            }
+            catch (Exception error)
+            {
+                SelectPage(SettingsPage.Game);
+                MessageBox.Show(this, error.Message, "Choose a build folder", MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+                buildPath.Focus();
+                return false;
+            }
         }
     }
 }

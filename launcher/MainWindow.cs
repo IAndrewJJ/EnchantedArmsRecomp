@@ -39,6 +39,11 @@ namespace EnchantedArmsPC
             Directory.CreateDirectory(Program.Local);
             preferences = LoadPreferences();
             preferences.Normalize();
+            if (!String.IsNullOrEmpty(InstallLocation.Unavailable))
+            {
+                failed = true;
+                lastFailure = InstallLocation.Unavailable;
+            }
             if (!preview)
                 foreach (Process candidate in Process.GetProcessesByName("enchantedarmsrecomp"))
                 {
@@ -275,7 +280,8 @@ namespace EnchantedArmsPC
         }
         bool Ready()
         {
-            return File.Exists(Path.Combine(Program.NativeDirectory, "enchantedarmsrecomp.exe")) &&
+            return String.IsNullOrEmpty(InstallLocation.Unavailable) &&
+                   File.Exists(Path.Combine(Program.NativeDirectory, "enchantedarmsrecomp.exe")) &&
                    File.Exists(Path.Combine(Program.NativeDirectory, "rexruntimerd.dll")) &&
                    File.Exists(Path.Combine(Program.NativeDirectory, "rexgpu-xenosrd.dll")) &&
                    File.Exists(Path.Combine(Program.Local, "game", "default.xex")) &&
@@ -372,19 +378,17 @@ namespace EnchantedArmsPC
             progress.Style = busy ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
             play.Text = busy      ? "PREPARING YOUR GAME"
                         : running ? "GAME RUNNING"
-                        : Ready()
-                            ? (Program.NativeUpdateRequired(Program.NativeDirectory)
-                                   ? "UPDATE GAME"
-                                   : "PLAY ENCHANTED ARMS")
-                            : "SET UP GAME";
+                        : Ready() ? (Program.NativeUpdateRequired(Program.NativeDirectory)
+                                         ? "UPDATE GAME"
+                                         : "PLAY ENCHANTED ARMS")
+                                  : "SET UP GAME";
             status.Text = busy      ? setupStage
                           : running ? "Your journey is in progress"
                           : failed ? (lastFailure ?? "Unable to start. Open Settings to try again.")
-                          : Ready()
-                              ? (Program.NativeUpdateRequired(Program.NativeDirectory)
-                                     ? "Rebuild your game to apply the latest fixes"
-                                     : "Ready to play")
-                              : "Choose your game disc to begin";
+                          : Ready() ? (Program.NativeUpdateRequired(Program.NativeDirectory)
+                                           ? "Rebuild your game to apply the latest fixes"
+                                           : "Ready to play")
+                                    : "Choose your game disc to begin";
             summary.Text = busy ? "First setup may take a while."
                                 : preferences.Scale + "× resolution  ·  " +
                                       (preferences.Upscaler == "fsr"   ? "FSR 1"
@@ -412,6 +416,20 @@ namespace EnchantedArmsPC
                     "Choose your game", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            string destination;
+            try
+            {
+                destination = InstallLocation.Validate(InstallLocation.Selected(preferences), true);
+                if (!InstallLocation.Same(destination, Program.Root) &&
+                    Directory.Exists(destination))
+                    Uninstall.CheckProcesses(destination, Process.GetCurrentProcess().Id);
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show(this, error.Message, "Choose a build folder", MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+                return;
+            }
             if (!SavePreferences())
                 return;
             busy = true;
@@ -433,7 +451,8 @@ namespace EnchantedArmsPC
                     powershell,
                     Program.Join("-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                                  Path.Combine(Program.Root, "scripts", "setup.ps1"), "-Iso",
-                                 preferences.Iso, "-Jobs", preferences.Jobs.ToString())) {
+                                 preferences.Iso, "-Jobs", preferences.Jobs.ToString(),
+                                 "-BuildLocation", destination)) {
                     UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = Program.Root,
                     RedirectStandardOutput = true, RedirectStandardError = true
                 };
@@ -492,6 +511,28 @@ namespace EnchantedArmsPC
                 RefreshState();
                 if (closeWhenStopped)
                     Close();
+            }
+            if (!failed && !cancelRequested && !closeWhenStopped)
+            {
+                try
+                {
+                    if (InstallLocation.Same(destination, Program.Root))
+                        InstallLocation.UseCurrentFolder();
+                    else
+                    {
+                        InstallLocation.Activate(destination);
+                        Close();
+                    }
+                }
+                catch (Exception error)
+                {
+                    failed = true;
+                    lastFailure = "Could not open your build folder. Open Settings to try again.";
+                    Program.Diagnostic("Build location activation failed: " + error);
+                    MessageBox.Show(this, error.Message, "Build folder", MessageBoxButtons.OK,
+                                    MessageBoxIcon.Information);
+                }
+                RefreshState();
             }
         }
         async Task CancelSetup()

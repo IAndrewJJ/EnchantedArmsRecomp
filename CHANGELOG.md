@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.5 — Choose your build folder
+
+- Add a Build location field and folder picker directly below Choose ISO.
+- Build the complete portable game in the selected folder, keeping its launcher,
+  game data, tools and saves together. Reopen the launcher there after successful
+  setup, without starting the game. Existing matching desktop shortcuts follow it.
+- Copy existing saves and texture packs into a new build folder while retaining
+  the originals. Preserve destination progress on retries and reject unrelated
+  nonempty folders and linked paths.
+- Keep existing installations in place unless another location is chosen.
+  Native build 0.3.5 is unchanged; no rebuild is needed to update the launcher.
+
 ## 0.5.4 — Simpler launcher settings
 
 - Remove graphics presets and the Advanced tab. Keep individual picture controls

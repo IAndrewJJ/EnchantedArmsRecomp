@@ -177,6 +177,17 @@ namespace EnchantedArmsPC
                 Directory.CreateDirectory(external);
                 string sentinel = Path.Combine(external, "keep.iso");
                 File.WriteAllText(sentinel, "external original ISO sentinel");
+                string linkedBuild = Fixture(parent, "linked-build");
+                string locationSource = Fixture(parent, "location-source");
+                Directory.CreateDirectory(Path.Combine(locationSource, ".local"));
+                File.WriteAllText(Path.Combine(locationSource, ".local", "installation-id.json"),
+                                  "{\"id\":\"fixture-identity\"}");
+                File.WriteAllText(
+                    Path.Combine(external, "build-location-owner.json"),
+                    "{\"project\":\"EnchantedArmsPC\",\"source_id\":\"fixture-identity\"}");
+                Junction(Path.Combine(linkedBuild, ".local"), external);
+                Check(!InstallLocation.Owned(locationSource, linkedBuild),
+                      "Linked build metadata must not authorize a destination");
                 Junction(Path.Combine(installation, "linked-game"), external);
                 Junction(Path.Combine(installation, "cycle"), installation);
                 string linkedRoot = Path.Combine(parent, "linked-installation");

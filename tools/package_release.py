@@ -22,10 +22,10 @@ DIRECTORIES = ["src", "config", "launcher", "scripts", "tools", "docs", "license
 ALLOWED_SUFFIXES = {".md", ".txt", ".cpp", ".h", ".cs", ".manifest", ".ps1", ".py", ".toml", ".json", ".yml", ".yaml", ".cmake"}
 
 
-def source_files():
-    result = [ROOT / name for name in FILES]
+def source_files(root=ROOT):
+    result = [root / name for name in FILES]
     for name in DIRECTORIES:
-        directory = ROOT / name
+        directory = root / name
         if directory.exists():
             for path in directory.rglob("*"):
                 if path.is_file() and "__pycache__" not in path.parts and path.suffix in ALLOWED_SUFFIXES:

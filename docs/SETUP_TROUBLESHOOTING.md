@@ -2,6 +2,22 @@
 
 Use the complete **EnchantedArmsPC-0.5.1-windows-x64.zip** from [release Assets](https://github.com/IAndrewJJ/EnchantedArmsRecomp/releases/tag/v0.5.1). The GitHub source ZIP and launcher-only CI artifact are not complete player kits. Extract the ZIP before opening the launcher.
 
+## Requirements
+
+- Your own supported **USA/Europe Enchanted Arms Xbox 360 ISO**. Game files are not included.
+- **Windows 10 or 11, 64-bit**, with **.NET Framework 4.8**.
+- The [Microsoft Visual C++ v14 x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+- A **Direct3D 12-capable GPU**. Higher graphics settings need more GPU power.
+- Roughly **20 GB of free space** in addition to the ISO, and an internet connection for the first setup. Setup downloads about **800 MB** of build tools and takes several minutes. Python and Visual Studio do not need to be installed separately.
+
+The supported game revision has title ID `555307E6`, media ID `41637F65`, and XEX version `0.0.0.1`. Its game executable has SHA-256:
+
+```text
+79e95ea830119123c2fd9c7b08fb890c4cf40cc6b8422b3568a820b6b3779f22
+```
+
+The launcher checks this before extraction and reads your ISO without modifying it. Other revisions are not currently supported.
+
 ## Updating after a failed setup
 
 1. Close the launcher and game. Extract the new kit, then copy the contents of its `EnchantedArmsRecomp` folder over your existing project folder. Replace the project files when prompted. Avoid nesting a second project folder inside the first.
@@ -28,7 +44,7 @@ The launcher error gives the file under `.local/logs/setup-*.log`. Open the newe
 
 Other common failures:
 
-- **Unsupported game revision:** only the USA/Europe Xbox 360 executable listed in the README is supported. Renaming an ISO does not change its revision.
+- **Unsupported game revision:** only the USA/Europe Xbox 360 executable listed under Requirements above is supported. Renaming an ISO does not change its revision.
 - **Insufficient space:** allow roughly 20 GB beyond the ISO for the extracted game, tools and compilation.
 - **Another setup is running:** let that attempt finish or cancel it in its launcher before retrying. An old `setup.lock` file alone does not hold the lock after its process exits.
 - **Checksum mismatch:** no unverified tool is installed. Retry with a stable connection; report repeated failures with the package name.
